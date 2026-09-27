@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Models\Booking;
+use App\Services\BookingEmailNotifier;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -10,6 +11,10 @@ use Illuminate\Validation\ValidationException;
 
 class UploadBookingGatepass
 {
+    public function __construct(
+        private readonly BookingEmailNotifier $bookingEmailNotifier,
+    ) {}
+
     public function execute(Booking $booking, UploadedFile $file, bool $allowReplace = false): Booking
     {
         if ($booking->hasGatepass() && ! $allowReplace) {
@@ -18,7 +23,9 @@ class UploadBookingGatepass
             ]);
         }
 
-        return DB::transaction(function () use ($booking, $file, $allowReplace): Booking {
+        $wasFirstUpload = ! $booking->hasGatepass();
+
+        $booking = DB::transaction(function () use ($booking, $file, $allowReplace): Booking {
             $directory = 'bookings/'.$booking->booking_number;
             $extension = strtolower($file->getClientOriginalExtension());
             $filename = 'gatepass.'.$extension;
@@ -34,5 +41,11 @@ class UploadBookingGatepass
 
             return $booking->fresh();
         });
+
+        if ($wasFirstUpload) {
+            $this->bookingEmailNotifier->gatepassUploaded($booking);
+        }
+
+        return $booking;
     }
 }

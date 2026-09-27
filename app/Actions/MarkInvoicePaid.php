@@ -4,11 +4,16 @@ namespace App\Actions;
 
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
+use App\Services\BookingEmailNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class MarkInvoicePaid
 {
+    public function __construct(
+        private readonly BookingEmailNotifier $bookingEmailNotifier,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -20,7 +25,7 @@ class MarkInvoicePaid
             ]);
         }
 
-        return DB::transaction(function () use ($invoice, $data): Invoice {
+        $invoice = DB::transaction(function () use ($invoice, $data): Invoice {
             $invoice->update([
                 'status' => InvoiceStatus::Paid,
                 'paid_at' => now('Asia/Manila'),
@@ -29,5 +34,9 @@ class MarkInvoicePaid
 
             return $invoice->fresh();
         });
+
+        $this->bookingEmailNotifier->invoicePaid($invoice);
+
+        return $invoice;
     }
 }

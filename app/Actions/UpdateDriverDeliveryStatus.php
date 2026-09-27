@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\User;
+use App\Services\BookingEmailNotifier;
 use App\Services\BookingVehicleRelease;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -13,6 +14,7 @@ class UpdateDriverDeliveryStatus
 {
     public function __construct(
         private readonly BookingVehicleRelease $bookingVehicleRelease,
+        private readonly BookingEmailNotifier $bookingEmailNotifier,
     ) {}
 
     public function execute(User $driver, Booking $booking, BookingStatus $status): Booking
@@ -29,7 +31,7 @@ class UpdateDriverDeliveryStatus
             ]);
         }
 
-        return DB::transaction(function () use ($booking, $status): Booking {
+        $booking = DB::transaction(function () use ($booking, $status): Booking {
             $booking = Booking::query()->whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
             if ($status === BookingStatus::InTransit) {
@@ -67,5 +69,9 @@ class UpdateDriverDeliveryStatus
                 'status' => 'Invalid status transition for driver delivery.',
             ]);
         });
+
+        $this->bookingEmailNotifier->statusChanged($booking, $status);
+
+        return $booking;
     }
 }

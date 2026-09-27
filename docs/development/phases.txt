@@ -73,7 +73,7 @@ BACKEND PHASES (do before matching UI)
 - Stub route helper (null / not configured); no live Mapbox calls
 - When enabled: static optimal route from coords (no live GPS)
 
-[ ] B9. Emails (post-MVP) — placeholder until MAIL_* keys
+[x] B9. Emails (post-MVP) — placeholder until MAIL_* keys
 - Stub / no-op send until enabled; events listed in email_events.txt
 - When enabled: Laravel Mail wired to those events
 

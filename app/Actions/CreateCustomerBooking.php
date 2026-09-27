@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\BookingEmailNotifier;
 use App\Services\BookingNumberGenerator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -17,6 +18,7 @@ class CreateCustomerBooking
     public function __construct(
         private readonly BookingNumberGenerator $bookingNumberGenerator,
         private readonly CreateBookingInvoice $createBookingInvoice,
+        private readonly BookingEmailNotifier $bookingEmailNotifier,
     ) {}
 
     /**
@@ -51,7 +53,7 @@ class CreateCustomerBooking
             ]);
         }
 
-        return DB::transaction(function () use ($customer, $data, $pricing): Booking {
+        $booking = DB::transaction(function () use ($customer, $data, $pricing): Booking {
             $booking = Booking::query()->create([
                 'booking_number' => $this->bookingNumberGenerator->next(),
                 'customer_id' => $customer->id,
@@ -75,5 +77,9 @@ class CreateCustomerBooking
 
             return $booking;
         });
+
+        $this->bookingEmailNotifier->bookingCreated($booking);
+
+        return $booking;
     }
 }

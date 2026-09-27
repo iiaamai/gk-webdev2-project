@@ -7,11 +7,16 @@ use App\Enums\VehicleStatus;
 use App\Models\Booking;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\BookingEmailNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AcceptDriverBooking
 {
+    public function __construct(
+        private readonly BookingEmailNotifier $bookingEmailNotifier,
+    ) {}
+
     public function execute(User $driver, Booking $booking): Booking
     {
         if (! $driver->isDriver()) {
@@ -26,7 +31,7 @@ class AcceptDriverBooking
             ]);
         }
 
-        return DB::transaction(function () use ($driver, $booking): Booking {
+        $booking = DB::transaction(function () use ($driver, $booking): Booking {
             $booking = Booking::query()->whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
             if (! $this->isAvailableForDriver($driver, $booking)) {
@@ -78,6 +83,10 @@ class AcceptDriverBooking
 
             return $booking->fresh();
         });
+
+        $this->bookingEmailNotifier->statusChanged($booking, BookingStatus::Accepted);
+
+        return $booking;
     }
 
     public function isAvailableForDriver(User $driver, Booking $booking): bool
