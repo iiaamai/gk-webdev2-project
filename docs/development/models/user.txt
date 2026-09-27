@@ -15,15 +15,22 @@ Fields
 - mobile                TEXT NULL
 - role                  TEXT NOT NULL
                         values: customer | driver | staff | system_admin
-- vehicle_type          TEXT NULL (driver only; matches Pricing / Vehicle type)
-- plate                 TEXT NULL (driver only; plate of assigned unit)
-- capacity_kg           INTEGER NULL (driver only)
 - remember_token        TEXT NULL
 - archived_at           TEXT NULL (soft delete; null = active)
 - created_at            TEXT NULL
 - updated_at            TEXT NULL
 
+Relations (Eloquent)
+- customerBookings()    HasMany Booking (customer_id)
+- driverBookings()      HasMany Booking (driver_id)
+- assignedVehicle()     HasOne Vehicle (vehicles.driver_id)
+- activityLogs()        HasMany ActivityLog
+
 Notes
-- Driver fields are nullable for non-driver roles; validate as required when role = driver.
+- Driver self-register: identity only (no vehicle fields). Fleet assignment is optional
+  and done by admin (Fleet create/edit or User create/edit vehicle dropdown).
+- Driver plate / type / capacity come from assignedVehicle → Pricing (no denormalized
+  copies on users).
+- Without an assigned vehicle, driver cannot see/accept matching jobs (pricing_id match).
 - Customer and Driver self-register; Staff is created by System Admin.
-- Soft delete via archived_at (Admin only).
+- Soft delete via archived_at (Admin only); clear fleet assignment when archiving a driver.

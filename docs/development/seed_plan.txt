@@ -8,20 +8,24 @@ System Admin    admin@gk.test         admin123
 Staff           staff@gk.test         staff123
 Customer        customer@gk.test      demo123
 Driver          driver@gk.test        demo123
-  - Driver: set vehicle_type + plate + capacity_kg to match a seeded vehicle
+  - Assigned fleet unit ABC-1234 (Isuzu, 4-wheeler truck)
 Driver (2nd)    driver2@gk.test       demo123
-  - Extra driver so accepted + in_transit sample bookings do not share one active trip
+  - Assigned fleet unit DEF-5678 (Fuso, 6-wheeler truck); extra driver so accepted + in_transit
+    sample bookings do not share one active trip
 
 Pricing (seed four rows)
-- 6-wheeler (Isuzu / Fuso) — 14500.00
-- 4-wheeler truck — 9200.00
-- L300 van — 4500.00
-- Reefer / specialized — 18500.00
+- 6-wheeler truck — 14500.00 — 12000 kg
+- 4-wheeler truck — 9200.00 — 3000 kg
+- L300 van — 4500.00 — 1000 kg
+- Reefer / specialized — 18500.00 — 5000 kg
 
 Vehicles
-- Several available plates across types
-- At least one maintenance example
-- One plate matching the demo driver
+- Several available plates across types (brand + color; capacity from Pricing)
+- At least one maintenance example (unassigned)
+- Demo drivers linked via vehicles.driver_id (ABC-1234, DEF-5678)
+
+Seed order
+- Pricing → Users → Vehicles (assign drivers) → Settings → Bookings
 
 Settings
 - company_name = GK Trucking Services
@@ -38,3 +42,4 @@ Sample bookings
 Notes
 - Never commit real production secrets
 - Emails use @gk.test for local demo
+- Command: php artisan migrate:fresh --seed

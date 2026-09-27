@@ -22,6 +22,7 @@ class StorePricingRequest extends FormRequest
         return [
             'vehicle_type' => ['required', 'string', 'max:255', 'unique:pricings,vehicle_type'],
             'amount' => ['required', 'numeric', 'min:0'],
+            'capacity_kg' => ['required', 'integer', 'min:1'],
         ];
     }
 }

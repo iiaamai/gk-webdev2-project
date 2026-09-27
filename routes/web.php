@@ -4,6 +4,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\EarningsController;
+use App\Http\Controllers\Admin\OverviewController;
 use App\Http\Controllers\Admin\PricingController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
@@ -88,6 +89,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('deliveries.eir.store');
             Route::post('deliveries/{booking}/pod', [DriverDeliveryController::class, 'storePod'])
                 ->name('deliveries.pod.store');
+            Route::get('deliveries/{booking}/receipt', [DriverDeliveryController::class, 'downloadReceipt'])
+                ->name('deliveries.receipt');
         });
 
     Route::middleware('role:'.UserRole::Staff->value)
@@ -96,20 +99,24 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
         ->group(function (): void {
             Route::get('/', PortalHomeController::class)->name('home');
 
-            Route::resource('bookings', StaffBookingController::class)->only(['index', 'show', 'update']);
+            Route::view('settings', 'staff.settings')->name('settings.edit');
+
+            Route::resource('bookings', StaffBookingController::class)->only(['index', 'show', 'edit', 'update']);
             Route::post('bookings/{booking}/gatepass', [StaffBookingController::class, 'storeGatepass'])
                 ->name('bookings.gatepass.store');
             Route::post('bookings/{booking}/cancel', [StaffBookingController::class, 'cancel'])
                 ->name('bookings.cancel');
             Route::post('bookings/{booking}/invoice/mark-paid', [StaffBookingController::class, 'markInvoicePaid'])
                 ->name('bookings.invoice.mark-paid');
+            Route::get('bookings/{booking}/receipt', [StaffBookingController::class, 'downloadReceipt'])
+                ->name('bookings.receipt');
         });
 
     Route::middleware('role:'.UserRole::SystemAdmin->value)
         ->prefix('admin')
         ->name('admin.')
         ->group(function (): void {
-            Route::get('/', PortalHomeController::class)->name('home');
+            Route::get('/', OverviewController::class)->name('home');
 
             Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
@@ -118,7 +125,7 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
             Route::resource('fleet', VehicleController::class)
                 ->parameters(['fleet' => 'vehicle'])
                 ->except(['show']);
-            Route::resource('users', UserController::class)->except(['show']);
+            Route::resource('users', UserController::class);
 
             Route::resource('bookings', AdminBookingController::class);
             Route::post('bookings/{booking}/gatepass', [AdminBookingController::class, 'storeGatepass'])
@@ -131,8 +138,12 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.eir.store');
             Route::post('bookings/{booking}/pod', [AdminBookingController::class, 'storePod'])
                 ->name('bookings.pod.store');
+            Route::get('bookings/{booking}/receipt', [AdminBookingController::class, 'downloadReceipt'])
+                ->name('bookings.receipt');
             Route::post('bookings/{booking}/invoice/mark-paid', [AdminBookingController::class, 'markInvoicePaid'])
                 ->name('bookings.invoice.mark-paid');
+            Route::post('bookings/{booking}/invoice/mark-unpaid', [AdminBookingController::class, 'markInvoiceUnpaid'])
+                ->name('bookings.invoice.mark-unpaid');
 
             Route::get('earnings', [EarningsController::class, 'index'])->name('earnings.index');
             Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');

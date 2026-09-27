@@ -21,7 +21,7 @@ class StoreBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vehicle_type' => ['required', 'string', 'max:255', Rule::exists('pricings', 'vehicle_type')],
+            'pricing_id' => ['required', 'integer', Rule::exists('pricings', 'id')],
             'booking_datetime' => ['required', 'date', 'after:now'],
             'pickup_address' => ['required', 'string', 'max:500'],
             'pickup_lat' => ['required', 'numeric', 'between:-90,90'],

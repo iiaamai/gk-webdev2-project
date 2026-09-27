@@ -16,21 +16,26 @@ users
   │
   ├──< bookings.customer_id          (1 customer : many bookings)
   ├──< bookings.driver_id            (1 driver : many bookings; nullable until accept)
+  ├── 1:0..1 vehicles.driver_id      (optional assigned fleet unit; unique driver_id)
   ├──< invoices via bookings
   ├──< ratings.customer_id
   └──< activity_logs.user_id
 
 vehicles
+  ├──> users.driver_id               (optional assigned driver; one driver per vehicle)
+  ├──> pricings.pricing_id           (required; type/amount/capacity from Pricing)
   └──< bookings.vehicle_id           (1 vehicle : many bookings over time; one active in_use)
 
 pricings
-  └── (logical) bookings.vehicle_type + bookings.payout snapshot
-      No FK required; match by vehicle_type string. Snapshot amount on create.
+  ├──< vehicles.pricing_id
+  ├──< bookings.pricing_id           (required; catalog type/amount/capacity)
+  └── (display) vehicle_type label + amount + capacity_kg
 
 bookings
+  ├──> pricings.pricing_id
   ├── 1:1 eirs.booking_id            (PK/FK)
   ├── 1:1 pods.booking_id            (PK/FK)
-  ├── 1:1 invoices.booking_id        (UNIQUE FK)
+  ├── 1:1 invoices.booking_id        (UNIQUE FK; amount snapshotted from Pricing)
   └── 1:1 ratings.booking_id         (UNIQUE FK)
 
 settings
@@ -45,13 +50,15 @@ Cardinality
 
 User (customer)  1 ─── *  Booking
 User (driver)    1 ─── *  Booking          (nullable driver_id until accepted)
+User (driver)    1 ─── 0..1  Vehicle       (optional fleet assignment via vehicles.driver_id UNIQUE)
 Vehicle          1 ─── *  Booking          (nullable vehicle_id until accepted)
+Pricing          1 ─── *  Vehicle
+Pricing          1 ─── *  Booking
 Booking          1 ─── 1  Eir
 Booking          1 ─── 1  Pod
-Booking          1 ─── 1  Invoice
+Booking          1 ─── 1  Invoice          (amount snapshot for earnings/history)
 Booking          1 ─── 1  Rating
 User             1 ─── *  ActivityLog
-Pricing          1 ─── *  Booking          (logical via vehicle_type; payout copied)
 
 ---
 
@@ -60,6 +67,9 @@ Foreign keys (recommended)
 bookings.customer_id  → users.id
 bookings.driver_id    → users.id
 bookings.vehicle_id   → vehicles.id
+bookings.pricing_id   → pricings.id
+vehicles.driver_id    → users.id   ON DELETE SET NULL (unique; one assigned unit per driver)
+vehicles.pricing_id   → pricings.id
 eirs.booking_id       → bookings.id   ON DELETE CASCADE (or restrict + soft delete)
 pods.booking_id       → bookings.id
 invoices.booking_id   → bookings.id
@@ -76,13 +86,15 @@ Indexes (useful)
 users(email) UNIQUE
 users(role)
 vehicles(plate_number) UNIQUE
-vehicles(type, status)
+vehicles(driver_id) UNIQUE
+vehicles(pricing_id)
+vehicles(status)
 pricings(vehicle_type) UNIQUE
 bookings(booking_number) UNIQUE
 bookings(status, is_locked)
 bookings(customer_id)
 bookings(driver_id)
-bookings(vehicle_type)
+bookings(pricing_id)
 invoices(booking_id) UNIQUE
 invoices(status)
 activity_logs(user_id)
@@ -95,8 +107,11 @@ Not modeled (dropped / computed)
 
 - Driver clearance (dropped from product)
 - Live GPS track points (static Mapbox route only)
-- earnings_reports table (compute from completed bookings.payout)
+- earnings_reports table (compute from completed bookings → invoices.amount)
 - Separate customers / drivers / admins tables (unified users.role)
+- users.vehicle_type / plate / capacity_kg (use assignedVehicle → Pricing)
+- vehicles.type (use Pricing.vehicle_type)
+- bookings.payout (use invoice.amount or Pricing.amount accessor)
 
 ---
 

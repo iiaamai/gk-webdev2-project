@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\Eir;
 use App\Models\Invoice;
 use App\Models\Pod;
+use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Database\Seeder;
@@ -28,68 +29,69 @@ class BookingSeeder extends Seeder
         $sixWheeler = Vehicle::query()->where('plate_number', 'DEF-5678')->firstOrFail();
         $van = Vehicle::query()->where('plate_number', 'GHI-9012')->firstOrFail();
 
+        $pricingByType = Pricing::query()->pluck('id', 'vehicle_type');
+        $amountByPricingId = Pricing::query()->pluck('amount', 'id');
         $year = now('Asia/Manila')->year;
 
         $samples = [
             [
                 'booking_number' => "GK-{$year}-0001",
-                'vehicle_type' => 'L300 van',
+                'pricing_id' => $pricingByType['L300 van'],
                 'vehicle_id' => null,
                 'driver_id' => null,
                 'status' => BookingStatus::Pending,
                 'is_locked' => false,
                 'accepted_at' => null,
-                'payout' => 4500.00,
                 'gatepass_path' => null,
                 'cargo_desc' => 'Office supplies (pending, no gatepass)',
+                'with_invoice' => InvoiceStatus::Unpaid,
             ],
             [
                 'booking_number' => "GK-{$year}-0002",
-                'vehicle_type' => '4-wheeler truck',
+                'pricing_id' => $pricingByType['4-wheeler truck'],
                 'vehicle_id' => null,
                 'driver_id' => null,
                 'status' => BookingStatus::Pending,
                 'is_locked' => false,
                 'accepted_at' => null,
-                'payout' => 9200.00,
                 'gatepass_path' => 'bookings/demo/gk-0002-gatepass.jpg',
                 'cargo_desc' => 'Retail pallets (pending with gatepass)',
+                'with_invoice' => InvoiceStatus::Unpaid,
             ],
             [
                 'booking_number' => "GK-{$year}-0003",
-                'vehicle_type' => '4-wheeler truck',
+                'pricing_id' => $pricingByType['4-wheeler truck'],
                 'vehicle_id' => $truck->id,
                 'driver_id' => $driver->id,
                 'status' => BookingStatus::Accepted,
                 'is_locked' => true,
                 'accepted_at' => now('Asia/Manila')->subHours(2),
-                'payout' => 9200.00,
                 'gatepass_path' => 'bookings/demo/gk-0003-gatepass.jpg',
                 'cargo_desc' => 'Accepted demo delivery',
                 'lock_vehicle' => $truck,
+                'with_invoice' => InvoiceStatus::Unpaid,
             ],
             [
                 'booking_number' => "GK-{$year}-0004",
-                'vehicle_type' => '6-wheeler (Isuzu / Fuso)',
+                'pricing_id' => $pricingByType['6-wheeler truck'],
                 'vehicle_id' => $sixWheeler->id,
                 'driver_id' => $driverTwo->id,
                 'status' => BookingStatus::InTransit,
                 'is_locked' => true,
                 'accepted_at' => now('Asia/Manila')->subDay(),
-                'payout' => 14500.00,
                 'gatepass_path' => 'bookings/demo/gk-0004-gatepass.jpg',
                 'cargo_desc' => 'In-transit demo load',
                 'lock_vehicle' => $sixWheeler,
+                'with_invoice' => InvoiceStatus::Unpaid,
             ],
             [
                 'booking_number' => "GK-{$year}-0005",
-                'vehicle_type' => 'L300 van',
+                'pricing_id' => $pricingByType['L300 van'],
                 'vehicle_id' => $van->id,
                 'driver_id' => $driver->id,
                 'status' => BookingStatus::Completed,
                 'is_locked' => true,
                 'accepted_at' => now('Asia/Manila')->subDays(3),
-                'payout' => 4500.00,
                 'gatepass_path' => 'bookings/demo/gk-0005-gatepass.jpg',
                 'cargo_desc' => 'Completed demo with EIR/POD',
                 'with_eir_pod' => true,
@@ -97,13 +99,12 @@ class BookingSeeder extends Seeder
             ],
             [
                 'booking_number' => "GK-{$year}-0006",
-                'vehicle_type' => 'Reefer / specialized',
+                'pricing_id' => $pricingByType['Reefer / specialized'],
                 'vehicle_id' => null,
                 'driver_id' => null,
                 'status' => BookingStatus::Cancelled,
                 'is_locked' => false,
                 'accepted_at' => null,
-                'payout' => 18500.00,
                 'gatepass_path' => null,
                 'cargo_desc' => 'Cancelled demo booking',
             ],
@@ -160,7 +161,7 @@ class BookingSeeder extends Seeder
                 Invoice::query()->updateOrCreate(
                     ['booking_id' => $booking->id],
                     [
-                        'amount' => $booking->payout,
+                        'amount' => $amountByPricingId[$booking->pricing_id] ?? 0,
                         'status' => $withInvoice,
                         'issued_at' => now('Asia/Manila')->subDays(2),
                         'paid_at' => $withInvoice === InvoiceStatus::Paid

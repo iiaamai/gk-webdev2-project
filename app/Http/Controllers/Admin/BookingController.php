@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\CancelBooking;
 use App\Actions\CreateAdminBooking;
 use App\Actions\MarkInvoicePaid;
+use App\Actions\MarkInvoiceUnpaid;
 use App\Actions\UpdateBooking;
 use App\Actions\UpdateBookingStatus;
 use App\Actions\UploadBookingEir;
@@ -17,15 +18,18 @@ use App\Http\Requests\Admin\StoreBookingRequest;
 use App\Http\Requests\Admin\UpdateBookingRequest;
 use App\Http\Requests\Admin\UpdateBookingStatusRequest;
 use App\Http\Requests\MarkInvoicePaidRequest;
+use App\Http\Requests\MarkInvoiceUnpaidRequest;
 use App\Http\Requests\UploadEirRequest;
 use App\Http\Requests\UploadGatepassRequest;
 use App\Http\Requests\UploadPodRequest;
 use App\Models\Booking;
 use App\Models\Pricing;
 use App\Models\User;
+use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class BookingController extends Controller
@@ -35,7 +39,7 @@ class BookingController extends Controller
         $this->authorize('viewAny', Booking::class);
 
         $bookings = Booking::query()
-            ->with('customer')
+            ->with(['customer', 'pricing', 'vehicle.pricing'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -52,15 +56,36 @@ class BookingController extends Controller
             ->get();
         $pricings = Pricing::query()->orderBy('vehicle_type')->get();
 
-        return view('admin.bookings.create', compact('customers', 'pricings'));
+        $drivers = User::query()
+            ->where('role', UserRole::Driver)
+            ->with('assignedVehicle')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.bookings.create', [
+            'customers' => $customers,
+            'drivers' => $drivers,
+            'pricings' => $pricings,
+            'statuses' => BookingStatus::cases(),
+        ]);
     }
 
-    public function store(StoreBookingRequest $request, CreateAdminBooking $createAdminBooking): RedirectResponse
-    {
-        $booking = $createAdminBooking->execute($request->validated());
+    public function store(
+        StoreBookingRequest $request,
+        CreateAdminBooking $createAdminBooking,
+        UploadBookingGatepass $uploadBookingGatepass,
+    ): RedirectResponse {
+        $data = $request->safe()->except(['gatepass']);
+        $gatepass = $request->file('gatepass');
+
+        $booking = $createAdminBooking->execute($data);
+
+        if ($gatepass !== null && $booking->status === BookingStatus::Pending) {
+            $uploadBookingGatepass->execute($booking, $gatepass, allowReplace: false);
+        }
 
         return redirect()
-            ->route('admin.bookings.show', $booking)
+            ->route('admin.bookings.edit', $booking)
             ->with('status', 'Booking created.');
     }
 
@@ -68,7 +93,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['customer', 'eir', 'pod', 'invoice', 'rating']);
+        $booking->load(['customer', 'eir', 'pod', 'invoice', 'rating', 'pricing', 'vehicle.pricing', 'driver']);
 
         return view('admin.bookings.show', [
             'booking' => $booking,
@@ -77,18 +102,30 @@ class BookingController extends Controller
         ]);
     }
 
-    public function edit(Booking $booking): View
+    public function edit(Booking $booking, BookingStaticRouteMapService $routeMapService): View
     {
         $this->authorize('update', $booking);
 
-        $booking->load('customer');
+        $booking->load(['customer', 'driver', 'pricing', 'vehicle.pricing', 'eir', 'pod']);
         $customers = User::query()
             ->where('role', UserRole::Customer)
             ->orderBy('name')
             ->get();
         $pricings = Pricing::query()->orderBy('vehicle_type')->get();
+        $drivers = User::query()
+            ->where('role', UserRole::Driver)
+            ->with('assignedVehicle')
+            ->orderBy('name')
+            ->get();
 
-        return view('admin.bookings.edit', compact('booking', 'customers', 'pricings'));
+        return view('admin.bookings.edit', [
+            'booking' => $booking,
+            'customers' => $customers,
+            'drivers' => $drivers,
+            'pricings' => $pricings,
+            'statuses' => BookingStatus::cases(),
+            'routeMap' => $routeMapService->forBooking($booking),
+        ]);
     }
 
     public function update(
@@ -99,7 +136,7 @@ class BookingController extends Controller
         $updateBooking->execute($booking, $request->validated());
 
         return redirect()
-            ->route('admin.bookings.show', $booking)
+            ->route('admin.bookings.edit', $booking)
             ->with('status', 'Booking updated.');
     }
 
@@ -126,7 +163,7 @@ class BookingController extends Controller
         );
 
         return redirect()
-            ->route('admin.bookings.show', $booking)
+            ->route('admin.bookings.edit', $booking)
             ->with('status', 'Gatepass saved.');
     }
 
@@ -139,7 +176,7 @@ class BookingController extends Controller
         $updateBookingStatus->execute($booking, $status);
 
         return redirect()
-            ->route('admin.bookings.show', $booking)
+            ->route('admin.bookings.edit', $booking)
             ->with('status', 'Status updated.');
     }
 
@@ -162,7 +199,7 @@ class BookingController extends Controller
         $uploadBookingEir->execute($booking, $request->file('eir'));
 
         return redirect()
-            ->route('admin.bookings.show', $booking)
+            ->route('admin.bookings.edit', $booking)
             ->with('status', 'EIR saved.');
     }
 
@@ -178,8 +215,17 @@ class BookingController extends Controller
         );
 
         return redirect()
-            ->route('admin.bookings.show', $booking)
+            ->route('admin.bookings.edit', $booking)
             ->with('status', 'POD saved.');
+    }
+
+    public function downloadReceipt(
+        Booking $booking,
+        BookingReceiptPdf $bookingReceiptPdf,
+    ): Response {
+        $this->authorize('downloadReceipt', $booking);
+
+        return $bookingReceiptPdf->download($booking);
     }
 
     public function markInvoicePaid(
@@ -190,7 +236,19 @@ class BookingController extends Controller
         $markInvoicePaid->execute($booking->invoice, $request->validated());
 
         return redirect()
-            ->route('admin.bookings.show', $booking)
+            ->route('admin.bookings.edit', $booking)
             ->with('status', 'Invoice marked as paid.');
+    }
+
+    public function markInvoiceUnpaid(
+        MarkInvoiceUnpaidRequest $request,
+        Booking $booking,
+        MarkInvoiceUnpaid $markInvoiceUnpaid,
+    ): RedirectResponse {
+        $markInvoiceUnpaid->execute($booking->invoice, $request->validated());
+
+        return redirect()
+            ->route('admin.bookings.edit', $booking)
+            ->with('status', 'Invoice reverted to unpaid.');
     }
 }

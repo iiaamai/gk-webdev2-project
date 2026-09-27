@@ -5,14 +5,14 @@
 @section('content')
     <h1>New booking</h1>
     <p><a href="{{ route('customer.bookings.index') }}">Back to list</a></p>
-    <p>Prices load from the pricing list. Pickup/dropoff coordinates are required for routing later (Mapbox placeholder).</p>
+    <p>Prices load from the pricing list. Enter pickup and dropoff addresses for your trip.</p>
     <form method="post" action="{{ route('customer.bookings.store') }}">
         @csrf
-        <label for="vehicle_type">Vehicle type</label>
-        <select id="vehicle_type" name="vehicle_type" required>
+        <label for="pricing_id">Vehicle type</label>
+        <select id="pricing_id" name="pricing_id" required>
             <option value="">Select type</option>
             @foreach ($pricings as $pricing)
-                <option value="{{ $pricing->vehicle_type }}" @selected(old('vehicle_type') === $pricing->vehicle_type)>
+                <option value="{{ $pricing->id }}" @selected((string) old('pricing_id') === (string) $pricing->id)>
                     {{ $pricing->vehicle_type }} — ₱{{ number_format((float) $pricing->amount, 2) }}
                 </option>
             @endforeach

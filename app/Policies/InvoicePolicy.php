@@ -31,4 +31,13 @@ class InvoicePolicy
 
         return $invoice->status === InvoiceStatus::Unpaid;
     }
+
+    public function markAsUnpaid(User $user, Invoice $invoice): bool
+    {
+        if (! $user->isSystemAdmin()) {
+            return false;
+        }
+
+        return $invoice->status === InvoiceStatus::Paid;
+    }
 }

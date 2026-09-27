@@ -20,6 +20,7 @@ class BookingController extends Controller
 
         $bookings = Booking::query()
             ->where('customer_id', $request->user()->id)
+            ->with(['pricing', 'vehicle.pricing'])
             ->orderByDesc('created_at')
             ->get();
 

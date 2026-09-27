@@ -4,24 +4,33 @@ Database: SQLite
 
 Purpose
 - Physical fleet unit. Locked to in_use when a driver accepts a booking.
-- Price is NOT stored here; pricing is by vehicle type (see Pricing).
+- Type/price/capacity come from Pricing via pricing_id.
+- Optionally assigned to one driver (admin Fleet / Users forms).
 
 Fields
 - id                    INTEGER PRIMARY KEY
 - plate_number          TEXT NOT NULL UNIQUE
-- label                 TEXT NOT NULL
-- type                  TEXT NOT NULL
-                        examples: 6-wheeler (Isuzu / Fuso) | 4-wheeler truck |
-                        L300 van | Reefer / specialized
-                        (must align with Pricing.vehicle_type)
-- capacity_kg           INTEGER NOT NULL
+- brand                 TEXT NOT NULL
+- color                 TEXT NULL
+- pricing_id            INTEGER NOT NULL → pricings.id
 - status                TEXT NOT NULL DEFAULT 'available'
                         values: available | in_use | maintenance
+- driver_id             INTEGER NULL UNIQUE → users.id (role driver)
+                        Optional assigned driver; one vehicle per driver.
 - archived_at           TEXT NULL
 - created_at            TEXT NULL
 - updated_at            TEXT NULL
 
+Relations (Eloquent)
+- driver()              BelongsTo User (driver_id)
+- pricing()             BelongsTo Pricing
+- bookings()            HasMany Booking
+- Accessor type: pricing.vehicle_type (display)
+
 Notes
-- On driver accept: match driver.plate to plate_number when possible; set status = in_use.
+- Capacity is on Pricing (pricing.capacity_kg), not on this table.
+- Assign/unassign via admin Fleet or User forms (vehicles.driver_id only).
+- On driver accept: prefer driver's assigned vehicle when pricing matches;
+  else any available unit with the same pricing_id; set status = in_use.
 - On booking completed/cancelled (when releasing): status = available if it was in_use.
-- Soft delete via archived_at (System Admin only).
+- Soft delete via archived_at (System Admin only); clear driver_id before archive.

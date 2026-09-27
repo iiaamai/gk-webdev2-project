@@ -7,10 +7,12 @@ use Database\Factories\PricingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'vehicle_type',
     'amount',
+    'capacity_kg',
 ])]
 class Pricing extends Model
 {
@@ -24,7 +26,24 @@ class Pricing extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'capacity_kg' => 'integer',
             'archived_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return HasMany<Vehicle, $this>
+     */
+    public function vehicles(): HasMany
+    {
+        return $this->hasMany(Vehicle::class);
+    }
+
+    /**
+     * @return HasMany<Booking, $this>
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
     }
 }

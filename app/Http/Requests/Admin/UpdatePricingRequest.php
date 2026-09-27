@@ -33,6 +33,7 @@ class UpdatePricingRequest extends FormRequest
                 Rule::unique('pricings', 'vehicle_type')->ignore($pricing),
             ],
             'amount' => ['required', 'numeric', 'min:0'],
+            'capacity_kg' => ['required', 'integer', 'min:1'],
         ];
     }
 }

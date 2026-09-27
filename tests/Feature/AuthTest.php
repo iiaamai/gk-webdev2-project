@@ -89,15 +89,12 @@ class AuthTest extends TestCase
         $this->assertNotNull($user->email_verified_at);
     }
 
-    public function test_driver_can_register_with_vehicle_fields(): void
+    public function test_driver_can_register_without_vehicle_fields(): void
     {
         $response = $this->post(route('register.driver'), [
             'name' => 'New Driver',
             'email' => 'new.driver@example.com',
             'mobile' => '09171234568',
-            'vehicle_type' => '4-wheeler truck',
-            'plate' => 'XYZ-9999',
-            'capacity_kg' => 3000,
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
@@ -107,7 +104,7 @@ class AuthTest extends TestCase
         $user = User::query()->where('email', 'new.driver@example.com')->first();
         $this->assertNotNull($user);
         $this->assertSame(UserRole::Driver, $user->role);
-        $this->assertSame('XYZ-9999', $user->plate);
+        $this->assertNull($user->assignedVehicle);
         $this->assertNotNull($user->email_verified_at);
     }
 

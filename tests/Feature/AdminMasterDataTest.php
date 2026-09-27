@@ -41,6 +41,7 @@ class AdminMasterDataTest extends TestCase
             ->post(route('admin.pricing.store'), [
                 'vehicle_type' => 'Test truck',
                 'amount' => 12345.67,
+                'capacity_kg' => 2500,
             ])
             ->assertRedirect(route('admin.pricing.index'));
 
@@ -51,11 +52,13 @@ class AdminMasterDataTest extends TestCase
             ->put(route('admin.pricing.update', $pricing), [
                 'vehicle_type' => 'Test truck updated',
                 'amount' => 15000,
+                'capacity_kg' => 2800,
             ])
             ->assertRedirect(route('admin.pricing.index'));
 
         $pricing->refresh();
         $this->assertSame('Test truck updated', $pricing->vehicle_type);
+        $this->assertSame(2800, $pricing->capacity_kg);
 
         $this->actingAs($admin)
             ->delete(route('admin.pricing.destroy', $pricing))
@@ -65,16 +68,65 @@ class AdminMasterDataTest extends TestCase
         $this->assertNotNull(Pricing::withArchived()->find($pricing->id));
     }
 
+    public function test_admin_can_assign_driver_on_fleet_vehicle(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        $driver = User::factory()->driver()->create();
+        $otherDriver = User::factory()->driver()->create();
+        $pricing = Pricing::factory()->create([
+            'vehicle_type' => '4-wheeler truck',
+            'amount' => 9200,
+            'capacity_kg' => 3000,
+        ]);
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'driver_id' => $otherDriver->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.fleet.store'), [
+                'plate_number' => 'ASN-0001',
+                'brand' => 'Isuzu',
+                'color' => 'White',
+                'pricing_id' => $pricing->id,
+                'status' => VehicleStatus::Available->value,
+                'driver_id' => $driver->id,
+            ])
+            ->assertRedirect(route('admin.fleet.index'));
+
+        $vehicle = Vehicle::query()->where('plate_number', 'ASN-0001')->first();
+        $this->assertNotNull($vehicle);
+        $this->assertSame($driver->id, $vehicle->driver_id);
+
+        $driver->load('assignedVehicle.pricing');
+        $this->assertSame('ASN-0001', $driver->assignedVehicle?->plate_number);
+        $this->assertSame('4-wheeler truck', $driver->assignedVehicle?->pricing?->vehicle_type);
+        $this->assertSame($pricing->capacity_kg, $driver->assignedVehicle?->pricing?->capacity_kg);
+
+        $this->actingAs($admin)
+            ->get(route('admin.fleet.index'))
+            ->assertOk()
+            ->assertSee('Assigned driver')
+            ->assertSee($driver->name);
+
+        $this->actingAs($admin)
+            ->get(route('admin.fleet.create'))
+            ->assertOk()
+            ->assertDontSee($otherDriver->email)
+            ->assertDontSee($driver->email);
+    }
+
     public function test_admin_can_crud_fleet(): void
     {
         $admin = User::factory()->systemAdmin()->create();
+        $pricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
 
         $this->actingAs($admin)
             ->post(route('admin.fleet.store'), [
                 'plate_number' => 'TST-0001',
-                'label' => 'Test Unit',
-                'type' => 'L300 van',
-                'capacity_kg' => 1000,
+                'brand' => 'Toyota',
+                'color' => 'Silver',
+                'pricing_id' => $pricing->id,
                 'status' => VehicleStatus::Available->value,
             ])
             ->assertRedirect(route('admin.fleet.index'));
@@ -85,15 +137,17 @@ class AdminMasterDataTest extends TestCase
         $this->actingAs($admin)
             ->put(route('admin.fleet.update', $vehicle), [
                 'plate_number' => 'TST-0001',
-                'label' => 'Test Unit Updated',
-                'type' => 'L300 van',
-                'capacity_kg' => 1200,
+                'brand' => 'Toyota',
+                'color' => 'Red',
+                'pricing_id' => $pricing->id,
                 'status' => VehicleStatus::Maintenance->value,
             ])
             ->assertRedirect(route('admin.fleet.index'));
 
         $vehicle->refresh();
         $this->assertSame(VehicleStatus::Maintenance, $vehicle->status);
+        $this->assertSame('Toyota', $vehicle->brand);
+        $this->assertSame('Red', $vehicle->color);
 
         $this->actingAs($admin)
             ->delete(route('admin.fleet.destroy', $vehicle))

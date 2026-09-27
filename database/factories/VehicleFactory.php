@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\VehicleStatus;
+use App\Models\Pricing;
 use App\Models\Vehicle;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,16 +17,18 @@ class VehicleFactory extends Factory
      */
     public function definition(): array
     {
+        $pricing = Pricing::query()->where('vehicle_type', '4-wheeler truck')->first()
+            ?? Pricing::factory()->create([
+                'vehicle_type' => '4-wheeler truck',
+                'amount' => 9200.00,
+                'capacity_kg' => 3000,
+            ]);
+
         return [
             'plate_number' => strtoupper(fake()->unique()->bothify('???-####')),
-            'label' => fake()->words(2, true),
-            'type' => fake()->randomElement([
-                '6-wheeler (Isuzu / Fuso)',
-                '4-wheeler truck',
-                'L300 van',
-                'Reefer / specialized',
-            ]),
-            'capacity_kg' => fake()->randomElement([1000, 2000, 3000, 8000, 12000]),
+            'brand' => fake()->randomElement(['Isuzu', 'Fuso', 'Toyota', 'Hino', 'Mitsubishi']),
+            'color' => fake()->randomElement(['White', 'Silver', 'Blue', 'Red', 'Black']),
+            'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
         ];
     }

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\SyncVehicleDriverAssignment;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Support\MailIntegration;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -26,36 +29,48 @@ class UserController extends Controller
     {
         $this->authorize('create', User::class);
 
-        return view('admin.users.create');
+        return view('admin.users.create', [
+            'vehicles' => $this->assignableVehicles(),
+        ]);
     }
 
-    public function store(StoreUserRequest $request): RedirectResponse
+    public function show(User $user): View
     {
+        $this->authorize('view', $user);
+
+        $user->load('assignedVehicle.pricing');
+
+        return view('admin.users.show', compact('user'));
+    }
+
+    public function store(
+        StoreUserRequest $request,
+        SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
+    ): RedirectResponse {
         $data = $request->safe()->only([
             'name',
             'email',
             'mobile',
             'password',
             'role',
-            'vehicle_type',
-            'plate',
-            'capacity_kg',
         ]);
 
         $role = $data['role'] instanceof UserRole
             ? $data['role']
             : UserRole::from((string) $data['role']);
 
-        if ($role !== UserRole::Driver) {
-            $data['vehicle_type'] = null;
-            $data['plate'] = null;
-            $data['capacity_kg'] = null;
-        }
-
         $data['role'] = $role;
         $data['email_verified_at'] = MailIntegration::isEnabled() ? null : now();
 
-        User::query()->create($data);
+        $user = User::query()->create($data);
+
+        if ($role === UserRole::Driver) {
+            $vehicleId = $request->validated('vehicle_id');
+            $syncVehicleDriverAssignment->forDriver(
+                $user,
+                $vehicleId !== null ? (int) $vehicleId : null,
+            );
+        }
 
         return redirect()
             ->route('admin.users.index')
@@ -66,31 +81,30 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        return view('admin.users.edit', compact('user'));
+        $user->load('assignedVehicle.pricing');
+
+        return view('admin.users.edit', [
+            'user' => $user,
+            'vehicles' => $this->assignableVehicles($user),
+        ]);
     }
 
-    public function update(UpdateUserRequest $request, User $user): RedirectResponse
-    {
+    public function update(
+        UpdateUserRequest $request,
+        User $user,
+        SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
+    ): RedirectResponse {
         $data = $request->safe()->only([
             'name',
             'email',
             'mobile',
             'role',
-            'vehicle_type',
-            'plate',
-            'capacity_kg',
             'password',
         ]);
 
         $role = $data['role'] instanceof UserRole
             ? $data['role']
             : UserRole::from((string) $data['role']);
-
-        if ($role !== UserRole::Driver) {
-            $data['vehicle_type'] = null;
-            $data['plate'] = null;
-            $data['capacity_kg'] = null;
-        }
 
         $data['role'] = $role;
 
@@ -100,19 +114,52 @@ class UserController extends Controller
 
         $user->update($data);
 
+        $vehicleId = $role === UserRole::Driver
+            ? $request->validated('vehicle_id')
+            : null;
+
+        $syncVehicleDriverAssignment->forDriver(
+            $user->fresh(),
+            $vehicleId !== null ? (int) $vehicleId : null,
+        );
+
         return redirect()
             ->route('admin.users.index')
             ->with('status', 'User updated.');
     }
 
-    public function destroy(User $user): RedirectResponse
-    {
+    public function destroy(
+        User $user,
+        SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
+    ): RedirectResponse {
         $this->authorize('delete', $user);
+
+        if ($user->isDriver()) {
+            $syncVehicleDriverAssignment->forDriver($user, null);
+        }
 
         $user->archive();
 
         return redirect()
             ->route('admin.users.index')
             ->with('status', 'User archived.');
+    }
+
+    /**
+     * @return Collection<int, Vehicle>
+     */
+    private function assignableVehicles(?User $user = null)
+    {
+        return Vehicle::query()
+            ->with('pricing')
+            ->where(function ($query) use ($user): void {
+                $query->whereNull('driver_id');
+
+                if ($user?->id) {
+                    $query->orWhere('driver_id', $user->id);
+                }
+            })
+            ->orderBy('plate_number')
+            ->get();
     }
 }

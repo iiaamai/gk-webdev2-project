@@ -7,6 +7,7 @@ use App\Models\Concerns\Archivable;
 use Database\Factories\BookingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'customer_id',
     'driver_id',
     'vehicle_id',
-    'vehicle_type',
+    'pricing_id',
     'booking_datetime',
     'posting_date',
     'pickup_address',
@@ -31,7 +32,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'status',
     'is_locked',
     'accepted_at',
-    'payout',
     'gatepass_path',
 ])]
 class Booking extends Model
@@ -62,9 +62,51 @@ class Booking extends Model
             'status' => BookingStatus::class,
             'is_locked' => 'boolean',
             'accepted_at' => 'datetime',
-            'payout' => 'decimal:2',
             'archived_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Live label: assigned fleet pricing type when present, else booking pricing.
+     *
+     * @return Attribute<string, never>
+     */
+    protected function vehicleType(): Attribute
+    {
+        return Attribute::get(function (): string {
+            if ($this->vehicle_id !== null) {
+                $this->loadMissing('vehicle.pricing');
+                $fromVehicle = $this->vehicle?->pricing?->vehicle_type;
+
+                if (filled($fromVehicle)) {
+                    return (string) $fromVehicle;
+                }
+            }
+
+            $this->loadMissing('pricing');
+
+            return (string) ($this->pricing?->vehicle_type ?? '—');
+        });
+    }
+
+    /**
+     * Invoice amount when billed; otherwise live Pricing.amount.
+     *
+     * @return Attribute<string|null, never>
+     */
+    protected function payout(): Attribute
+    {
+        return Attribute::get(function (): ?string {
+            $this->loadMissing(['invoice', 'pricing']);
+
+            $amount = $this->invoice?->amount ?? $this->pricing?->amount;
+
+            if ($amount === null) {
+                return null;
+            }
+
+            return number_format((float) $amount, 2, '.', '');
+        });
     }
 
     /**
@@ -89,6 +131,14 @@ class Booking extends Model
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    /**
+     * @return BelongsTo<Pricing, $this>
+     */
+    public function pricing(): BelongsTo
+    {
+        return $this->belongsTo(Pricing::class);
     }
 
     /**
@@ -134,12 +184,19 @@ class Booking extends Model
      */
     public function scopeAvailableForDriver(Builder $query, User $driver): Builder
     {
-        return $query
+        $pricingId = $driver->assignedVehicle?->pricing_id;
+
+        $query
             ->where('status', BookingStatus::Pending)
             ->whereNotNull('gatepass_path')
             ->where('is_locked', false)
-            ->whereNull('driver_id')
-            ->where('vehicle_type', $driver->vehicle_type);
+            ->whereNull('driver_id');
+
+        if ($pricingId === null) {
+            return $query->whereRaw('0 = 1');
+        }
+
+        return $query->where('pricing_id', $pricingId);
     }
 
     /**

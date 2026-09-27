@@ -12,7 +12,7 @@ Fields
 - customer_id           INTEGER NOT NULL  → users.id (role customer)
 - driver_id             INTEGER NULL     → users.id (role driver)
 - vehicle_id            INTEGER NULL     → vehicles.id
-- vehicle_type          TEXT NOT NULL    (chosen on form; must exist in pricings)
+- pricing_id            INTEGER NOT NULL → pricings.id (chosen on form)
 - booking_datetime      TEXT NOT NULL    (preferred pickup datetime)
 - posting_date          TEXT NULL
 - pickup_address        TEXT NOT NULL
@@ -27,11 +27,16 @@ Fields
                         values: pending | accepted | in_transit | completed | cancelled
 - is_locked             INTEGER NOT NULL DEFAULT 0  (0/1 boolean)
 - accepted_at           TEXT NULL
-- payout                REAL NULL        (snapshot from Pricing.amount at create)
 - gatepass_path         TEXT NULL        (private storage path)
 - archived_at           TEXT NULL
 - created_at            TEXT NULL
 - updated_at            TEXT NULL
+
+Relations (Eloquent)
+- customer(), driver(), vehicle(), pricing()
+- eir(), pod(), invoice(), rating()
+- Accessor vehicle_type: assigned vehicle pricing type when vehicle_id set, else pricing.vehicle_type
+- Accessor payout: invoice.amount when invoice exists, else pricing.amount (display only)
 
 Lifecycle
 pending
@@ -41,8 +46,10 @@ pending
   → EIR + POD on complete → completed, vehicle released
 
 Notes
-- Drivers see jobs only if: status=pending, gatepass_path set, not locked, no driver, vehicle_type matches driver.
+- Drivers see jobs only if: status=pending, gatepass_path set, not locked, no driver,
+  pricing_id matches assigned fleet vehicle pricing_id.
 - Max one active delivery per driver (accepted or in_transit).
 - Staff may update and upload gatepass once; cannot override gatepass after upload. Admin can.
 - Soft delete / archive: System Admin only. Staff cannot delete.
 - Mapbox static route uses pickup/dropoff lat-lng on details after accept.
+- Fare money history lives on invoices.amount (snapshotted at invoice create from Pricing.amount).

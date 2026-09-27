@@ -31,7 +31,7 @@ pending
 
 Pricing
 - Keep the legacy default amounts, stored in the database so they can change later (not hardcoded in the form):
-  - 6-wheeler (Isuzu / Fuso) — 14500.00
+  - 6-wheeler truck — 14500.00
   - 4-wheeler truck — 9200.00
   - L300 van — 4500.00
   - Reefer / specialized — 18500.00

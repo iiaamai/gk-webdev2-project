@@ -2,11 +2,11 @@
 
 @section('title', 'Register driver')
 @section('auth_mode', 'showcase-first')
-@section('showcase_tagline', 'Accept deliveries that match your vehicle')
+@section('showcase_tagline', 'Join the GK fleet and accept matching deliveries')
 
 @section('content')
     <h1 class="text-xl font-semibold text-text">Register as driver</h1>
-    <p class="mt-1 text-sm text-text-muted">Create a driver account to start accepting trips.</p>
+    <p class="mt-1 text-sm text-text-muted">Create a driver account. Fleet vehicles are assigned by admin after registration.</p>
 
     <form method="post" action="{{ route('register.driver') }}" class="mt-6 space-y-4">
         @csrf
@@ -27,24 +27,6 @@
             <x-ui.label for="mobile">Mobile</x-ui.label>
             <x-ui.input id="mobile" type="text" name="mobile" value="{{ old('mobile') }}" autocomplete="tel" />
             <x-ui.field-error name="mobile" />
-        </div>
-
-        <div>
-            <x-ui.label for="vehicle_type">Vehicle type</x-ui.label>
-            <x-ui.input id="vehicle_type" type="text" name="vehicle_type" value="{{ old('vehicle_type', '4-wheeler truck') }}" required />
-            <x-ui.field-error name="vehicle_type" />
-        </div>
-
-        <div>
-            <x-ui.label for="plate">Plate</x-ui.label>
-            <x-ui.input id="plate" type="text" name="plate" value="{{ old('plate') }}" required />
-            <x-ui.field-error name="plate" />
-        </div>
-
-        <div>
-            <x-ui.label for="capacity_kg">Capacity (kg)</x-ui.label>
-            <x-ui.input id="capacity_kg" type="number" name="capacity_kg" value="{{ old('capacity_kg', 3000) }}" min="1" required />
-            <x-ui.field-error name="capacity_kg" />
         </div>
 
         <div>

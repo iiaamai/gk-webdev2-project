@@ -9,7 +9,7 @@ Purpose
 Fields
 - id                    INTEGER PRIMARY KEY
 - booking_id            INTEGER NOT NULL UNIQUE  → bookings.id
-- amount                REAL NOT NULL               (from Booking.payout / Pricing snapshot)
+- amount                REAL NOT NULL               (snapshotted from Pricing.amount at issue)
 - status                TEXT NOT NULL DEFAULT 'unpaid'
                         values: unpaid | paid
 - issued_at             TEXT NULL

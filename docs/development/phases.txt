@@ -49,7 +49,7 @@ BACKEND PHASES (do before matching UI)
 - UserSeeder: plain passwords (hashed via model cast)
 
 [x] B3. Customer bookings (data + rules)
-- Create / list / details; payout snapshot from Pricing
+- Create / list / details; fare from Pricing, locked on Invoice.amount at issue
 - Pickup/dropoff address + lat/lng
 - Rules: pricing row exists; at least one available fleet unit of type; GK-{YEAR}-#### via booking_seq
 - Routes: /customer/bookings (index, create, store, show); BookingPolicy + CreateCustomerBooking action
@@ -104,7 +104,7 @@ FRONTEND PHASES (backend B0–B10 complete; UI from F1 onward)
     - Login, register customer/driver, verify email (B1 stub forms exist for QA).
     - Real mail send still awaits MAIL_* / GK_MAIL_ENABLED — development_notes.txt
 
-[ ] F3. Admin UI (first role polish): settings, pricing, fleet, users, bookings,
+[x] F3. Admin UI (first role polish): settings, pricing, fleet, users, bookings,
     earnings, activity logs (beyond B2/B4/B10 stubs)
 
 [ ] F4. Staff UI: overview, bookings list/show, gatepass upload

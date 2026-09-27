@@ -7,6 +7,7 @@ use App\Enums\VehicleStatus;
 use App\Models\Booking;
 use App\Models\Eir;
 use App\Models\Pod;
+use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,19 +19,27 @@ class DriverDeliveryTest extends TestCase
 
     public function test_driver_sees_only_available_jobs_with_gatepass_and_matching_type(): void
     {
-        $driver = User::factory()->driver()->create(['vehicle_type' => '4-wheeler truck']);
-        $visible = Booking::factory()->withGatepass()->create([
+        $truckPricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $vanPricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
+        $driver = User::factory()->driver()->create();
+        Vehicle::factory()->create([
+            'pricing_id' => $truckPricing->id,
+            'driver_id' => $driver->id,
+            'status' => VehicleStatus::Available,
+        ]);
+
+        Booking::factory()->withGatepass()->create([
             'booking_number' => 'GK-TEST-1001',
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $truckPricing->id,
         ]);
         Booking::factory()->create([
             'booking_number' => 'GK-TEST-1002',
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $truckPricing->id,
             'gatepass_path' => null,
         ]);
         Booking::factory()->withGatepass()->create([
             'booking_number' => 'GK-TEST-1003',
-            'vehicle_type' => 'L300 van',
+            'pricing_id' => $vanPricing->id,
         ]);
 
         $this->actingAs($driver)
@@ -43,17 +52,16 @@ class DriverDeliveryTest extends TestCase
 
     public function test_driver_can_accept_job_and_locks_vehicle(): void
     {
-        $driver = User::factory()->driver()->create([
-            'vehicle_type' => '4-wheeler truck',
-            'plate' => 'ABC-1234',
-        ]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $driver = User::factory()->driver()->create();
         $vehicle = Vehicle::factory()->create([
             'plate_number' => 'ABC-1234',
-            'type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
             'status' => VehicleStatus::Available,
         ]);
         $booking = Booking::factory()->withGatepass()->create([
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
         ]);
 
         $this->actingAs($driver)
@@ -73,19 +81,27 @@ class DriverDeliveryTest extends TestCase
 
     public function test_driver_cannot_accept_second_job_while_active(): void
     {
-        $driver = User::factory()->driver()->create(['vehicle_type' => '4-wheeler truck']);
-        Vehicle::factory()->create(['type' => '4-wheeler truck', 'status' => VehicleStatus::Available]);
-        Vehicle::factory()->create(['type' => '4-wheeler truck', 'status' => VehicleStatus::Available]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $driver = User::factory()->driver()->create();
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
+            'status' => VehicleStatus::Available,
+        ]);
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'status' => VehicleStatus::Available,
+        ]);
 
         $active = Booking::factory()->withGatepass()->create([
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
             'status' => BookingStatus::Accepted,
             'is_locked' => true,
         ]);
 
         $another = Booking::factory()->withGatepass()->create([
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
         ]);
 
         $this->actingAs($driver)

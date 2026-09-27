@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\BookingStatus;
 use App\Http\Requests\Concerns\ValidatesBookingFields;
 use App\Models\Booking;
 use App\Models\User;
@@ -25,6 +26,14 @@ class StoreBookingRequest extends FormRequest
     {
         return array_merge($this->bookingFieldRules(requireFutureDatetime: true), [
             'customer_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'customer')],
+            'status' => ['required', Rule::enum(BookingStatus::class)],
+            'driver_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')->where('role', 'driver'),
+                $this->validateDriverMatchesPricing(),
+            ],
+            'gatepass' => ['nullable', 'file', 'mimes:jpeg,jpg,png,webp,gif', 'max:20480'],
         ]);
     }
 }

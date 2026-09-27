@@ -44,9 +44,6 @@ class UserSeeder extends Seeder
                 'password' => 'demo123',
                 'mobile' => '09170000004',
                 'role' => UserRole::Driver,
-                'vehicle_type' => '4-wheeler truck',
-                'plate' => 'ABC-1234',
-                'capacity_kg' => 3000,
                 'email_verified_at' => now(),
             ],
             [
@@ -55,9 +52,6 @@ class UserSeeder extends Seeder
                 'password' => 'demo123',
                 'mobile' => '09170000005',
                 'role' => UserRole::Driver,
-                'vehicle_type' => '6-wheeler (Isuzu / Fuso)',
-                'plate' => 'DEF-5678',
-                'capacity_kg' => 12000,
                 'email_verified_at' => now(),
             ],
         ];

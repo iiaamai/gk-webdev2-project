@@ -2,10 +2,49 @@
 
 namespace App\Http\Requests\Concerns;
 
+use App\Models\Booking;
+use App\Models\User;
+use Closure;
 use Illuminate\Validation\Rule;
 
 trait ValidatesBookingFields
 {
+    protected function validateDriverMatchesPricing(?Booking $legacyBooking = null): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($legacyBooking): void {
+            if ($value === null || $value === '') {
+                return;
+            }
+
+            $driver = User::query()
+                ->where('role', 'driver')
+                ->with('assignedVehicle')
+                ->find($value);
+
+            if ($driver === null) {
+                return;
+            }
+
+            $pricingId = $this->input('pricing_id');
+
+            if ($driver->assignedVehicle === null || $driver->assignedVehicle->pricing_id === null) {
+                $fail('The selected driver has no assigned fleet vehicle.');
+
+                return;
+            }
+
+            if ((int) $driver->assignedVehicle->pricing_id === (int) $pricingId) {
+                return;
+            }
+
+            if ($legacyBooking instanceof Booking && (int) $value === (int) $legacyBooking->driver_id) {
+                return;
+            }
+
+            $fail('The selected driver does not match the booking vehicle type.');
+        };
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -17,7 +56,7 @@ trait ValidatesBookingFields
         }
 
         return [
-            'vehicle_type' => ['required', 'string', 'max:255', Rule::exists('pricings', 'vehicle_type')],
+            'pricing_id' => ['required', 'integer', Rule::exists('pricings', 'id')],
             'booking_datetime' => $datetimeRules,
             'pickup_address' => ['required', 'string', 'max:500'],
             'pickup_lat' => ['required', 'numeric', 'between:-90,90'],

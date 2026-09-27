@@ -12,9 +12,11 @@ use App\Http\Requests\Driver\UpdateDeliveryStatusRequest;
 use App\Http\Requests\UploadEirRequest;
 use App\Http\Requests\UploadPodRequest;
 use App\Models\Booking;
+use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class DeliveryController extends Controller
@@ -22,25 +24,28 @@ class DeliveryController extends Controller
     public function index(Request $request): View
     {
         $driver = $request->user();
+        $driver->load('assignedVehicle.pricing');
 
         $available = Booking::query()
             ->availableForDriver($driver)
+            ->with(['pricing', 'vehicle.pricing'])
             ->orderByDesc('created_at')
             ->get();
 
         $active = Booking::query()
             ->activeForDriver($driver)
+            ->with(['pricing', 'vehicle.pricing'])
             ->orderByDesc('accepted_at')
             ->get();
 
-        return view('driver.deliveries.index', compact('available', 'active'));
+        return view('driver.deliveries.index', compact('available', 'active', 'driver'));
     }
 
     public function show(Booking $booking, BookingStaticRouteMapService $routeMapService): View
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['eir', 'pod']);
+        $booking->load(['eir', 'pod', 'pricing', 'vehicle.pricing']);
 
         return view('driver.deliveries.show', [
             'booking' => $booking,
@@ -102,5 +107,14 @@ class DeliveryController extends Controller
         return redirect()
             ->route('driver.deliveries.show', $booking)
             ->with('status', 'POD uploaded.');
+    }
+
+    public function downloadReceipt(
+        Booking $booking,
+        BookingReceiptPdf $bookingReceiptPdf,
+    ): Response {
+        $this->authorize('downloadReceipt', $booking);
+
+        return $bookingReceiptPdf->download($booking);
     }
 }

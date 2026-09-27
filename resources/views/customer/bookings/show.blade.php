@@ -9,7 +9,7 @@
     <dl>
         <dt>Status</dt><dd>{{ $booking->status->value }}</dd>
         <dt>Vehicle type</dt><dd>{{ $booking->vehicle_type }}</dd>
-        <dt>Payout (snapshot)</dt><dd>₱{{ number_format((float) $booking->payout, 2) }}</dd>
+        <dt>Amount</dt><dd>₱{{ number_format((float) $booking->payout, 2) }}</dd>
         <dt>Pickup</dt><dd>{{ $booking->pickup_address }} ({{ $booking->pickup_lat }}, {{ $booking->pickup_lng }})</dd>
         <dt>Dropoff</dt><dd>{{ $booking->dropoff_address }} ({{ $booking->dropoff_lat }}, {{ $booking->dropoff_lng }})</dd>
         <dt>Preferred pickup</dt><dd>{{ $booking->booking_datetime->timezone('Asia/Manila')->format('Y-m-d H:i') }}</dd>

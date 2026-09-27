@@ -3,72 +3,66 @@
 @section('title', $booking->booking_number)
 
 @section('content')
-    <h1>{{ $booking->booking_number }}</h1>
-    <p>
-        <a href="{{ route('admin.bookings.index') }}">Back to list</a>
-        · <a href="{{ route('admin.bookings.edit', $booking) }}">Edit</a>
-    </p>
+    <x-ui.page-header title="{{ $booking->booking_number }}" subtitle="Customer: {{ $booking->customer->name }}">
+        <x-slot:actions>
+            <x-ui.button href="{{ route('admin.bookings.index') }}" variant="secondary">
+                <x-ui.icon name="arrow-left" size="size-4" />
+                Back to list
+            </x-ui.button>
+            @can('downloadReceipt', $booking)
+                <x-ui.button href="{{ route('admin.bookings.receipt', $booking) }}" variant="secondary">
+                    <x-ui.icon name="file-up" size="size-4" />
+                    Download receipt
+                </x-ui.button>
+            @endcan
+            <x-ui.button href="{{ route('admin.bookings.edit', $booking) }}">
+                <x-ui.icon name="pencil" size="size-4" />
+                Edit workspace
+            </x-ui.button>
+        </x-slot:actions>
+    </x-ui.page-header>
 
-    <p>Customer: <strong>{{ $booking->customer->name }}</strong></p>
-    <p>Status: <strong>{{ $booking->status->value }}</strong></p>
-    <p>Payout snapshot: ₱{{ number_format((float) $booking->payout, 2) }}</p>
+    <div class="mb-6 grid gap-4 lg:grid-cols-2">
+        <x-ui.card>
+            @include('bookings._edit_summary', ['booking' => $booking, 'thin' => false])
+        </x-ui.card>
 
-    @if ($booking->hasGatepass())
-        <p>Gatepass: <a href="{{ route('documents.bookings.gatepass', $booking) }}">Download</a></p>
-    @else
-        <p>Gatepass: not uploaded.</p>
-    @endif
+        <x-ui.card>
+            @include('bookings._route_map', [
+                'booking' => $booking,
+                'routeMap' => $routeMap,
+                'editMapSlot' => true,
+            ])
+        </x-ui.card>
+    </div>
 
-    @if ($booking->driver_id)
-        @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
-    @endif
+    <div class="space-y-4">
+        <x-ui.card>
+            <x-ui.section-heading icon="file-up" title="Gatepass" />
+            <div class="mt-3 text-sm">
+                @if ($booking->hasGatepass())
+                    <a href="{{ route('documents.bookings.gatepass', $booking) }}" class="font-medium text-primary hover:text-primary-shade-1">Download gatepass</a>
+                @else
+                    <p class="text-text-muted">Not uploaded yet.</p>
+                @endif
+            </div>
+        </x-ui.card>
 
-    @include('bookings._eir_pod_links', ['booking' => $booking])
+        <div class="grid items-start gap-4 lg:grid-cols-2">
+            <x-ui.card>
+                <x-ui.section-heading icon="package" title="Documents" description="Delivery documents (EIR and POD)" />
+                <div class="mt-3 text-sm">
+                    @include('bookings._eir_pod_links', ['booking' => $booking])
+                </div>
+            </x-ui.card>
 
-    @include('bookings._invoice', [
-        'booking' => $booking,
-        'markPaidAction' => route('admin.bookings.invoice.mark-paid', $booking),
-    ])
+            <x-ui.card>
+                @include('bookings._invoice', ['booking' => $booking])
+            </x-ui.card>
+        </div>
 
-    @include('bookings._rating', ['booking' => $booking])
-
-    @include('bookings._eir_pod_upload', [
-        'booking' => $booking,
-        'eirAction' => route('admin.bookings.eir.store', $booking),
-        'podAction' => route('admin.bookings.pod.store', $booking),
-    ])
-
-    <h2>Upload or replace gatepass</h2>
-    <form method="post" action="{{ route('admin.bookings.gatepass.store', $booking) }}" enctype="multipart/form-data">
-        @csrf
-        <label for="gatepass">Gatepass image</label>
-        <input id="gatepass" type="file" name="gatepass" accept="image/jpeg,image/png,image/webp,image/gif" required>
-        <button type="submit">{{ $booking->hasGatepass() ? 'Replace gatepass' : 'Upload gatepass' }}</button>
-    </form>
-
-    <h2>Update status</h2>
-    <form method="post" action="{{ route('admin.bookings.status.update', $booking) }}">
-        @csrf
-        @method('PATCH')
-        <label for="status">Status</label>
-        <select id="status" name="status" required>
-            @foreach ($statuses as $status)
-                <option value="{{ $status->value }}" @selected($booking->status === $status)>{{ $status->value }}</option>
-            @endforeach
-        </select>
-        <button type="submit">Apply status</button>
-    </form>
-
-    @can('cancel', $booking)
-        <form method="post" action="{{ route('admin.bookings.cancel', $booking) }}" onsubmit="return confirm('Cancel this booking?');">
-            @csrf
-            <button type="submit">Cancel booking</button>
-        </form>
-    @endcan
-
-    <form method="post" action="{{ route('admin.bookings.destroy', $booking) }}" onsubmit="return confirm('Archive this booking?');">
-        @csrf
-        @method('DELETE')
-        <button type="submit">Archive booking</button>
-    </form>
+        <x-ui.card>
+            @include('bookings._rating', ['booking' => $booking])
+        </x-ui.card>
+    </div>
 @endsection

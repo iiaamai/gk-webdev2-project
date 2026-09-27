@@ -26,6 +26,12 @@ class UpdateBookingRequest extends FormRequest
     {
         return array_merge($this->bookingFieldRules(requireFutureDatetime: false), [
             'customer_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'customer')],
+            'driver_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')->where('role', 'driver'),
+                $this->validateDriverMatchesPricing($this->route('booking')),
+            ],
         ]);
     }
 }

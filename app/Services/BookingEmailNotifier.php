@@ -39,7 +39,9 @@ class BookingEmailNotifier
         $this->send(function () use ($booking): void {
             $drivers = User::query()
                 ->where('role', UserRole::Driver)
-                ->where('vehicle_type', $booking->vehicle_type)
+                ->whereHas('assignedVehicle', function ($query) use ($booking): void {
+                    $query->where('pricing_id', $booking->pricing_id);
+                })
                 ->get();
 
             foreach ($drivers as $driver) {

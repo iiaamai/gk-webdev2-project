@@ -51,11 +51,36 @@ class BookingPolicy
 
     public function uploadGatepass(User $user, Booking $booking): bool
     {
+        if ($booking->status === BookingStatus::Cancelled) {
+            return false;
+        }
+
+        if ($user->isSystemAdmin() || $user->isStaff()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Admin: any status. Staff/Driver: completed trips only.
+     */
+    public function downloadReceipt(User $user, Booking $booking): bool
+    {
         if ($user->isSystemAdmin()) {
             return true;
         }
 
-        return $user->isStaff() && ! $booking->hasGatepass();
+        if ($booking->status !== BookingStatus::Completed) {
+            return false;
+        }
+
+        if ($user->isStaff()) {
+            return true;
+        }
+
+        return $user->isDriver()
+            && $booking->driver_id === $user->id;
     }
 
     public function viewGatepass(User $user, Booking $booking): bool

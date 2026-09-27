@@ -17,35 +17,31 @@ class UpdateBooking
     public function execute(Booking $booking, array $data): Booking
     {
         return DB::transaction(function () use ($booking, $data): Booking {
-            $vehicleType = $data['vehicle_type'];
+            $pricingId = (int) $data['pricing_id'];
 
-            if ($vehicleType !== $booking->vehicle_type) {
-                $pricing = Pricing::query()
-                    ->where('vehicle_type', $vehicleType)
-                    ->first();
+            if ($pricingId !== (int) $booking->pricing_id) {
+                $pricing = Pricing::query()->find($pricingId);
 
                 if ($pricing === null) {
                     throw ValidationException::withMessages([
-                        'vehicle_type' => 'The selected vehicle type is not in the pricing list.',
+                        'pricing_id' => 'The selected pricing is invalid.',
                     ]);
                 }
 
                 $hasAvailableVehicle = Vehicle::query()
-                    ->where('type', $vehicleType)
+                    ->where('pricing_id', $pricing->id)
                     ->where('status', VehicleStatus::Available)
                     ->exists();
 
                 if (! $hasAvailableVehicle) {
                     throw ValidationException::withMessages([
-                        'vehicle_type' => 'No available fleet unit for this vehicle type right now.',
+                        'pricing_id' => 'No available fleet unit for this vehicle type right now.',
                     ]);
                 }
-
-                $data['payout'] = $pricing->amount;
             }
 
             $booking->update([
-                'vehicle_type' => $vehicleType,
+                'pricing_id' => $pricingId,
                 'booking_datetime' => $data['booking_datetime'],
                 'pickup_address' => $data['pickup_address'],
                 'pickup_lat' => $data['pickup_lat'],
@@ -55,7 +51,9 @@ class UpdateBooking
                 'dropoff_lng' => $data['dropoff_lng'],
                 'cargo_desc' => $data['cargo_desc'] ?? null,
                 'additional_requirements' => $data['additional_requirements'] ?? null,
-                'payout' => $data['payout'] ?? $booking->payout,
+                'driver_id' => array_key_exists('driver_id', $data)
+                    ? ($data['driver_id'] ?: null)
+                    : $booking->driver_id,
             ]);
 
             if (isset($data['customer_id'])) {

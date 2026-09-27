@@ -24,6 +24,10 @@
 
     @include('bookings._eir_pod_links', ['booking' => $booking])
 
+    @can('downloadReceipt', $booking)
+        <p><a href="{{ route('driver.deliveries.receipt', $booking) }}">Download delivery receipt (PDF)</a></p>
+    @endcan
+
     @if ($booking->driver_id)
         @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
     @endif

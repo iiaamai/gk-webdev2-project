@@ -19,11 +19,14 @@ class InvoiceTest extends TestCase
     public function test_booking_creation_creates_unpaid_invoice_with_payout_amount(): void
     {
         $customer = User::factory()->customer()->create();
-        Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 7500]);
-        Vehicle::factory()->create(['type' => '4-wheeler truck', 'status' => VehicleStatus::Available]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 7500]);
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'status' => VehicleStatus::Available,
+        ]);
 
         $this->actingAs($customer)->post(route('customer.bookings.store'), [
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
             'booking_datetime' => now()->addDay()->format('Y-m-d H:i:s'),
             'pickup_address' => 'A',
             'pickup_lat' => 14.5,
@@ -49,7 +52,7 @@ class InvoiceTest extends TestCase
         $booking = Booking::factory()->create();
         $invoice = Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => $booking->payout,
+            'amount' => $booking->pricing?->amount ?? 9200,
             'status' => InvoiceStatus::Unpaid,
         ]);
 
@@ -57,7 +60,7 @@ class InvoiceTest extends TestCase
             ->post(route('staff.bookings.invoice.mark-paid', $booking), [
                 'notes' => 'Cash received at office',
             ])
-            ->assertRedirect(route('staff.bookings.show', $booking));
+            ->assertRedirect(route('staff.bookings.edit', $booking));
 
         $invoice->refresh();
         $this->assertSame(InvoiceStatus::Paid, $invoice->status);
@@ -73,7 +76,7 @@ class InvoiceTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('admin.bookings.invoice.mark-paid', $booking))
-            ->assertRedirect(route('admin.bookings.show', $booking));
+            ->assertRedirect(route('admin.bookings.edit', $booking));
 
         $this->assertSame(InvoiceStatus::Paid, $booking->fresh()->invoice->status);
     }
@@ -98,6 +101,49 @@ class InvoiceTest extends TestCase
         $this->actingAs($staff)
             ->from(route('staff.bookings.show', $booking))
             ->post(route('staff.bookings.invoice.mark-paid', $booking))
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_revert_invoice_to_unpaid(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        $booking = Booking::factory()->create();
+        $invoice = Invoice::factory()->paid()->create([
+            'booking_id' => $booking->id,
+            'notes' => 'Paid in error',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.bookings.invoice.mark-unpaid', $booking), [
+                'notes' => 'Correcting mistaken payment',
+            ])
+            ->assertRedirect(route('admin.bookings.edit', $booking));
+
+        $invoice->refresh();
+        $this->assertSame(InvoiceStatus::Unpaid, $invoice->status);
+        $this->assertNull($invoice->paid_at);
+        $this->assertSame('Correcting mistaken payment', $invoice->notes);
+    }
+
+    public function test_staff_cannot_revert_invoice_to_unpaid(): void
+    {
+        $staff = User::factory()->staff()->create();
+        $booking = Booking::factory()->create();
+        Invoice::factory()->paid()->create(['booking_id' => $booking->id]);
+
+        $this->actingAs($staff)
+            ->post(route('admin.bookings.invoice.mark-unpaid', $booking))
+            ->assertRedirect(route('staff.home'));
+    }
+
+    public function test_cannot_revert_already_unpaid_invoice(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        $booking = Booking::factory()->create();
+        Invoice::factory()->create(['booking_id' => $booking->id, 'status' => InvoiceStatus::Unpaid]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.bookings.invoice.mark-unpaid', $booking))
             ->assertForbidden();
     }
 

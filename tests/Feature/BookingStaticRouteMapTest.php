@@ -45,7 +45,7 @@ class BookingStaticRouteMapTest extends TestCase
 
         $this->assertTrue($result->eligible);
         $this->assertFalse($result->configured);
-        $this->assertStringContainsString('disabled', strtolower($result->message ?? ''));
+        $this->assertNull($result->message);
         Http::assertNothingSent();
     }
 
@@ -104,6 +104,7 @@ class BookingStaticRouteMapTest extends TestCase
         $this->actingAs($customer)
             ->get(route('customer.bookings.show', $booking))
             ->assertOk()
-            ->assertSee('Route map');
+            ->assertSee('Pickup and dropoff for this booking.', false)
+            ->assertSee('Pickup to dropoff route preview.', false);
     }
 }

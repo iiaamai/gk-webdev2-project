@@ -41,11 +41,21 @@ class FoundationSchemaTest extends TestCase
         $this->assertTrue(Schema::hasColumns('users', [
             'role',
             'mobile',
-            'vehicle_type',
-            'plate',
-            'capacity_kg',
             'archived_at',
         ]));
+        $this->assertFalse(Schema::hasColumn('users', 'vehicle_type'));
+        $this->assertFalse(Schema::hasColumn('users', 'plate'));
+        $this->assertFalse(Schema::hasColumn('users', 'capacity_kg'));
+    }
+
+    public function test_vehicles_table_has_driver_assignment_column(): void
+    {
+        $this->assertTrue(Schema::hasColumn('vehicles', 'driver_id'));
+        $this->assertTrue(Schema::hasColumn('vehicles', 'pricing_id'));
+        $this->assertFalse(Schema::hasColumn('vehicles', 'type'));
+        $this->assertTrue(Schema::hasColumn('bookings', 'pricing_id'));
+        $this->assertFalse(Schema::hasColumn('bookings', 'vehicle_type'));
+        $this->assertFalse(Schema::hasColumn('bookings', 'payout'));
     }
 
     public function test_database_seeder_creates_demo_data(): void
@@ -61,8 +71,14 @@ class FoundationSchemaTest extends TestCase
         $driver = User::query()->where('email', 'driver@gk.test')->first();
         $this->assertNotNull($driver);
         $this->assertSame(UserRole::Driver, $driver->role);
-        $this->assertSame('ABC-1234', $driver->plate);
         $this->assertNotNull($driver->email_verified_at);
+        $this->assertNotNull($driver->assignedVehicle);
+        $this->assertSame('ABC-1234', $driver->assignedVehicle->plate_number);
+
+        $this->assertSame(
+            $driver->id,
+            Vehicle::query()->where('plate_number', 'ABC-1234')->value('driver_id'),
+        );
 
         $this->assertTrue(
             Booking::query()->where('status', BookingStatus::Pending)->whereNull('gatepass_path')->exists()

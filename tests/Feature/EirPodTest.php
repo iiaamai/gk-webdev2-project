@@ -179,7 +179,7 @@ class EirPodTest extends TestCase
             ->post(route('admin.bookings.eir.store', $booking), [
                 'eir' => UploadedFile::fake()->image('eir.jpg'),
             ])
-            ->assertRedirect(route('admin.bookings.show', $booking));
+            ->assertRedirect(route('admin.bookings.edit', $booking));
 
         $this->assertNotNull($booking->fresh()->eir);
     }

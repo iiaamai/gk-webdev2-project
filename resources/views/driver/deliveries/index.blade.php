@@ -30,7 +30,7 @@
     </table>
 
     <h2>Available jobs</h2>
-    <p>Jobs with gatepass matching your vehicle type ({{ auth()->user()->vehicle_type }}).</p>
+    <p>Jobs with gatepass matching your vehicle type ({{ $driver->assignedVehicle?->pricing?->vehicle_type ?? 'unassigned' }}).</p>
     <table>
         <thead>
             <tr>

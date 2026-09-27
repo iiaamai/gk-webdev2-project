@@ -12,9 +12,11 @@ use App\Http\Requests\Staff\UpdateBookingRequest;
 use App\Http\Requests\UploadGatepassRequest;
 use App\Models\Booking;
 use App\Models\Pricing;
+use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class BookingController extends Controller
@@ -24,7 +26,7 @@ class BookingController extends Controller
         $this->authorize('viewAny', Booking::class);
 
         $bookings = Booking::query()
-            ->with('customer')
+            ->with(['customer', 'pricing', 'vehicle.pricing'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -35,10 +37,22 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['customer', 'eir', 'pod', 'invoice']);
-        $pricings = Pricing::query()->orderBy('vehicle_type')->get();
+        $booking->load(['customer', 'eir', 'pod', 'invoice', 'pricing', 'vehicle.pricing']);
 
         return view('staff.bookings.show', [
+            'booking' => $booking,
+            'routeMap' => $routeMapService->forBooking($booking),
+        ]);
+    }
+
+    public function edit(Booking $booking, BookingStaticRouteMapService $routeMapService): View
+    {
+        $this->authorize('view', $booking);
+
+        $booking->load(['customer', 'pricing', 'vehicle.pricing', 'eir', 'pod', 'invoice']);
+        $pricings = Pricing::query()->orderBy('vehicle_type')->get();
+
+        return view('staff.bookings.edit', [
             'booking' => $booking,
             'pricings' => $pricings,
             'routeMap' => $routeMapService->forBooking($booking),
@@ -53,7 +67,7 @@ class BookingController extends Controller
         $updateBooking->execute($booking, $request->validated());
 
         return redirect()
-            ->route('staff.bookings.show', $booking)
+            ->route('staff.bookings.edit', $booking)
             ->with('status', 'Booking updated.');
     }
 
@@ -62,11 +76,17 @@ class BookingController extends Controller
         Booking $booking,
         UploadBookingGatepass $uploadBookingGatepass,
     ): RedirectResponse {
-        $uploadBookingGatepass->execute($booking, $request->file('gatepass'));
+        $wasReplace = $booking->hasGatepass();
+
+        $uploadBookingGatepass->execute(
+            $booking,
+            $request->file('gatepass'),
+            allowReplace: $wasReplace,
+        );
 
         return redirect()
-            ->route('staff.bookings.show', $booking)
-            ->with('status', 'Gatepass uploaded.');
+            ->route('staff.bookings.edit', $booking)
+            ->with('status', $wasReplace ? 'Gatepass replaced.' : 'Gatepass uploaded.');
     }
 
     public function cancel(Booking $booking, CancelBooking $cancelBooking): RedirectResponse
@@ -88,7 +108,16 @@ class BookingController extends Controller
         $markInvoicePaid->execute($booking->invoice, $request->validated());
 
         return redirect()
-            ->route('staff.bookings.show', $booking)
+            ->route('staff.bookings.edit', $booking)
             ->with('status', 'Invoice marked as paid.');
+    }
+
+    public function downloadReceipt(
+        Booking $booking,
+        BookingReceiptPdf $bookingReceiptPdf,
+    ): Response {
+        $this->authorize('downloadReceipt', $booking);
+
+        return $bookingReceiptPdf->download($booking);
     }
 }

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Models\Pricing;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,12 +18,18 @@ class BookingFactory extends Factory
      */
     public function definition(): array
     {
+        $pricing = Pricing::query()->where('vehicle_type', '4-wheeler truck')->first()
+            ?? Pricing::factory()->create([
+                'vehicle_type' => '4-wheeler truck',
+                'amount' => 9200.00,
+            ]);
+
         return [
             'booking_number' => sprintf('GK-%s-%04d', now('Asia/Manila')->year, fake()->unique()->numberBetween(1, 9999)),
             'customer_id' => User::factory()->customer(),
             'driver_id' => null,
             'vehicle_id' => null,
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
             'booking_datetime' => now('Asia/Manila')->addDay(),
             'posting_date' => now('Asia/Manila')->toDateString(),
             'pickup_address' => 'Makati City, Metro Manila',
@@ -36,7 +43,6 @@ class BookingFactory extends Factory
             'status' => BookingStatus::Pending,
             'is_locked' => false,
             'accepted_at' => null,
-            'payout' => 9200.00,
             'gatepass_path' => null,
         ];
     }

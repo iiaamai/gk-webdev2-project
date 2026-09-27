@@ -30,9 +30,6 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'mobile' => fake()->numerify('09#########'),
             'role' => UserRole::Customer,
-            'vehicle_type' => null,
-            'plate' => null,
-            'capacity_kg' => null,
             'remember_token' => Str::random(10),
         ];
     }
@@ -55,9 +52,6 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => UserRole::Driver,
-            'vehicle_type' => '4-wheeler truck',
-            'plate' => strtoupper(fake()->bothify('???-####')),
-            'capacity_kg' => 3000,
         ]);
     }
 

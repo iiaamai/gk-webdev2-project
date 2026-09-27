@@ -34,32 +34,35 @@ class CreateCustomerBooking
             ]);
         }
 
-        $pricing = Pricing::query()
-            ->where('vehicle_type', $data['vehicle_type'])
-            ->first();
+        $pricing = Pricing::query()->find($data['pricing_id'] ?? null);
 
         if ($pricing === null) {
             throw ValidationException::withMessages([
-                'vehicle_type' => 'The selected vehicle type is not in the pricing list.',
+                'pricing_id' => 'The selected pricing is invalid.',
             ]);
         }
 
         $hasAvailableVehicle = Vehicle::query()
-            ->where('type', $data['vehicle_type'])
+            ->where('pricing_id', $pricing->id)
             ->where('status', VehicleStatus::Available)
             ->exists();
 
         if (! $hasAvailableVehicle) {
             throw ValidationException::withMessages([
-                'vehicle_type' => 'No available fleet unit for this vehicle type right now.',
+                'pricing_id' => 'No available fleet unit for this vehicle type right now.',
             ]);
         }
 
-        $booking = DB::transaction(function () use ($customer, $data, $pricing): Booking {
+        $status = isset($data['status'])
+            ? BookingStatus::from((string) $data['status'])
+            : BookingStatus::Pending;
+
+        $booking = DB::transaction(function () use ($customer, $data, $pricing, $status): Booking {
             $booking = Booking::query()->create([
                 'booking_number' => $this->bookingNumberGenerator->next(),
                 'customer_id' => $customer->id,
-                'vehicle_type' => $data['vehicle_type'],
+                'driver_id' => $data['driver_id'] ?? null,
+                'pricing_id' => $pricing->id,
                 'booking_datetime' => $data['booking_datetime'],
                 'posting_date' => now('Asia/Manila')->toDateString(),
                 'pickup_address' => $data['pickup_address'],
@@ -70,14 +73,13 @@ class CreateCustomerBooking
                 'dropoff_lng' => $data['dropoff_lng'],
                 'cargo_desc' => $data['cargo_desc'] ?? null,
                 'additional_requirements' => $data['additional_requirements'] ?? null,
-                'status' => BookingStatus::Pending,
+                'status' => $status,
                 'is_locked' => false,
-                'payout' => $pricing->amount,
             ]);
 
             $this->createBookingInvoice->execute($booking);
 
-            return $booking;
+            return $booking->fresh(['invoice', 'pricing']) ?? $booking;
         });
 
         $this->bookingEmailNotifier->bookingCreated($booking);
@@ -87,8 +89,9 @@ class CreateCustomerBooking
             subject: $booking,
             description: "Booking {$booking->booking_number} created.",
             properties: [
+                'pricing_id' => $booking->pricing_id,
                 'vehicle_type' => $booking->vehicle_type,
-                'payout' => (string) $booking->payout,
+                'payout' => (string) ($booking->payout ?? $pricing->amount),
             ],
             user: $customer,
         );

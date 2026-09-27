@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -21,9 +22,6 @@ use Illuminate\Notifications\Notifiable;
     'password',
     'mobile',
     'role',
-    'vehicle_type',
-    'plate',
-    'capacity_kg',
     'email_verified_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -41,7 +39,6 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
-            'capacity_kg' => 'integer',
             'archived_at' => 'datetime',
         ];
     }
@@ -72,6 +69,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function driverBookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'driver_id');
+    }
+
+    /**
+     * @return HasOne<Vehicle, $this>
+     */
+    public function assignedVehicle(): HasOne
+    {
+        return $this->hasOne(Vehicle::class, 'driver_id');
     }
 
     /**

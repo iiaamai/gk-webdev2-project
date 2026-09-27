@@ -16,21 +16,21 @@ class CustomerBookingTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_customer_can_create_booking_with_payout_snapshot_and_booking_number(): void
+    public function test_customer_can_create_booking_with_invoice_amount_and_booking_number(): void
     {
         $customer = User::factory()->customer()->create();
-        Pricing::factory()->create([
+        $pricing = Pricing::factory()->create([
             'vehicle_type' => '4-wheeler truck',
             'amount' => 9200.00,
         ]);
         Vehicle::factory()->create([
-            'type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
         ]);
         Setting::setValue('booking_seq', '42');
 
         $response = $this->actingAs($customer)->post(route('customer.bookings.store'), [
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
             'booking_datetime' => now('Asia/Manila')->addDay()->format('Y-m-d H:i:s'),
             'pickup_address' => 'Makati City',
             'pickup_lat' => 14.5547,
@@ -48,20 +48,24 @@ class CustomerBookingTest extends TestCase
         $year = now('Asia/Manila')->year;
         $this->assertSame("GK-{$year}-0042", $booking->booking_number);
         $this->assertSame(BookingStatus::Pending, $booking->status);
+        $this->assertSame($pricing->id, $booking->pricing_id);
         $this->assertSame('9200.00', (string) $booking->payout);
+        $this->assertSame('9200.00', (string) $booking->invoice?->amount);
         $this->assertSame('43', Setting::getValue('booking_seq'));
     }
 
     public function test_customer_cannot_create_booking_without_available_vehicle(): void
     {
         $customer = User::factory()->customer()->create();
-        Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
-        Vehicle::factory()->maintenance()->create(['type' => 'L300 van']);
+        $pricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
+        Vehicle::factory()->maintenance()->create([
+            'pricing_id' => $pricing->id,
+        ]);
 
         $this->actingAs($customer)
             ->from(route('customer.bookings.create'))
             ->post(route('customer.bookings.store'), [
-                'vehicle_type' => 'L300 van',
+                'pricing_id' => $pricing->id,
                 'booking_datetime' => now()->addDay()->format('Y-m-d H:i:s'),
                 'pickup_address' => 'A',
                 'pickup_lat' => 14.5,
@@ -71,7 +75,7 @@ class CustomerBookingTest extends TestCase
                 'dropoff_lng' => 121.1,
             ])
             ->assertRedirect(route('customer.bookings.create'))
-            ->assertSessionHasErrors('vehicle_type');
+            ->assertSessionHasErrors('pricing_id');
 
         $this->assertSame(0, Booking::query()->count());
     }

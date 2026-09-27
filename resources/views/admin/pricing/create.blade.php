@@ -3,16 +3,41 @@
 @section('title', 'Add pricing')
 
 @section('content')
-    <h1>Add pricing row</h1>
-    <p><a href="{{ route('admin.pricing.index') }}">Back to list</a></p>
-    <form method="post" action="{{ route('admin.pricing.store') }}">
-        @csrf
-        <label for="vehicle_type">Vehicle type</label>
-        <input id="vehicle_type" name="vehicle_type" value="{{ old('vehicle_type') }}" required>
+    <x-ui.page-header title="Add pricing row" subtitle="Create a vehicle type and amount.">
+        <x-slot:actions>
+            <x-ui.button href="{{ route('admin.pricing.index') }}" variant="secondary">
+                <x-ui.icon name="arrow-left" size="size-4" />
+                Back to list
+            </x-ui.button>
+        </x-slot:actions>
+    </x-ui.page-header>
 
-        <label for="amount">Amount (PHP)</label>
-        <input id="amount" type="number" step="0.01" name="amount" value="{{ old('amount') }}" min="0" required>
+    <x-ui.card class="max-w-xl">
+        <form method="post" action="{{ route('admin.pricing.store') }}" class="space-y-4">
+            @csrf
 
-        <button type="submit">Create</button>
-    </form>
+            <div>
+                <x-ui.label for="vehicle_type">Vehicle type</x-ui.label>
+                <x-ui.input id="vehicle_type" name="vehicle_type" value="{{ old('vehicle_type') }}" required />
+                <x-ui.field-error name="vehicle_type" />
+            </div>
+
+            <div>
+                <x-ui.label for="amount">Amount (PHP)</x-ui.label>
+                <x-ui.input id="amount" type="number" step="0.01" name="amount" value="{{ old('amount') }}" min="0" required />
+                <x-ui.field-error name="amount" />
+            </div>
+
+            <div>
+                <x-ui.label for="capacity_kg">Capacity (kg)</x-ui.label>
+                <x-ui.input id="capacity_kg" type="number" name="capacity_kg" value="{{ old('capacity_kg') }}" min="1" required />
+                <x-ui.field-error name="capacity_kg" />
+            </div>
+
+            <x-ui.button type="submit">
+                <x-ui.icon name="plus" size="size-4" />
+                Create
+            </x-ui.button>
+        </form>
+    </x-ui.card>
 @endsection

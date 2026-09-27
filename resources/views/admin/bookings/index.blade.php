@@ -3,35 +3,72 @@
 @section('title', 'Bookings')
 
 @section('content')
-    <h1>Bookings</h1>
-    <p><a href="{{ route('admin.bookings.create') }}">Create booking</a></p>
-    <table>
-        <thead>
-            <tr>
-                <th>Number</th>
-                <th>Customer</th>
-                <th>Status</th>
-                <th>Vehicle type</th>
-                <th>Gatepass</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($bookings as $booking)
+    <x-ui.page-header title="Bookings" subtitle="Create, review, and manage all trips.">
+        <x-slot:actions>
+            <x-ui.button href="{{ route('admin.bookings.create') }}">
+                <x-ui.icon name="plus" size="size-4" />
+                Create booking
+            </x-ui.button>
+        </x-slot:actions>
+    </x-ui.page-header>
+
+    @if ($bookings->isEmpty())
+        <x-ui.empty-state title="No bookings yet" icon="clipboard-list">
+            <x-slot:description>Create a booking for a customer or wait for customer submissions.</x-slot:description>
+            <x-slot:actions>
+                <x-ui.button href="{{ route('admin.bookings.create') }}">
+                    <x-ui.icon name="plus" size="size-4" />
+                    Create booking
+                </x-ui.button>
+            </x-slot:actions>
+        </x-ui.empty-state>
+    @else
+        <x-ui.table>
+            <x-slot:head>
                 <tr>
-                    <td>{{ $booking->booking_number }}</td>
-                    <td>{{ $booking->customer->name }}</td>
-                    <td>{{ $booking->status->value }}</td>
-                    <td>{{ $booking->vehicle_type }}</td>
-                    <td>{{ $booking->hasGatepass() ? 'Yes' : 'No' }}</td>
-                    <td>
-                        <a href="{{ route('admin.bookings.show', $booking) }}">View</a>
-                        <a href="{{ route('admin.bookings.edit', $booking) }}">Edit</a>
+                    <th class="px-4 py-3 font-medium">Number</th>
+                    <th class="px-4 py-3 font-medium">Customer</th>
+                    <th class="px-4 py-3 font-medium">Status</th>
+                    <th class="px-4 py-3 font-medium">Vehicle type</th>
+                    <th class="px-4 py-3 font-medium">Gatepass</th>
+                    <th class="px-4 py-3 font-medium"><span class="sr-only">Actions</span></th>
+                </tr>
+            </x-slot:head>
+            @foreach ($bookings as $booking)
+                @php
+                    $statusTone = match ($booking->status->value) {
+                        'pending' => 'warning',
+                        'accepted', 'in_transit' => 'info',
+                        'completed' => 'success',
+                        'cancelled' => 'danger',
+                        default => 'neutral',
+                    };
+                @endphp
+                <tr>
+                    <td class="px-4 py-3 font-medium">{{ $booking->booking_number }}</td>
+                    <td class="px-4 py-3">{{ $booking->customer->name }}</td>
+                    <td class="px-4 py-3">
+                        <x-ui.badge :tone="$statusTone">{{ $booking->status->value }}</x-ui.badge>
+                    </td>
+                    <td class="px-4 py-3">{{ $booking->vehicle_type }}</td>
+                    <td class="px-4 py-3">
+                        <x-ui.badge :tone="$booking->hasGatepass() ? 'success' : 'neutral'">
+                            {{ $booking->hasGatepass() ? 'Yes' : 'No' }}
+                        </x-ui.badge>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex flex-wrap items-center justify-end gap-2">
+                            <x-ui.button href="{{ route('admin.bookings.show', $booking) }}" variant="secondary" class="!py-1.5 !text-xs">
+                                View
+                            </x-ui.button>
+                            <x-ui.button href="{{ route('admin.bookings.edit', $booking) }}" variant="ghost" class="!py-1.5 !text-xs">
+                                <x-ui.icon name="pencil" size="size-3.5" />
+                                Edit
+                            </x-ui.button>
+                        </div>
                     </td>
                 </tr>
-            @empty
-                <tr><td colspan="6">No bookings yet.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+            @endforeach
+        </x-ui.table>
+    @endif
 @endsection

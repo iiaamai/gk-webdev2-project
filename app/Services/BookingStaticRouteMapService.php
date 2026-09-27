@@ -16,7 +16,7 @@ class BookingStaticRouteMapService
             return new StaticRouteMapResult(
                 configured: MapboxIntegration::isConfigured(),
                 eligible: false,
-                message: 'Route map is available after a driver accepts this booking.',
+                message: 'Shown after a driver accepts this booking.',
             );
         }
 
@@ -24,9 +24,6 @@ class BookingStaticRouteMapService
             return new StaticRouteMapResult(
                 configured: false,
                 eligible: true,
-                message: MapboxIntegration::isEnabled()
-                    ? 'MAPBOX_TOKEN is not set.'
-                    : 'Mapbox integration is disabled (GK_MAPBOX_ENABLED=false).',
             );
         }
 
@@ -70,7 +67,7 @@ class BookingStaticRouteMapService
             return new StaticRouteMapResult(
                 configured: true,
                 eligible: true,
-                message: 'Unable to load route from Mapbox.',
+                message: 'Could not load the route preview.',
             );
         }
 
@@ -80,7 +77,7 @@ class BookingStaticRouteMapService
             return new StaticRouteMapResult(
                 configured: true,
                 eligible: true,
-                message: 'Mapbox returned no route for these coordinates.',
+                message: 'No route could be calculated for these addresses.',
             );
         }
 

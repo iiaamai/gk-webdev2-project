@@ -19,7 +19,7 @@ Change status (after gatepass)      No         Own flow*  No                 Yes
 Cancel (pre-gatepass only for Staff) No        No         Yes                Yes
 Cancel (after gatepass)             No         No         No                 Yes
 Upload gatepass (first time)        No         No         Yes                Yes
-Replace gatepass                    No         No         No                 Yes
+Replace gatepass                    No         No         Yes                Yes
 Archive / soft-delete booking       No         No         No                 Yes
 Accept job                          No         Yes        No                 Yes
 Update delivery in_transit/complete No         Yes        Via Admin path     Yes
@@ -27,7 +27,9 @@ Upload EIR / POD                    No         Yes        No                 Yes
 View gatepass                       No         Assigned   Yes                Yes
 View EIR                            Own**      Assigned   Yes                Yes
 View POD                            Own**      Assigned   Yes                Yes
+Download delivery receipt (PDF)     No         Completed† Completed†        Yes (any status)‡
 Create invoice / mark paid          View own   No         Yes                Yes
+Revert invoice to unpaid            No         No         No                 Yes
 Earnings & reports                  No         No         No                 Yes
 Activity logs                       No         No         No                 Yes
 Rate overall trip                   Own done   No         No                 View
@@ -36,6 +38,8 @@ Map on booking details              Own***     Own***     Active bookings    Yes
 * Driver: accepted → in_transit → completed (own active delivery only).
 ** When status allows (EIR: in_transit/completed; POD: completed).
 *** Only after a driver has accepted; nothing on map before accept.
+† Driver/Staff receipt download only when status is completed (not cancelled).
+‡ System Admin downloads a simple PDF receipt (logo placeholder + trip/invoice fields) at any status.
 Customer never sees gatepass.
 
 See also: lifecycle.txt, document_acl.txt

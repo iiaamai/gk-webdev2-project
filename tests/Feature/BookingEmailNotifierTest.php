@@ -31,11 +31,14 @@ class BookingEmailNotifierTest extends TestCase
         config(['gk.mail_enabled' => false]);
 
         $customer = User::factory()->customer()->create();
-        Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000]);
-        Vehicle::factory()->create(['type' => '4-wheeler truck', 'status' => VehicleStatus::Available]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000]);
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'status' => VehicleStatus::Available,
+        ]);
 
         $this->actingAs($customer)->post(route('customer.bookings.store'), [
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
             'booking_datetime' => now()->addDay()->format('Y-m-d H:i:s'),
             'pickup_address' => 'A',
             'pickup_lat' => 14.5,
@@ -54,11 +57,14 @@ class BookingEmailNotifierTest extends TestCase
         config(['gk.mail_enabled' => true]);
 
         $customer = User::factory()->customer()->create();
-        Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000]);
-        Vehicle::factory()->create(['type' => '4-wheeler truck', 'status' => VehicleStatus::Available]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000]);
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'status' => VehicleStatus::Available,
+        ]);
 
         $this->actingAs($customer)->post(route('customer.bookings.store'), [
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
             'booking_datetime' => now()->addDay()->format('Y-m-d H:i:s'),
             'pickup_address' => 'A',
             'pickup_lat' => 14.5,
@@ -78,11 +84,21 @@ class BookingEmailNotifierTest extends TestCase
         Storage::fake('local');
         config(['gk.mail_enabled' => true]);
 
-        $matching = User::factory()->driver()->create(['vehicle_type' => '4-wheeler truck']);
-        $other = User::factory()->driver()->create(['vehicle_type' => 'L300 van']);
+        $truckPricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $vanPricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
+        $matching = User::factory()->driver()->create();
+        $other = User::factory()->driver()->create();
+        Vehicle::factory()->create([
+            'pricing_id' => $truckPricing->id,
+            'driver_id' => $matching->id,
+        ]);
+        Vehicle::factory()->create([
+            'pricing_id' => $vanPricing->id,
+            'driver_id' => $other->id,
+        ]);
         $staff = User::factory()->staff()->create();
         $booking = Booking::factory()->create([
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $truckPricing->id,
             'gatepass_path' => null,
         ]);
 
@@ -100,19 +116,18 @@ class BookingEmailNotifierTest extends TestCase
         Mail::fake();
         config(['gk.mail_enabled' => true]);
 
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
         $customer = User::factory()->customer()->create();
-        $driver = User::factory()->driver()->create([
-            'vehicle_type' => '4-wheeler truck',
-            'plate' => 'ABC-1234',
-        ]);
+        $driver = User::factory()->driver()->create();
         Vehicle::factory()->create([
             'plate_number' => 'ABC-1234',
-            'type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
             'status' => VehicleStatus::Available,
         ]);
         $booking = Booking::factory()->withGatepass()->create([
             'customer_id' => $customer->id,
-            'vehicle_type' => '4-wheeler truck',
+            'pricing_id' => $pricing->id,
         ]);
 
         $this->actingAs($driver)->post(route('driver.deliveries.accept', $booking));

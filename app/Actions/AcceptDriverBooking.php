@@ -27,9 +27,11 @@ class AcceptDriverBooking
             ]);
         }
 
-        if (blank($driver->vehicle_type)) {
+        $driver->loadMissing('assignedVehicle');
+
+        if ($driver->assignedVehicle === null || $driver->assignedVehicle->pricing_id === null) {
             throw ValidationException::withMessages([
-                'vehicle_type' => 'Your driver profile must have a vehicle type before accepting jobs.',
+                'vehicle' => 'You must be assigned a fleet vehicle before accepting jobs.',
             ]);
         }
 
@@ -105,26 +107,34 @@ class AcceptDriverBooking
 
     public function isAvailableForDriver(User $driver, Booking $booking): bool
     {
+        $driver->loadMissing('assignedVehicle');
+
         return $booking->status === BookingStatus::Pending
             && $booking->hasGatepass()
             && ! $booking->is_locked
             && $booking->driver_id === null
-            && $booking->vehicle_type === $driver->vehicle_type;
+            && $driver->assignedVehicle !== null
+            && (int) $booking->pricing_id === (int) $driver->assignedVehicle->pricing_id;
     }
 
     private function resolveVehicle(User $driver, Booking $booking): ?Vehicle
     {
-        $query = Vehicle::query()
-            ->where('type', $booking->vehicle_type)
-            ->where('status', VehicleStatus::Available);
+        $driver->loadMissing('assignedVehicle');
 
-        if (filled($driver->plate)) {
-            $matched = (clone $query)->where('plate_number', $driver->plate)->first();
-            if ($matched !== null) {
-                return $matched;
-            }
+        $assigned = $driver->assignedVehicle;
+
+        if (
+            $assigned !== null
+            && (int) $assigned->pricing_id === (int) $booking->pricing_id
+            && $assigned->status === VehicleStatus::Available
+        ) {
+            return $assigned;
         }
 
-        return $query->orderBy('plate_number')->first();
+        return Vehicle::query()
+            ->where('pricing_id', $booking->pricing_id)
+            ->where('status', VehicleStatus::Available)
+            ->orderBy('plate_number')
+            ->first();
     }
 }
