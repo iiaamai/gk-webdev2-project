@@ -64,7 +64,7 @@ BACKEND PHASES (do before matching UI)
 [x] B6. EIR + POD
 - Required both before completed
 
-[ ] B7. Invoice (MVP end)
+[x] B7. Invoice (MVP end)
 - One per booking; unpaid / paid; Staff + Admin mark paid
 - PayMongo: placeholder only (nullable paymongo_reference; no API until after MVP)
 → Checkpoint B (MVP)

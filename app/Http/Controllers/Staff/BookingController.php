@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Actions\CancelBooking;
+use App\Actions\MarkInvoicePaid;
 use App\Actions\UpdateBooking;
 use App\Actions\UploadBookingGatepass;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MarkInvoicePaidRequest;
 use App\Http\Requests\Staff\UpdateBookingRequest;
 use App\Http\Requests\UploadGatepassRequest;
 use App\Models\Booking;
@@ -32,7 +34,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['customer', 'eir', 'pod']);
+        $booking->load(['customer', 'eir', 'pod', 'invoice']);
         $pricings = Pricing::query()->orderBy('vehicle_type')->get();
 
         return view('staff.bookings.show', compact('booking', 'pricings'));
@@ -71,5 +73,17 @@ class BookingController extends Controller
         return redirect()
             ->route('staff.bookings.show', $booking)
             ->with('status', 'Booking cancelled.');
+    }
+
+    public function markInvoicePaid(
+        MarkInvoicePaidRequest $request,
+        Booking $booking,
+        MarkInvoicePaid $markInvoicePaid,
+    ): RedirectResponse {
+        $markInvoicePaid->execute($booking->invoice, $request->validated());
+
+        return redirect()
+            ->route('staff.bookings.show', $booking)
+            ->with('status', 'Invoice marked as paid.');
     }
 }

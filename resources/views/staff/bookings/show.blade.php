@@ -17,6 +17,11 @@
 
     @include('bookings._eir_pod_links', ['booking' => $booking])
 
+    @include('bookings._invoice', [
+        'booking' => $booking,
+        'markPaidAction' => route('staff.bookings.invoice.mark-paid', $booking),
+    ])
+
     @can('update', $booking)
         <h2>Update booking</h2>
         @include('bookings._fields', [

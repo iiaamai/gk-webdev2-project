@@ -96,6 +96,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.gatepass.store');
             Route::post('bookings/{booking}/cancel', [StaffBookingController::class, 'cancel'])
                 ->name('bookings.cancel');
+            Route::post('bookings/{booking}/invoice/mark-paid', [StaffBookingController::class, 'markInvoicePaid'])
+                ->name('bookings.invoice.mark-paid');
         });
 
     Route::middleware('role:'.UserRole::SystemAdmin->value)
@@ -124,5 +126,7 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.eir.store');
             Route::post('bookings/{booking}/pod', [AdminBookingController::class, 'storePod'])
                 ->name('bookings.pod.store');
+            Route::post('bookings/{booking}/invoice/mark-paid', [AdminBookingController::class, 'markInvoicePaid'])
+                ->name('bookings.invoice.mark-paid');
         });
 });

@@ -21,6 +21,11 @@
 
     @include('bookings._eir_pod_links', ['booking' => $booking])
 
+    @include('bookings._invoice', [
+        'booking' => $booking,
+        'markPaidAction' => route('admin.bookings.invoice.mark-paid', $booking),
+    ])
+
     @include('bookings._eir_pod_upload', [
         'booking' => $booking,
         'eirAction' => route('admin.bookings.eir.store', $booking),

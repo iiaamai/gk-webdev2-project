@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\CancelBooking;
 use App\Actions\CreateAdminBooking;
+use App\Actions\MarkInvoicePaid;
 use App\Actions\UpdateBooking;
 use App\Actions\UpdateBookingStatus;
 use App\Actions\UploadBookingEir;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreBookingRequest;
 use App\Http\Requests\Admin\UpdateBookingRequest;
 use App\Http\Requests\Admin\UpdateBookingStatusRequest;
+use App\Http\Requests\MarkInvoicePaidRequest;
 use App\Http\Requests\UploadEirRequest;
 use App\Http\Requests\UploadGatepassRequest;
 use App\Http\Requests\UploadPodRequest;
@@ -65,7 +67,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['customer', 'eir', 'pod']);
+        $booking->load(['customer', 'eir', 'pod', 'invoice']);
 
         return view('admin.bookings.show', [
             'booking' => $booking,
@@ -176,5 +178,17 @@ class BookingController extends Controller
         return redirect()
             ->route('admin.bookings.show', $booking)
             ->with('status', 'POD saved.');
+    }
+
+    public function markInvoicePaid(
+        MarkInvoicePaidRequest $request,
+        Booking $booking,
+        MarkInvoicePaid $markInvoicePaid,
+    ): RedirectResponse {
+        $markInvoicePaid->execute($booking->invoice, $request->validated());
+
+        return redirect()
+            ->route('admin.bookings.show', $booking)
+            ->with('status', 'Invoice marked as paid.');
     }
 }

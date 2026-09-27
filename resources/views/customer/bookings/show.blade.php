@@ -30,4 +30,6 @@
     <p><em>Gatepass is not visible to customers per document ACL.</em></p>
 
     @include('bookings._eir_pod_links', ['booking' => $booking])
+
+    @include('bookings._invoice', ['booking' => $booking])
 @endsection

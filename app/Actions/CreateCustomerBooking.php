@@ -16,6 +16,7 @@ class CreateCustomerBooking
 {
     public function __construct(
         private readonly BookingNumberGenerator $bookingNumberGenerator,
+        private readonly CreateBookingInvoice $createBookingInvoice,
     ) {}
 
     /**
@@ -51,7 +52,7 @@ class CreateCustomerBooking
         }
 
         return DB::transaction(function () use ($customer, $data, $pricing): Booking {
-            return Booking::query()->create([
+            $booking = Booking::query()->create([
                 'booking_number' => $this->bookingNumberGenerator->next(),
                 'customer_id' => $customer->id,
                 'vehicle_type' => $data['vehicle_type'],
@@ -69,6 +70,10 @@ class CreateCustomerBooking
                 'is_locked' => false,
                 'payout' => $pricing->amount,
             ]);
+
+            $this->createBookingInvoice->execute($booking);
+
+            return $booking;
         });
     }
 }

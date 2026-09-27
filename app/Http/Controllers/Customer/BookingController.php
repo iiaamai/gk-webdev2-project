@@ -50,7 +50,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['eir', 'pod']);
+        $booking->load(['eir', 'pod', 'invoice']);
 
         return view('customer.bookings.show', compact('booking'));
     }
