@@ -14,6 +14,62 @@ Policy (agreed)
 
 ---
 
+UI (frontend — decided before F1)
+
+Purpose
+- Single place for shells, theming, view/component conventions. Details per phase in phases.txt F1–F10.
+
+Build priority (role polish)
+- Admin → Staff → Driver → Customer (phases F3 → F4 → F5 → F6).
+- F1–F2 (tokens, shells, auth) apply to all roles before F3+.
+
+Stack
+- Tailwind CSS v4 via Vite (resources/css/app.css).
+- Alpine.js via Vite for light interactivity (management sidebar toggle; later F7+ flows).
+- Blade only (no SPA); prefer named routes and route() in nav.
+
+Theming (mock brand until real branding)
+- Mock primary: #2596be as --color-primary (utilities: bg-primary, text-primary).
+  Named steps in app.css @theme (no primary-50…950 scale):
+  primary-tint-1..3 (lighter; 1 = subtle), primary-shade-1..3 (darker; 1 = subtle),
+  primary-tone-1..3 (muted/desaturated surfaces and borders; 1 = subtle).
+- Neutral scale (slate/zinc-style) for surface, border, body/muted text.
+- Semantic aliases in @theme where useful (e.g. surface, border, text-muted) so
+  Blade uses utilities, not hardcoded hex. Rebrand = edit app.css tokens only.
+
+Layouts (three shells)
+1. auth — login, register customer/driver, verify email (centered card; no portal/management chrome).
+2. management — Admin + Staff: collapsible left sidebar + top bar (user, logout).
+   Staff nav is a subset of Admin (permissions already in policies).
+3. portal — Customer + Driver: top bar + card-based content, mobile-first.
+
+Role layout files
+- May keep layouts/admin.blade.php, staff, customer, driver as thin @extends wrappers
+  on management or portal so existing @extends paths need minimal churn.
+- Shared chrome partials: e.g. layouts/partials/ (sidebar, topbar, portal header, flash).
+
+View folders
+- Role at top level: resources/views/{admin,staff,driver,customer}/...
+- Cross-role booking markup: resources/views/bookings/_*.blade.php partials.
+- Do not nest feature/role (e.g. bookings/admin/) unless a future refactor is agreed.
+
+Shared components
+- Generic UI in resources/views/components/ (Blade <x-ui.*> or project convention):
+  button, input, select, textarea, label, field-error, badge, card, page-header,
+  flash, table shell, empty-state.
+- Domain-specific pieces stay in role views or bookings/ partials, not generic components.
+
+Vite
+- All layouts must @vite resources/css/app.css and resources/js/app.js (welcome.blade.php
+  already does; B-era stubs used inline CSS until F1).
+- If styles do not appear, run npm run dev or npm run build.
+
+Auth UI (F2)
+- Dedicated auth layout only; not management or portal shells.
+- Email verification UI ships in F2; GK_MAIL_ENABLED=false behavior unchanged from B1.
+
+---
+
 Placeholder integrations
 
 1. Mail (Laravel Mail / SMTP)

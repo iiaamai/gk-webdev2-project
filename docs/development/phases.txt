@@ -4,6 +4,8 @@ Approach
 - Backend first, then UI, per feature (test each piece before the next).
 - MVP (first serious demo) = checkpoint B: full trip + EIR/POD + pay-later invoice.
 - After MVP: map, emails, ratings, activity logs, earnings charts.
+- UI page polish priority by role: Admin → Staff → Driver → Customer (F3–F6).
+- Frontend foundations (F1–F2) before role-specific polish; see development_notes.txt “UI”.
 - Remind to add env keys when each phase needs them (see env_checklist.txt).
 - External APIs (Mail, Mapbox, PayMongo): placeholders first — stub services,
   no live calls until keys are set. See development_notes.txt.
@@ -43,7 +45,7 @@ BACKEND PHASES (do before matching UI)
 [x] B2. Admin master data
 - Settings, Pricing List, Fleet, User management (policies + CRUD; archive on delete)
 - Routes: /admin/settings, /admin/pricing, /admin/fleet, /admin/users
-- Minimal admin layout (F3 may polish UI)
+- Minimal admin layout (F3 polishes admin UI)
 - UserSeeder: plain passwords (hashed via model cast)
 
 [x] B3. Customer bookings (data + rules)
@@ -51,7 +53,7 @@ BACKEND PHASES (do before matching UI)
 - Pickup/dropoff address + lat/lng
 - Rules: pricing row exists; at least one available fleet unit of type; GK-{YEAR}-#### via booking_seq
 - Routes: /customer/bookings (index, create, store, show); BookingPolicy + CreateCustomerBooking action
-- Minimal customer layout (F4 may polish UI)
+- Minimal customer layout (F6 polishes customer UI)
 
 [x] B4. Staff/Admin bookings + gatepass
 - Staff: update fields, status/cancel only before gatepass; first gatepass upload
@@ -81,20 +83,43 @@ BACKEND PHASES (do before matching UI)
 
 ---
 
-FRONTEND PHASES (after matching backend slice)
+FRONTEND PHASES (backend B0–B10 complete; UI from F1 onward)
 
-[ ] F1. Layout shells + nav for customer / driver / staff / admin
-[ ] F2. Auth pages (shared login, register customer/driver, verify email)
-    (minimal stub forms shipped with B1 for QA; polish in F2)
-    (verify UI ok; real mail send awaits MAIL_* — development_notes.txt)
-[ ] F3. Admin: settings, pricing, fleet, users (polish UI beyond B2 stubs)
-[ ] F4. Customer: My Bookings + new booking form + details (B3 stubs shipped; polish in F4)
-[ ] F5. Staff: overview, bookings, gatepass upload
-[ ] F6. Driver: deliveries available / active / details
-[ ] F7. Document upload/view UI (ACL)
-[ ] F8. Invoice UI
+[ ] F1. Layout shells + shared UI components
+    - Theme tokens in resources/css/app.css (Tailwind v4 @theme): mock primary #2596be
+      with tint/shade/tone scale + neutral palette for easy rebrand (no final branding yet).
+    - Three layouts: auth (sign-in/sign-up/verify only); management (Admin + Staff);
+      portal (Customer + Driver). Thin role wrappers may extend management/portal.
+    - Management: collapsible left sidebar + top bar (user, logout). Portal: top bar +
+      card-based pages (mobile-friendly). Wire @vite on all layouts; Alpine.js via Vite
+      (sidebar toggle; later uploads/signature in F7+).
+    - Shared Blade components under resources/views/components/ (e.g. button, input,
+      badge, card, flash, page-header, table shell). Domain partials stay in
+      resources/views/bookings/ (_invoice, _rating, _route_map, etc.).
+    - Views stay role-first at top level: admin/, staff/, driver/, customer/ (no mass
+      rename to feature/role nesting).
+    - Replace inline <style> in current layouts/admin|staff|driver|customer stubs.
+
+[ ] F2. Auth pages (dedicated auth layout — not management/portal shells)
+    - Login, register customer/driver, verify email (B1 stub forms exist for QA).
+    - Real mail send still awaits MAIL_* / GK_MAIL_ENABLED — development_notes.txt
+
+[ ] F3. Admin UI (first role polish): settings, pricing, fleet, users, bookings,
+    earnings, activity logs (beyond B2/B4/B10 stubs)
+
+[ ] F4. Staff UI: overview, bookings list/show, gatepass upload
+
+[ ] F5. Driver UI: deliveries available / active / show
+
+[ ] F6. Customer UI: My Bookings, new booking, booking details (beyond B3 stubs)
+
+[ ] F7. Document upload/view UI (gatepass, EIR, POD — ACL streamed routes)
+
+[ ] F8. Invoice UI (Pay Later unpaid/paid; Staff/Admin mark paid)
+
 [ ] F9. Map on booking details (after accept) — placeholder until MAPBOX_* keys
-[ ] F10. Ratings, activity logs, earnings/overview charts
+
+[ ] F10. Ratings, activity logs presentation, earnings/overview charts
 
 ---
 

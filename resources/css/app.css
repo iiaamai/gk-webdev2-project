@@ -3,7 +3,82 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+ * GK Trucking Services 2.0 — mock theme (pre-branding)
+ * Primary anchor: #2596be — change this scale + semantic tokens to rebrand.
+ * Docs: docs/development/development_notes.txt (UI / Theming)
+ */
+
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Primary — base + tints (lighter), shades (darker), tones (muted/desaturated) */
+    --color-primary: #2596be;
+
+    --color-primary-tint-1: #e9f5fa;
+    --color-primary-tint-2: #d4ebf5;
+    --color-primary-tint-3: #a9d7eb;
+
+    --color-primary-shade-1: #1e7898;
+    --color-primary-shade-2: #165a72;
+    --color-primary-shade-3: #0f3c4c;
+
+    --color-primary-tone-1: #eef3f6;
+    --color-primary-tone-2: #d5e0e8;
+    --color-primary-tone-3: #b8c9d4;
+
+    /* Neutral — surfaces, borders, body text (cool gray) */
+    --color-neutral-50: #f8fafc;
+    --color-neutral-100: #f1f5f9;
+    --color-neutral-200: #e2e8f0;
+    --color-neutral-300: #cbd5e1;
+    --color-neutral-400: #94a3b8;
+    --color-neutral-500: #64748b;
+    --color-neutral-600: #475569;
+    --color-neutral-700: #334155;
+    --color-neutral-800: #1e293b;
+    --color-neutral-900: #0f172a;
+    --color-neutral-950: #020617;
+
+    /* Semantic aliases — prefer these in Blade for easy theme swaps */
+    --color-surface: var(--color-neutral-50);
+    --color-surface-elevated: #ffffff;
+    --color-surface-inset: var(--color-neutral-100);
+    --color-border: var(--color-neutral-200);
+    --color-border-strong: var(--color-neutral-300);
+    --color-text: var(--color-neutral-900);
+    --color-text-muted: var(--color-neutral-600);
+    --color-text-subtle: var(--color-neutral-500);
+    --color-text-on-primary: #ffffff;
+
+    --color-primary-muted: var(--color-primary-tint-2);
+    --color-primary-subtle: var(--color-primary-tint-1);
+    --color-primary-emphasis: var(--color-primary-shade-2);
+
+    --color-sidebar: var(--color-neutral-900);
+    --color-sidebar-border: var(--color-neutral-800);
+    --color-sidebar-text: var(--color-neutral-300);
+    --color-sidebar-text-active: #ffffff;
+    --color-sidebar-accent: var(--color-primary);
+
+    /* Status / feedback */
+    --color-success: #047857;
+    --color-success-muted: #d1fae5;
+    --color-success-subtle: #ecfdf5;
+    --color-danger: #b91c1c;
+    --color-danger-muted: #fee2e2;
+    --color-danger-subtle: #fef2f2;
+    --color-warning: #b45309;
+    --color-warning-muted: #fef3c7;
+    --color-warning-subtle: #fffbeb;
+    --color-info: var(--color-primary-shade-2);
+    --color-info-muted: var(--color-primary-tint-2);
+    --color-info-subtle: var(--color-primary-tint-1);
+}
+
+@layer base {
+    body {
+        @apply bg-surface text-text font-sans antialiased;
+    }
 }
