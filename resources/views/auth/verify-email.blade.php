@@ -1,30 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Verify email — GK Trucking Services</title>
-    <style>
-        body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 3rem auto; padding: 0 1rem; }
-        button { margin-top: 1rem; padding: 0.5rem 1rem; }
-    </style>
-</head>
-<body>
-    <h1>Verify your email</h1>
-    <p>Thanks for signing up. Please verify your email address.</p>
+@extends('layouts.auth')
 
-    @if (session('status'))
-        <p>{{ session('status') }}</p>
-    @endif
+@section('title', 'Verify email')
+@section('subtitle', 'Confirm your email address')
 
-    <form method="post" action="{{ route('verification.send') }}">
+@section('content')
+    <h1 class="text-xl font-semibold text-text">Verify your email</h1>
+    <p class="mt-1 text-sm text-text-muted">
+        Thanks for signing up. Please verify your email address to continue.
+        @if (! config('gk.mail_enabled'))
+            While mail is a placeholder, seeded and new accounts may already be marked verified.
+        @endif
+    </p>
+
+    <form method="post" action="{{ route('verification.send') }}" class="mt-6">
         @csrf
-        <button type="submit">Resend verification email</button>
+        <x-ui.button type="submit" class="w-full">
+            <x-ui.icon name="mail" size="size-4" />
+            Resend verification email
+        </x-ui.button>
     </form>
 
-    <form method="post" action="{{ route('logout') }}">
+    <form method="post" action="{{ route('logout') }}" class="mt-3">
         @csrf
-        <button type="submit">Log out</button>
+        <x-ui.button type="submit" variant="secondary" class="w-full">
+            <x-ui.icon name="log-out" size="size-4" />
+            Log out
+        </x-ui.button>
     </form>
-</body>
-</html>
+@endsection

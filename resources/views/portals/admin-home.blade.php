@@ -3,7 +3,10 @@
 @section('title', 'Overview')
 
 @section('content')
-    <h1>Admin overview</h1>
-    <p>Signed in as <strong>{{ $name }}</strong>.</p>
-    <p>Use the navigation for settings, pricing, fleet, users, bookings, earnings, and activity logs.</p>
+    <x-ui.page-header title="Admin overview" subtitle="Master data, bookings, earnings, and activity." />
+
+    <x-ui.card>
+        <p class="text-sm text-text-muted">Signed in as <span class="font-medium text-text">{{ $name }}</span>.</p>
+        <p class="mt-2 text-sm text-text-muted">Use the sidebar for settings, pricing, fleet, users, bookings, earnings, and activity logs.</p>
+    </x-ui.card>
 @endsection

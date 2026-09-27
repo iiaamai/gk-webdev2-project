@@ -26,6 +26,8 @@ Build priority (role polish)
 Stack
 - Tailwind CSS v4 via Vite (resources/css/app.css).
 - Alpine.js via Vite for light interactivity (management sidebar toggle; later F7+ flows).
+- Lucide icons (npm `lucide`): Blade <x-ui.icon name="truck" />; hydrated in
+  resources/js/app.js via createIcons. Prefer Lucide names from lucide.dev.
 - Blade only (no SPA); prefer named routes and route() in nav.
 
 Theming (mock brand until real branding)
@@ -54,9 +56,9 @@ View folders
 - Do not nest feature/role (e.g. bookings/admin/) unless a future refactor is agreed.
 
 Shared components
-- Generic UI in resources/views/components/ (Blade <x-ui.*> or project convention):
+- Generic UI in resources/views/components/ui/ (Blade <x-ui.*> ):
   button, input, select, textarea, label, field-error, badge, card, page-header,
-  flash, table shell, empty-state.
+  flash, table, empty-state, nav-link, icon (Lucide).
 - Domain-specific pieces stay in role views or bookings/ partials, not generic components.
 
 Vite

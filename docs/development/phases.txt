@@ -85,22 +85,22 @@ BACKEND PHASES (do before matching UI)
 
 FRONTEND PHASES (backend B0–B10 complete; UI from F1 onward)
 
-[ ] F1. Layout shells + shared UI components
+[x] F1. Layout shells + shared UI components
     - Theme tokens in resources/css/app.css (Tailwind v4 @theme): mock primary #2596be
       with tint/shade/tone scale + neutral palette for easy rebrand (no final branding yet).
     - Three layouts: auth (sign-in/sign-up/verify only); management (Admin + Staff);
       portal (Customer + Driver). Thin role wrappers may extend management/portal.
     - Management: collapsible left sidebar + top bar (user, logout). Portal: top bar +
       card-based pages (mobile-friendly). Wire @vite on all layouts; Alpine.js via Vite
-      (sidebar toggle; later uploads/signature in F7+).
-    - Shared Blade components under resources/views/components/ (e.g. button, input,
-      badge, card, flash, page-header, table shell). Domain partials stay in
+      (sidebar toggle; later uploads/signature in F7+). Lucide icons via npm + <x-ui.icon>.
+    - Shared Blade components under resources/views/components/ui/ (button, input,
+      badge, card, flash, page-header, table shell, etc.). Domain partials stay in
       resources/views/bookings/ (_invoice, _rating, _route_map, etc.).
     - Views stay role-first at top level: admin/, staff/, driver/, customer/ (no mass
       rename to feature/role nesting).
     - Replace inline <style> in current layouts/admin|staff|driver|customer stubs.
 
-[ ] F2. Auth pages (dedicated auth layout — not management/portal shells)
+[x] F2. Auth pages (dedicated auth layout — not management/portal shells)
     - Login, register customer/driver, verify email (B1 stub forms exist for QA).
     - Real mail send still awaits MAIL_* / GK_MAIL_ENABLED — development_notes.txt
 

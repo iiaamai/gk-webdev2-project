@@ -1,47 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Driver') — GK Trucking Services</title>
-    <style>
-        body { font-family: system-ui, sans-serif; margin: 0; }
-        header { background: #1d4ed8; color: #fff; padding: 0.75rem 1rem; }
-        header a { color: #dbeafe; margin-right: 1rem; text-decoration: none; }
-        header a:hover { color: #fff; }
-        main { max-width: 56rem; margin: 1.5rem auto; padding: 0 1rem; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { border: 1px solid #e2e8f0; padding: 0.5rem; text-align: left; }
-        button, .btn { display: inline-block; margin-top: 1rem; padding: 0.4rem 0.75rem; cursor: pointer; }
-        .error { color: #b91c1c; }
-        .status { color: #047857; margin-bottom: 1rem; }
-        dl { display: grid; grid-template-columns: 10rem 1fr; gap: 0.5rem 1rem; }
-    </style>
-</head>
-<body>
-    <header>
-        <strong>GK Driver</strong>
-        <nav>
-            <a href="{{ route('driver.home') }}">Home</a>
-            <a href="{{ route('driver.deliveries.index') }}">Deliveries</a>
-        </nav>
-        <form method="post" action="{{ route('logout') }}" style="display:inline;margin-left:1rem;">
-            @csrf
-            <button type="submit" style="background:transparent;border:1px solid #93c5fd;color:#dbeafe;">Log out</button>
-        </form>
-    </header>
-    <main>
-        @if (session('status'))
-            <p class="status">{{ session('status') }}</p>
-        @endif
-        @if ($errors->any())
-            <ul class="error">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        @endif
-        @yield('content')
-    </main>
-</body>
-</html>
+@extends('layouts.portal')
+
+@section('brand', 'GK Driver')
+@section('home_route', route('driver.home'))
+
+@section('nav')
+    <x-ui.nav-link variant="portal" :href="route('driver.home')" icon="house" :active="request()->routeIs('driver.home')">
+        Home
+    </x-ui.nav-link>
+    <x-ui.nav-link variant="portal" :href="route('driver.deliveries.index')" icon="package" :active="request()->routeIs('driver.deliveries.*')">
+        Deliveries
+    </x-ui.nav-link>
+@endsection

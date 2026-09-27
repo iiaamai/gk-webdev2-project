@@ -1,47 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Register customer — GK Trucking Services</title>
-    <style>
-        body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 3rem auto; padding: 0 1rem; }
-        label { display: block; margin-top: 1rem; }
-        input { width: 100%; padding: 0.5rem; box-sizing: border-box; }
-        button { margin-top: 1.25rem; padding: 0.5rem 1rem; }
-        .error { color: #b91c1c; font-size: 0.875rem; }
-    </style>
-</head>
-<body>
-    <h1>Register as customer</h1>
-    <p><a href="{{ route('login') }}">Back to login</a></p>
+@extends('layouts.auth')
 
-    @if ($errors->any())
-        <ul class="error">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    @endif
+@section('title', 'Register customer')
+@section('auth_mode', 'showcase-first')
+@section('showcase_tagline', 'Book urban and regional truck deliveries')
 
-    <form method="post" action="{{ route('register.customer') }}">
+@section('content')
+    <h1 class="text-xl font-semibold text-text">Register as customer</h1>
+    <p class="mt-1 text-sm text-text-muted">Create a customer account to start booking.</p>
+
+    <form method="post" action="{{ route('register.customer') }}" class="mt-6 space-y-4">
         @csrf
-        <label for="name">Name</label>
-        <input id="name" type="text" name="name" value="{{ old('name') }}" required>
 
-        <label for="email">Email</label>
-        <input id="email" type="email" name="email" value="{{ old('email') }}" required>
+        <div>
+            <x-ui.label for="name">Name</x-ui.label>
+            <x-ui.input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" />
+            <x-ui.field-error name="name" />
+        </div>
 
-        <label for="mobile">Mobile</label>
-        <input id="mobile" type="text" name="mobile" value="{{ old('mobile') }}">
+        <div>
+            <x-ui.label for="email">Email</x-ui.label>
+            <x-ui.input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username" />
+            <x-ui.field-error name="email" />
+        </div>
 
-        <label for="password">Password</label>
-        <input id="password" type="password" name="password" required>
+        <div>
+            <x-ui.label for="mobile">Mobile</x-ui.label>
+            <x-ui.input id="mobile" type="text" name="mobile" value="{{ old('mobile') }}" autocomplete="tel" />
+            <x-ui.field-error name="mobile" />
+        </div>
 
-        <label for="password_confirmation">Confirm password</label>
-        <input id="password_confirmation" type="password" name="password_confirmation" required>
+        <div>
+            <x-ui.label for="password">Password</x-ui.label>
+            <x-ui.input id="password" type="password" name="password" required autocomplete="new-password" />
+            <x-ui.field-error name="password" />
+        </div>
 
-        <button type="submit">Create account</button>
+        <div>
+            <x-ui.label for="password_confirmation">Confirm password</x-ui.label>
+            <x-ui.input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" />
+        </div>
+
+        <x-ui.button type="submit" class="w-full">
+            <x-ui.icon name="user-plus" size="size-4" />
+            Create account
+        </x-ui.button>
     </form>
-</body>
-</html>
+@endsection
+
+@section('footer')
+    <p>
+        Already have an account?
+        <a href="{{ route('login') }}" class="font-medium text-primary hover:text-primary-shade-1">Log in</a>
+    </p>
+@endsection
