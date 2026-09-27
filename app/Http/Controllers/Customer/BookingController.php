@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\StoreBookingRequest;
 use App\Models\Booking;
 use App\Models\Pricing;
+use App\Services\BookingStaticRouteMapService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -46,12 +47,15 @@ class BookingController extends Controller
             ->with('status', 'Booking created successfully.');
     }
 
-    public function show(Booking $booking): View
+    public function show(Booking $booking, BookingStaticRouteMapService $routeMapService): View
     {
         $this->authorize('view', $booking);
 
         $booking->load(['eir', 'pod', 'invoice']);
 
-        return view('customer.bookings.show', compact('booking'));
+        return view('customer.bookings.show', [
+            'booking' => $booking,
+            'routeMap' => $routeMapService->forBooking($booking),
+        ]);
     }
 }

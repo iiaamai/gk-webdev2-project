@@ -23,6 +23,7 @@ use App\Http\Requests\UploadPodRequest;
 use App\Models\Booking;
 use App\Models\Pricing;
 use App\Models\User;
+use App\Services\BookingStaticRouteMapService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -63,7 +64,7 @@ class BookingController extends Controller
             ->with('status', 'Booking created.');
     }
 
-    public function show(Booking $booking): View
+    public function show(Booking $booking, BookingStaticRouteMapService $routeMapService): View
     {
         $this->authorize('view', $booking);
 
@@ -72,6 +73,7 @@ class BookingController extends Controller
         return view('admin.bookings.show', [
             'booking' => $booking,
             'statuses' => BookingStatus::cases(),
+            'routeMap' => $routeMapService->forBooking($booking),
         ]);
     }
 

@@ -12,6 +12,7 @@ use App\Http\Requests\Staff\UpdateBookingRequest;
 use App\Http\Requests\UploadGatepassRequest;
 use App\Models\Booking;
 use App\Models\Pricing;
+use App\Services\BookingStaticRouteMapService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -30,14 +31,18 @@ class BookingController extends Controller
         return view('staff.bookings.index', compact('bookings'));
     }
 
-    public function show(Booking $booking): View
+    public function show(Booking $booking, BookingStaticRouteMapService $routeMapService): View
     {
         $this->authorize('view', $booking);
 
         $booking->load(['customer', 'eir', 'pod', 'invoice']);
         $pricings = Pricing::query()->orderBy('vehicle_type')->get();
 
-        return view('staff.bookings.show', compact('booking', 'pricings'));
+        return view('staff.bookings.show', [
+            'booking' => $booking,
+            'pricings' => $pricings,
+            'routeMap' => $routeMapService->forBooking($booking),
+        ]);
     }
 
     public function update(

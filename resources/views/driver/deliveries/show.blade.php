@@ -24,8 +24,8 @@
 
     @include('bookings._eir_pod_links', ['booking' => $booking])
 
-    @if ($booking->status === \App\Enums\BookingStatus::Accepted || $booking->status === \App\Enums\BookingStatus::InTransit)
-        <p><em>Map route placeholder (Mapbox in a later phase).</em></p>
+    @if ($booking->driver_id)
+        @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
     @endif
 
     @can('accept', $booking)

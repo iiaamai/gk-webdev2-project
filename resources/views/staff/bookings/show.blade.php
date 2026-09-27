@@ -15,6 +15,10 @@
         <p>Gatepass: not uploaded yet.</p>
     @endif
 
+    @if ($booking->driver_id)
+        @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
+    @endif
+
     @include('bookings._eir_pod_links', ['booking' => $booking])
 
     @include('bookings._invoice', [

@@ -69,7 +69,7 @@ BACKEND PHASES (do before matching UI)
 - PayMongo: placeholder only (nullable paymongo_reference; no API until after MVP)
 → Checkpoint B (MVP)
 
-[ ] B8. Mapbox helpers (post-MVP) — placeholder until MAPBOX_* keys
+[x] B8. Mapbox helpers (post-MVP) — placeholder until MAPBOX_* keys
 - Stub route helper (null / not configured); no live Mapbox calls
 - When enabled: static optimal route from coords (no live GPS)
 

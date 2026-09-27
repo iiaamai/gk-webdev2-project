@@ -12,6 +12,7 @@ use App\Http\Requests\Driver\UpdateDeliveryStatusRequest;
 use App\Http\Requests\UploadEirRequest;
 use App\Http\Requests\UploadPodRequest;
 use App\Models\Booking;
+use App\Services\BookingStaticRouteMapService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -35,13 +36,16 @@ class DeliveryController extends Controller
         return view('driver.deliveries.index', compact('available', 'active'));
     }
 
-    public function show(Booking $booking): View
+    public function show(Booking $booking, BookingStaticRouteMapService $routeMapService): View
     {
         $this->authorize('view', $booking);
 
         $booking->load(['eir', 'pod']);
 
-        return view('driver.deliveries.show', compact('booking'));
+        return view('driver.deliveries.show', [
+            'booking' => $booking,
+            'routeMap' => $routeMapService->forBooking($booking),
+        ]);
     }
 
     public function accept(

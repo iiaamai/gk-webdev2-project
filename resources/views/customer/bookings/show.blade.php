@@ -22,7 +22,7 @@
     </dl>
 
     @if ($booking->driver_id)
-        <p>Driver assigned. Map on details will appear in a later phase (Mapbox placeholder).</p>
+        @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
     @else
         <p>Waiting for gatepass and driver assignment.</p>
     @endif

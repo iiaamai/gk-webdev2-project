@@ -15,6 +15,10 @@ return [
 
     'mapbox_enabled' => (bool) env('GK_MAPBOX_ENABLED', false),
 
+    'mapbox_token' => env('MAPBOX_TOKEN', env('MAPBOX_ACCESS_TOKEN')),
+
+    'mapbox_style' => env('MAPBOX_STYLE', 'mapbox/streets-v12'),
+
     'paymongo_enabled' => (bool) env('GK_PAYMONGO_ENABLED', false),
 
 ];
