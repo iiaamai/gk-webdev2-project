@@ -19,6 +19,14 @@
         <p>Gatepass: not uploaded.</p>
     @endif
 
+    @include('bookings._eir_pod_links', ['booking' => $booking])
+
+    @include('bookings._eir_pod_upload', [
+        'booking' => $booking,
+        'eirAction' => route('admin.bookings.eir.store', $booking),
+        'podAction' => route('admin.bookings.pod.store', $booking),
+    ])
+
     <h2>Upload or replace gatepass</h2>
     <form method="post" action="{{ route('admin.bookings.gatepass.store', $booking) }}" enctype="multipart/form-data">
         @csrf

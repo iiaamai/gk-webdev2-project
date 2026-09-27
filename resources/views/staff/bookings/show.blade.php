@@ -15,6 +15,8 @@
         <p>Gatepass: not uploaded yet.</p>
     @endif
 
+    @include('bookings._eir_pod_links', ['booking' => $booking])
+
     @can('update', $booking)
         <h2>Update booking</h2>
         @include('bookings._fields', [

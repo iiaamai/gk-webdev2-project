@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Driver;
 
 use App\Actions\AcceptDriverBooking;
 use App\Actions\UpdateDriverDeliveryStatus;
+use App\Actions\UploadBookingEir;
+use App\Actions\UploadBookingPod;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Driver\UpdateDeliveryStatusRequest;
+use App\Http\Requests\UploadEirRequest;
+use App\Http\Requests\UploadPodRequest;
 use App\Models\Booking;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +38,8 @@ class DeliveryController extends Controller
     public function show(Booking $booking): View
     {
         $this->authorize('view', $booking);
+
+        $booking->load(['eir', 'pod']);
 
         return view('driver.deliveries.show', compact('booking'));
     }
@@ -64,5 +70,33 @@ class DeliveryController extends Controller
         return redirect()
             ->route('driver.deliveries.show', $booking)
             ->with('status', 'Delivery status updated.');
+    }
+
+    public function storeEir(
+        UploadEirRequest $request,
+        Booking $booking,
+        UploadBookingEir $uploadBookingEir,
+    ): RedirectResponse {
+        $uploadBookingEir->execute($booking, $request->file('eir'));
+
+        return redirect()
+            ->route('driver.deliveries.show', $booking)
+            ->with('status', 'EIR uploaded.');
+    }
+
+    public function storePod(
+        UploadPodRequest $request,
+        Booking $booking,
+        UploadBookingPod $uploadBookingPod,
+    ): RedirectResponse {
+        $uploadBookingPod->execute(
+            $booking,
+            $request->file('photos'),
+            $request->file('signature'),
+        );
+
+        return redirect()
+            ->route('driver.deliveries.show', $booking)
+            ->with('status', 'POD uploaded.');
     }
 }

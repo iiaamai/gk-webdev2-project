@@ -6,14 +6,18 @@ use App\Actions\CancelBooking;
 use App\Actions\CreateAdminBooking;
 use App\Actions\UpdateBooking;
 use App\Actions\UpdateBookingStatus;
+use App\Actions\UploadBookingEir;
 use App\Actions\UploadBookingGatepass;
+use App\Actions\UploadBookingPod;
 use App\Enums\BookingStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreBookingRequest;
 use App\Http\Requests\Admin\UpdateBookingRequest;
 use App\Http\Requests\Admin\UpdateBookingStatusRequest;
+use App\Http\Requests\UploadEirRequest;
 use App\Http\Requests\UploadGatepassRequest;
+use App\Http\Requests\UploadPodRequest;
 use App\Models\Booking;
 use App\Models\Pricing;
 use App\Models\User;
@@ -61,7 +65,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load('customer');
+        $booking->load(['customer', 'eir', 'pod']);
 
         return view('admin.bookings.show', [
             'booking' => $booking,
@@ -144,5 +148,33 @@ class BookingController extends Controller
         return redirect()
             ->route('admin.bookings.show', $booking)
             ->with('status', 'Booking cancelled.');
+    }
+
+    public function storeEir(
+        UploadEirRequest $request,
+        Booking $booking,
+        UploadBookingEir $uploadBookingEir,
+    ): RedirectResponse {
+        $uploadBookingEir->execute($booking, $request->file('eir'));
+
+        return redirect()
+            ->route('admin.bookings.show', $booking)
+            ->with('status', 'EIR saved.');
+    }
+
+    public function storePod(
+        UploadPodRequest $request,
+        Booking $booking,
+        UploadBookingPod $uploadBookingPod,
+    ): RedirectResponse {
+        $uploadBookingPod->execute(
+            $booking,
+            $request->file('photos'),
+            $request->file('signature'),
+        );
+
+        return redirect()
+            ->route('admin.bookings.show', $booking)
+            ->with('status', 'POD saved.');
     }
 }

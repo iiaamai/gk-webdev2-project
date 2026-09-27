@@ -32,7 +32,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load('customer');
+        $booking->load(['customer', 'eir', 'pod']);
         $pricings = Pricing::query()->orderBy('vehicle_type')->get();
 
         return view('staff.bookings.show', compact('booking', 'pricings'));

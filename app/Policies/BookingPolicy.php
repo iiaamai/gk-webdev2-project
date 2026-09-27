@@ -99,6 +99,64 @@ class BookingPolicy
             && in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true);
     }
 
+    public function viewEir(User $user, Booking $booking): bool
+    {
+        if ($user->isSystemAdmin() || $user->isStaff()) {
+            return true;
+        }
+
+        if ($user->isCustomer()) {
+            return $booking->customer_id === $user->id
+                && in_array($booking->status, [BookingStatus::InTransit, BookingStatus::Completed], true);
+        }
+
+        if ($user->isDriver()) {
+            return $booking->driver_id === $user->id;
+        }
+
+        return false;
+    }
+
+    public function viewPod(User $user, Booking $booking): bool
+    {
+        if ($user->isSystemAdmin() || $user->isStaff()) {
+            return true;
+        }
+
+        if ($user->isCustomer()) {
+            return $booking->customer_id === $user->id
+                && $booking->status === BookingStatus::Completed;
+        }
+
+        if ($user->isDriver()) {
+            return $booking->driver_id === $user->id;
+        }
+
+        return false;
+    }
+
+    public function uploadEir(User $user, Booking $booking): bool
+    {
+        if ($user->isSystemAdmin()) {
+            return $booking->status !== BookingStatus::Cancelled;
+        }
+
+        return $user->isDriver()
+            && $booking->driver_id === $user->id
+            && in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true);
+    }
+
+    public function uploadPod(User $user, Booking $booking): bool
+    {
+        if ($user->isSystemAdmin()) {
+            return $booking->status !== BookingStatus::Cancelled;
+        }
+
+        return $user->isDriver()
+            && $booking->driver_id === $user->id
+            && in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true);
+    }
+
     public function cancel(User $user, Booking $booking): bool
     {
         if ($user->isSystemAdmin()) {

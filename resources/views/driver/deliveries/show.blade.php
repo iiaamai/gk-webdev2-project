@@ -22,6 +22,8 @@
         <p><a href="{{ route('documents.bookings.gatepass', $booking) }}">Download gatepass</a></p>
     @endcan
 
+    @include('bookings._eir_pod_links', ['booking' => $booking])
+
     @if ($booking->status === \App\Enums\BookingStatus::Accepted || $booking->status === \App\Enums\BookingStatus::InTransit)
         <p><em>Map route placeholder (Mapbox in a later phase).</em></p>
     @endif
@@ -32,6 +34,12 @@
             <button type="submit">Accept delivery</button>
         </form>
     @endcan
+
+    @include('bookings._eir_pod_upload', [
+        'booking' => $booking,
+        'eirAction' => route('driver.deliveries.eir.store', $booking),
+        'podAction' => route('driver.deliveries.pod.store', $booking),
+    ])
 
     @can('updateDeliveryStatus', $booking)
         @if ($booking->status === \App\Enums\BookingStatus::Accepted)
@@ -50,7 +58,7 @@
                 <input type="hidden" name="status" value="completed">
                 <button type="submit">Mark completed</button>
             </form>
-            <p><em>Completing requires EIR and POD (upload in phase B6).</em></p>
+            <p><em>Upload EIR and POD before completing.</em></p>
         @endif
     @endcan
 @endsection

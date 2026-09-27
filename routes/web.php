@@ -53,6 +53,13 @@ Route::middleware('auth')->group(function (): void {
 Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void {
     Route::get('documents/bookings/{booking}/gatepass', [BookingDocumentController::class, 'gatepass'])
         ->name('documents.bookings.gatepass');
+    Route::get('documents/bookings/{booking}/eir', [BookingDocumentController::class, 'eir'])
+        ->name('documents.bookings.eir');
+    Route::get('documents/bookings/{booking}/pod/photos/{index}', [BookingDocumentController::class, 'podPhoto'])
+        ->whereNumber('index')
+        ->name('documents.bookings.pod.photo');
+    Route::get('documents/bookings/{booking}/pod/signature', [BookingDocumentController::class, 'podSignature'])
+        ->name('documents.bookings.pod.signature');
     Route::middleware('role:'.UserRole::Customer->value)
         ->prefix('customer')
         ->name('customer.')
@@ -72,6 +79,10 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
             Route::post('deliveries/{booking}/accept', [DriverDeliveryController::class, 'accept'])->name('deliveries.accept');
             Route::patch('deliveries/{booking}/status', [DriverDeliveryController::class, 'updateStatus'])
                 ->name('deliveries.status.update');
+            Route::post('deliveries/{booking}/eir', [DriverDeliveryController::class, 'storeEir'])
+                ->name('deliveries.eir.store');
+            Route::post('deliveries/{booking}/pod', [DriverDeliveryController::class, 'storePod'])
+                ->name('deliveries.pod.store');
         });
 
     Route::middleware('role:'.UserRole::Staff->value)
@@ -109,5 +120,9 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.status.update');
             Route::post('bookings/{booking}/cancel', [AdminBookingController::class, 'cancel'])
                 ->name('bookings.cancel');
+            Route::post('bookings/{booking}/eir', [AdminBookingController::class, 'storeEir'])
+                ->name('bookings.eir.store');
+            Route::post('bookings/{booking}/pod', [AdminBookingController::class, 'storePod'])
+                ->name('bookings.pod.store');
         });
 });

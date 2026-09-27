@@ -61,7 +61,7 @@ BACKEND PHASES (do before matching UI)
 - Available (gatepass + matching vehicle type), one active, accept, status updates
 - Vehicle in_use / release
 
-[ ] B6. EIR + POD
+[x] B6. EIR + POD
 - Required both before completed
 
 [ ] B7. Invoice (MVP end)
