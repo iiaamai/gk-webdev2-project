@@ -1,7 +1,9 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Admin\EarningsController;
 use App\Http\Controllers\Admin\PricingController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\Auth\RegisterDriverController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BookingDocumentController;
 use App\Http\Controllers\Customer\BookingController as CustomerBookingController;
+use App\Http\Controllers\Customer\BookingRatingController;
 use App\Http\Controllers\Driver\DeliveryController as DriverDeliveryController;
 use App\Http\Controllers\PortalHomeController;
 use App\Http\Controllers\Staff\BookingController as StaffBookingController;
@@ -66,6 +69,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
         ->group(function (): void {
             Route::get('/', PortalHomeController::class)->name('home');
             Route::resource('bookings', CustomerBookingController::class)->only(['index', 'create', 'store', 'show']);
+            Route::post('bookings/{booking}/rating', [BookingRatingController::class, 'store'])
+                ->name('bookings.rating.store');
         });
 
     Route::middleware('role:'.UserRole::Driver->value)
@@ -128,5 +133,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.pod.store');
             Route::post('bookings/{booking}/invoice/mark-paid', [AdminBookingController::class, 'markInvoicePaid'])
                 ->name('bookings.invoice.mark-paid');
+
+            Route::get('earnings', [EarningsController::class, 'index'])->name('earnings.index');
+            Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
         });
 });

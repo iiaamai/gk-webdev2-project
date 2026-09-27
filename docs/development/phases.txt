@@ -77,7 +77,7 @@ BACKEND PHASES (do before matching UI)
 - Stub / no-op send until enabled; events listed in email_events.txt
 - When enabled: Laravel Mail wired to those events
 
-[ ] B10. Ratings + activity logs + earnings queries (post-MVP)
+[x] B10. Ratings + activity logs + earnings queries (post-MVP)
 
 ---
 

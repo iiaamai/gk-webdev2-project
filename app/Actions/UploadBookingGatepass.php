@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Models\Booking;
+use App\Services\ActivityLogger;
 use App\Services\BookingEmailNotifier;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ class UploadBookingGatepass
 {
     public function __construct(
         private readonly BookingEmailNotifier $bookingEmailNotifier,
+        private readonly ActivityLogger $activityLogger,
     ) {}
 
     public function execute(Booking $booking, UploadedFile $file, bool $allowReplace = false): Booking
@@ -45,6 +47,14 @@ class UploadBookingGatepass
         if ($wasFirstUpload) {
             $this->bookingEmailNotifier->gatepassUploaded($booking);
         }
+
+        $this->activityLogger->log(
+            action: $wasFirstUpload ? 'booking.gatepass_uploaded' : 'booking.gatepass_replaced',
+            subject: $booking,
+            description: $wasFirstUpload
+                ? "Gatepass uploaded for {$booking->booking_number}."
+                : "Gatepass replaced for {$booking->booking_number}.",
+        );
 
         return $booking;
     }

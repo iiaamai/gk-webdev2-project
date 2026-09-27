@@ -29,6 +29,8 @@
             <a href="{{ route('admin.fleet.index') }}">Fleet</a>
             <a href="{{ route('admin.users.index') }}">Users</a>
             <a href="{{ route('admin.bookings.index') }}">Bookings</a>
+            <a href="{{ route('admin.earnings.index') }}">Earnings</a>
+            <a href="{{ route('admin.activity-logs.index') }}">Activity logs</a>
         </nav>
         <form method="post" action="{{ route('logout') }}" style="display:inline;margin-left:1rem;">
             @csrf

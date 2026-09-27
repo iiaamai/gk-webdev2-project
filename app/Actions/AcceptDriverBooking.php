@@ -7,6 +7,7 @@ use App\Enums\VehicleStatus;
 use App\Models\Booking;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\ActivityLogger;
 use App\Services\BookingEmailNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -15,6 +16,7 @@ class AcceptDriverBooking
 {
     public function __construct(
         private readonly BookingEmailNotifier $bookingEmailNotifier,
+        private readonly ActivityLogger $activityLogger,
     ) {}
 
     public function execute(User $driver, Booking $booking): Booking
@@ -85,6 +87,18 @@ class AcceptDriverBooking
         });
 
         $this->bookingEmailNotifier->statusChanged($booking, BookingStatus::Accepted);
+
+        $this->activityLogger->log(
+            action: 'booking.status_changed',
+            subject: $booking,
+            description: "Booking {$booking->booking_number} accepted by driver.",
+            properties: [
+                'status' => BookingStatus::Accepted->value,
+                'driver_id' => $driver->id,
+                'vehicle_id' => $booking->vehicle_id,
+            ],
+            user: $driver,
+        );
 
         return $booking;
     }

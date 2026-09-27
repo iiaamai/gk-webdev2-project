@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\BookingEmailNotifier;
 use App\Services\BookingVehicleRelease;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ class UpdateDriverDeliveryStatus
     public function __construct(
         private readonly BookingVehicleRelease $bookingVehicleRelease,
         private readonly BookingEmailNotifier $bookingEmailNotifier,
+        private readonly ActivityLogger $activityLogger,
     ) {}
 
     public function execute(User $driver, Booking $booking, BookingStatus $status): Booking
@@ -71,6 +73,14 @@ class UpdateDriverDeliveryStatus
         });
 
         $this->bookingEmailNotifier->statusChanged($booking, $status);
+
+        $this->activityLogger->log(
+            action: 'booking.status_changed',
+            subject: $booking,
+            description: "Booking {$booking->booking_number} marked {$status->value}.",
+            properties: ['status' => $status->value],
+            user: $driver,
+        );
 
         return $booking;
     }

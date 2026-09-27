@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\ActivityLogger;
 use App\Services\BookingEmailNotifier;
 use App\Services\BookingNumberGenerator;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ class CreateCustomerBooking
         private readonly BookingNumberGenerator $bookingNumberGenerator,
         private readonly CreateBookingInvoice $createBookingInvoice,
         private readonly BookingEmailNotifier $bookingEmailNotifier,
+        private readonly ActivityLogger $activityLogger,
     ) {}
 
     /**
@@ -79,6 +81,17 @@ class CreateCustomerBooking
         });
 
         $this->bookingEmailNotifier->bookingCreated($booking);
+
+        $this->activityLogger->log(
+            action: 'booking.created',
+            subject: $booking,
+            description: "Booking {$booking->booking_number} created.",
+            properties: [
+                'vehicle_type' => $booking->vehicle_type,
+                'payout' => (string) $booking->payout,
+            ],
+            user: $customer,
+        );
 
         return $booking;
     }

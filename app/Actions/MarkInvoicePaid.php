@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
+use App\Services\ActivityLogger;
 use App\Services\BookingEmailNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -12,6 +13,7 @@ class MarkInvoicePaid
 {
     public function __construct(
         private readonly BookingEmailNotifier $bookingEmailNotifier,
+        private readonly ActivityLogger $activityLogger,
     ) {}
 
     /**
@@ -36,6 +38,17 @@ class MarkInvoicePaid
         });
 
         $this->bookingEmailNotifier->invoicePaid($invoice);
+
+        $invoice->loadMissing('booking');
+        $this->activityLogger->log(
+            action: 'invoice.marked_paid',
+            subject: $invoice->booking,
+            description: 'Invoice marked paid for booking '.($invoice->booking?->booking_number ?? $invoice->booking_id).'.',
+            properties: [
+                'invoice_id' => $invoice->id,
+                'amount' => (string) $invoice->amount,
+            ],
+        );
 
         return $invoice;
     }

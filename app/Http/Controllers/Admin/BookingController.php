@@ -68,7 +68,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['customer', 'eir', 'pod', 'invoice']);
+        $booking->load(['customer', 'eir', 'pod', 'invoice', 'rating']);
 
         return view('admin.bookings.show', [
             'booking' => $booking,

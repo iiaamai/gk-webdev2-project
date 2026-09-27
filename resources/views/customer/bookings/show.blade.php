@@ -32,4 +32,9 @@
     @include('bookings._eir_pod_links', ['booking' => $booking])
 
     @include('bookings._invoice', ['booking' => $booking])
+
+    @include('bookings._rating', [
+        'booking' => $booking,
+        'canRate' => auth()->user()?->can('create', [\App\Models\Rating::class, $booking]),
+    ])
 @endsection
