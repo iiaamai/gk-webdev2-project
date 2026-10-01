@@ -22,6 +22,8 @@ use App\Http\Controllers\Customer\BookingRatingController;
 use App\Http\Controllers\Driver\DeliveryController as DriverDeliveryController;
 use App\Http\Controllers\PortalHomeController;
 use App\Http\Controllers\Staff\BookingController as StaffBookingController;
+use App\Http\Controllers\Staff\OverviewController as StaffOverviewController;
+use App\Http\Controllers\Staff\VehicleController as StaffVehicleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -97,7 +99,7 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
         ->prefix('staff')
         ->name('staff.')
         ->group(function (): void {
-            Route::get('/', PortalHomeController::class)->name('home');
+            Route::get('/', StaffOverviewController::class)->name('home');
 
             Route::view('settings', 'staff.settings')->name('settings.edit');
 
@@ -110,6 +112,10 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.invoice.mark-paid');
             Route::get('bookings/{booking}/receipt', [StaffBookingController::class, 'downloadReceipt'])
                 ->name('bookings.receipt');
+
+            Route::resource('fleet', StaffVehicleController::class)
+                ->parameters(['fleet' => 'vehicle'])
+                ->only(['index', 'edit', 'update']);
         });
 
     Route::middleware('role:'.UserRole::SystemAdmin->value)

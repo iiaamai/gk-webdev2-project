@@ -3,6 +3,11 @@
 @section('title', 'Users')
 
 @section('content')
+    @php
+        use App\Enums\UserRole;
+        $roleOptions = collect(UserRole::cases())->mapWithKeys(fn (UserRole $role) => [$role->value => $role->value])->all();
+    @endphp
+
     <x-ui.page-header title="User management" subtitle="Customers, drivers, staff, and system admins.">
         <x-slot:actions>
             <x-ui.button href="{{ route('admin.users.create') }}">
@@ -12,16 +17,30 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    @if ($users->isEmpty())
-        <x-ui.empty-state title="No users" icon="users">
-            <x-slot:description>Create staff or other roles from here.</x-slot:description>
-            <x-slot:actions>
-                <x-ui.button href="{{ route('admin.users.create') }}">
-                    <x-ui.icon name="user-plus" size="size-4" />
-                    Create user
-                </x-ui.button>
-            </x-slot:actions>
-        </x-ui.empty-state>
+    <x-ui.list-filters
+        :action="route('admin.users.index')"
+        :clear-url="route('admin.users.index')"
+        :q="$search"
+        search-placeholder="Name or email"
+        :filters-active="$filtersActive"
+        :role="$roleFilter"
+        :role-options="$roleOptions"
+    />
+
+    @if ($users->total() === 0)
+        @if ($filtersActive)
+            <x-ui.list-no-results :clear-url="route('admin.users.index')" />
+        @else
+            <x-ui.empty-state title="No users" icon="users">
+                <x-slot:description>Create staff or other roles from here.</x-slot:description>
+                <x-slot:actions>
+                    <x-ui.button href="{{ route('admin.users.create') }}">
+                        <x-ui.icon name="user-plus" size="size-4" />
+                        Create user
+                    </x-ui.button>
+                </x-slot:actions>
+            </x-ui.empty-state>
+        @endif
     @else
         <x-ui.table>
             <x-slot:head>
@@ -72,5 +91,7 @@
                 </tr>
             @endforeach
         </x-ui.table>
+
+        <x-ui.pagination :paginator="$users" />
     @endif
 @endsection

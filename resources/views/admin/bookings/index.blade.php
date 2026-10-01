@@ -3,6 +3,11 @@
 @section('title', 'Bookings')
 
 @section('content')
+    @php
+        use App\Enums\BookingStatus;
+        $statusOptions = collect(BookingStatus::cases())->mapWithKeys(fn (BookingStatus $status) => [$status->value => $status->value])->all();
+    @endphp
+
     <x-ui.page-header title="Bookings" subtitle="Create, review, and manage all trips.">
         <x-slot:actions>
             <x-ui.button href="{{ route('admin.bookings.create') }}">
@@ -12,16 +17,30 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    @if ($bookings->isEmpty())
-        <x-ui.empty-state title="No bookings yet" icon="clipboard-list">
-            <x-slot:description>Create a booking for a customer or wait for customer submissions.</x-slot:description>
-            <x-slot:actions>
-                <x-ui.button href="{{ route('admin.bookings.create') }}">
-                    <x-ui.icon name="plus" size="size-4" />
-                    Create booking
-                </x-ui.button>
-            </x-slot:actions>
-        </x-ui.empty-state>
+    <x-ui.list-filters
+        :action="route('admin.bookings.index')"
+        :clear-url="route('admin.bookings.index')"
+        :q="$search"
+        search-placeholder="Booking number, customer name or email"
+        :filters-active="$filtersActive"
+        :status="$statusFilter"
+        :status-options="$statusOptions"
+    />
+
+    @if ($bookings->total() === 0)
+        @if ($filtersActive)
+            <x-ui.list-no-results :clear-url="route('admin.bookings.index')" />
+        @else
+            <x-ui.empty-state title="No bookings yet" icon="clipboard-list">
+                <x-slot:description>Create a booking for a customer or wait for customer submissions.</x-slot:description>
+                <x-slot:actions>
+                    <x-ui.button href="{{ route('admin.bookings.create') }}">
+                        <x-ui.icon name="plus" size="size-4" />
+                        Create booking
+                    </x-ui.button>
+                </x-slot:actions>
+            </x-ui.empty-state>
+        @endif
     @else
         <x-ui.table>
             <x-slot:head>
@@ -70,5 +89,7 @@
                 </tr>
             @endforeach
         </x-ui.table>
+
+        <x-ui.pagination :paginator="$bookings" />
     @endif
 @endsection

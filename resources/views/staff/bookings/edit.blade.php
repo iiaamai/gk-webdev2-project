@@ -61,6 +61,12 @@
                 />
                 <form method="post" action="{{ route('staff.bookings.gatepass.store', $booking) }}" enctype="multipart/form-data" class="mt-4 space-y-4">
                     @csrf
+                    @if ($booking->hasGatepass())
+                        <p class="text-sm text-text-muted">
+                            Current file:
+                            <a href="{{ route('documents.bookings.gatepass', $booking) }}" class="font-medium text-primary hover:text-primary-shade-1">Download gatepass</a>
+                        </p>
+                    @endif
                     <div>
                         <x-ui.label for="gatepass">Gatepass image</x-ui.label>
                         <input

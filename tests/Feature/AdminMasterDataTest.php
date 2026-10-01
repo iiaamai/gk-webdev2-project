@@ -112,8 +112,9 @@ class AdminMasterDataTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.fleet.create'))
             ->assertOk()
-            ->assertDontSee($otherDriver->email)
-            ->assertDontSee($driver->email);
+            ->assertSee('Assigned driver', false)
+            ->assertSee($otherDriver->email, false)
+            ->assertSee($driver->email, false);
     }
 
     public function test_admin_can_crud_fleet(): void

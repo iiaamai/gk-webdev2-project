@@ -107,7 +107,7 @@ FRONTEND PHASES (backend B0–B10 complete; UI from F1 onward)
 [x] F3. Admin UI (first role polish): settings, pricing, fleet, users, bookings,
     earnings, activity logs (beyond B2/B4/B10 stubs)
 
-[ ] F4. Staff UI: overview, bookings list/show, gatepass upload
+[x] F4. Staff UI: overview, bookings list/show, gatepass upload
 
 [ ] F5. Driver UI: deliveries available / active / show
 

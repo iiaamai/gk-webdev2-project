@@ -92,7 +92,8 @@ Driver modules
 Staff modules (limited)
 - Overview (booking summaries and related ops stats)
 - Live Bookings (map on active booking details)
-- Bookings Management — update and upload gatepass; cannot override a gatepass after it is uploaded; cannot delete bookings; cannot touch fleet, users, earnings, or pricing
+- Bookings Management — update and upload gatepass; cannot override a gatepass after it is uploaded; cannot delete bookings; cannot touch users, earnings, or pricing
+- Fleet — view and update vehicles; cannot create or archive fleet units
 - Profile
 
 System Admin modules (full CRUD on every module)

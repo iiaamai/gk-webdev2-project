@@ -12,8 +12,10 @@ use App\Http\Requests\Staff\UpdateBookingRequest;
 use App\Http\Requests\UploadGatepassRequest;
 use App\Models\Booking;
 use App\Models\Pricing;
+use App\Services\BookingListQuery;
 use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
+use App\Support\ListFilter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -21,16 +23,19 @@ use Illuminate\View\View;
 
 class BookingController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, BookingListQuery $bookingListQuery): View
     {
         $this->authorize('viewAny', Booking::class);
 
-        $bookings = Booking::query()
-            ->with(['customer', 'pricing', 'vehicle.pricing'])
-            ->orderByDesc('created_at')
-            ->get();
+        $bookings = $bookingListQuery->paginate($request);
+        $filtersActive = ListFilter::isActive($request, ['q', 'status']);
 
-        return view('staff.bookings.index', compact('bookings'));
+        return view('staff.bookings.index', [
+            'bookings' => $bookings,
+            'filtersActive' => $filtersActive,
+            'search' => ListFilter::searchTerm($request),
+            'statusFilter' => $request->query('status'),
+        ]);
     }
 
     public function show(Booking $booking, BookingStaticRouteMapService $routeMapService): View

@@ -9,20 +9,41 @@ use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Support\ListFilter;
 use App\Support\MailIntegration;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', User::class);
 
-        $users = User::query()->orderBy('name')->get();
+        $search = ListFilter::searchTerm($request);
+        $role = UserRole::tryFrom((string) $request->query('role', ''));
+        $filtersActive = ListFilter::isActive($request, ['q', 'role']);
 
-        return view('admin.users.index', compact('users'));
+        $users = User::query()
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($inner) use ($search): void {
+                    $inner->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%');
+                });
+            })
+            ->when($role !== null, fn ($query) => $query->where('role', $role))
+            ->orderBy('name')
+            ->paginate(ListFilter::PER_PAGE)
+            ->withQueryString();
+
+        return view('admin.users.index', [
+            'users' => $users,
+            'filtersActive' => $filtersActive,
+            'search' => $search,
+            'roleFilter' => $request->query('role'),
+        ]);
     }
 
     public function create(): View

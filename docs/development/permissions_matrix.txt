@@ -9,7 +9,8 @@ Register + verify email             Yes        Yes        No                 No
 Shared login (redirect by role)     Yes        Yes        Yes                Yes
 User management CRUD                No         No         No                 Yes (all roles)
 Create Staff / any role             No         No         No                 Yes
-Fleet CRUD                          No         No         No                 Yes
+Fleet view / update                 No         No         Yes                Yes
+Fleet create / archive              No         No         No                 Yes
 Pricing List CRUD                   No         No         No                 Yes
 Settings                            No         No         No                 Yes
 Create booking                      Own        No         No                 Yes (for any customer)

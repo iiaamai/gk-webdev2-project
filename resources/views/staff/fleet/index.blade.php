@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.staff')
 
 @section('title', 'Fleet')
 
@@ -8,18 +8,11 @@
         $statusOptions = collect(VehicleStatus::cases())->mapWithKeys(fn (VehicleStatus $status) => [$status->value => $status->value])->all();
     @endphp
 
-    <x-ui.page-header title="Fleet" subtitle="Vehicles available for bookings.">
-        <x-slot:actions>
-            <x-ui.button href="{{ route('admin.fleet.create') }}">
-                <x-ui.icon name="plus" size="size-4" />
-                Add vehicle
-            </x-ui.button>
-        </x-slot:actions>
-    </x-ui.page-header>
+    <x-ui.page-header title="Fleet" subtitle="View and update vehicles. Contact an administrator to add or archive units." />
 
     <x-ui.list-filters
-        :action="route('admin.fleet.index')"
-        :clear-url="route('admin.fleet.index')"
+        :action="route('staff.fleet.index')"
+        :clear-url="route('staff.fleet.index')"
         :q="$search"
         search-placeholder="Plate, brand, or driver name"
         :filters-active="$filtersActive"
@@ -29,16 +22,10 @@
 
     @if ($vehicles->total() === 0)
         @if ($filtersActive)
-            <x-ui.list-no-results :clear-url="route('admin.fleet.index')" />
+            <x-ui.list-no-results :clear-url="route('staff.fleet.index')" />
         @else
             <x-ui.empty-state title="No vehicles yet" icon="truck">
-                <x-slot:description>Add fleet units so bookings can assign a matching vehicle type.</x-slot:description>
-                <x-slot:actions>
-                    <x-ui.button href="{{ route('admin.fleet.create') }}">
-                        <x-ui.icon name="plus" size="size-4" />
-                        Add vehicle
-                    </x-ui.button>
-                </x-slot:actions>
+                <x-slot:description>Fleet units will appear here once an administrator adds them.</x-slot:description>
             </x-ui.empty-state>
         @endif
     @else
@@ -83,18 +70,10 @@
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex flex-wrap items-center justify-end gap-2">
-                            <x-ui.button href="{{ route('admin.fleet.edit', $vehicle) }}" variant="secondary" class="!py-1.5 !text-xs">
+                            <x-ui.button href="{{ route('staff.fleet.edit', $vehicle) }}" variant="secondary" class="!py-1.5 !text-xs">
                                 <x-ui.icon name="pencil" size="size-3.5" />
                                 Edit
                             </x-ui.button>
-                            <form method="post" action="{{ route('admin.fleet.destroy', $vehicle) }}" onsubmit="return confirm('Archive this vehicle?');">
-                                @csrf
-                                @method('DELETE')
-                                <x-ui.button type="submit" variant="ghost" class="!py-1.5 !text-xs !text-danger">
-                                    <x-ui.icon name="archive" size="size-3.5" />
-                                    Archive
-                                </x-ui.button>
-                            </form>
                         </div>
                     </td>
                 </tr>

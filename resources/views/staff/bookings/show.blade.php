@@ -17,7 +17,7 @@
             @endcan
             <x-ui.button href="{{ route('staff.bookings.edit', $booking) }}">
                 <x-ui.icon name="pencil" size="size-4" />
-                Edit booking
+                Edit workspace
             </x-ui.button>
         </x-slot:actions>
     </x-ui.page-header>
@@ -42,11 +42,17 @@
     <div class="space-y-4">
         <x-ui.card>
             <x-ui.section-heading icon="file-up" title="Gatepass" />
-            <div class="mt-3 text-sm">
+            <div class="mt-3 space-y-3 text-sm">
                 @if ($booking->hasGatepass())
                     <a href="{{ route('documents.bookings.gatepass', $booking) }}" class="font-medium text-primary hover:text-primary-shade-1">Download gatepass</a>
                 @else
                     <p class="text-text-muted">Not uploaded yet.</p>
+                    @can('uploadGatepass', $booking)
+                        <x-ui.button href="{{ route('staff.bookings.edit', $booking) }}">
+                            <x-ui.icon name="file-up" size="size-4" />
+                            Upload gatepass
+                        </x-ui.button>
+                    @endcan
                 @endif
             </div>
         </x-ui.card>

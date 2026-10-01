@@ -1,11 +1,11 @@
-@extends('layouts.admin')
+@extends('layouts.staff')
 
 @section('title', 'Edit vehicle')
 
 @section('content')
     <x-ui.page-header title="Edit vehicle" subtitle="{{ $vehicle->plate_number }} — {{ $vehicle->brand }}">
         <x-slot:actions>
-            <x-ui.button href="{{ route('admin.fleet.index') }}" variant="secondary">
+            <x-ui.button href="{{ route('staff.fleet.index') }}" variant="secondary">
                 <x-ui.icon name="arrow-left" size="size-4" />
                 Back to fleet
             </x-ui.button>
@@ -14,7 +14,7 @@
 
     @include('admin.fleet._form', [
         'vehicle' => $vehicle,
-        'action' => route('admin.fleet.update', $vehicle),
+        'action' => route('staff.fleet.update', $vehicle),
         'drivers' => $drivers,
         'pricings' => $pricings,
     ])

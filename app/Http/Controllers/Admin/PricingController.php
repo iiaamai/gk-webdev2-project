@@ -6,18 +6,31 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePricingRequest;
 use App\Http\Requests\Admin\UpdatePricingRequest;
 use App\Models\Pricing;
+use App\Support\ListFilter;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PricingController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Pricing::class);
 
-        $pricings = Pricing::query()->orderBy('vehicle_type')->get();
+        $search = ListFilter::searchTerm($request);
+        $filtersActive = ListFilter::isActive($request, ['q']);
 
-        return view('admin.pricing.index', compact('pricings'));
+        $pricings = Pricing::query()
+            ->when($search !== '', fn ($query) => $query->where('vehicle_type', 'like', '%'.$search.'%'))
+            ->orderBy('vehicle_type')
+            ->paginate(ListFilter::PER_PAGE)
+            ->withQueryString();
+
+        return view('admin.pricing.index', [
+            'pricings' => $pricings,
+            'filtersActive' => $filtersActive,
+            'search' => $search,
+        ]);
     }
 
     public function create(): View

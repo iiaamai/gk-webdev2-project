@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Staff;
 
 use App\Actions\SyncVehicleDriverAssignment;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\StoreVehicleRequest;
 use App\Http\Requests\Admin\UpdateVehicleRequest;
 use App\Models\Pricing;
 use App\Models\User;
@@ -26,41 +25,12 @@ class VehicleController extends Controller
         $vehicles = $vehicleListQuery->paginate($request);
         $filtersActive = ListFilter::isActive($request, ['q', 'status']);
 
-        return view('admin.fleet.index', [
+        return view('staff.fleet.index', [
             'vehicles' => $vehicles,
             'filtersActive' => $filtersActive,
             'search' => ListFilter::searchTerm($request),
             'statusFilter' => $request->query('status'),
         ]);
-    }
-
-    public function create(): View
-    {
-        $this->authorize('create', Vehicle::class);
-
-        return view('admin.fleet.create', [
-            'drivers' => $this->fleetDrivers(),
-            'pricings' => Pricing::query()->orderBy('vehicle_type')->get(),
-        ]);
-    }
-
-    public function store(
-        StoreVehicleRequest $request,
-        SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
-    ): RedirectResponse {
-        $data = $request->safe()->except(['driver_id']);
-        $driverId = $request->validated('driver_id');
-
-        $vehicle = Vehicle::query()->create($data);
-
-        $syncVehicleDriverAssignment->forVehicle(
-            $vehicle,
-            $driverId !== null ? (int) $driverId : null,
-        );
-
-        return redirect()
-            ->route('admin.fleet.index')
-            ->with('status', 'Vehicle created.');
     }
 
     public function edit(Vehicle $vehicle): View
@@ -69,7 +39,7 @@ class VehicleController extends Controller
 
         $vehicle->load('driver');
 
-        return view('admin.fleet.edit', [
+        return view('staff.fleet.edit', [
             'vehicle' => $vehicle,
             'drivers' => $this->fleetDrivers(),
             'pricings' => Pricing::query()->orderBy('vehicle_type')->get(),
@@ -92,22 +62,8 @@ class VehicleController extends Controller
         );
 
         return redirect()
-            ->route('admin.fleet.index')
+            ->route('staff.fleet.index')
             ->with('status', 'Vehicle updated.');
-    }
-
-    public function destroy(
-        Vehicle $vehicle,
-        SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
-    ): RedirectResponse {
-        $this->authorize('delete', $vehicle);
-
-        $syncVehicleDriverAssignment->forVehicle($vehicle, null);
-        $vehicle->archive();
-
-        return redirect()
-            ->route('admin.fleet.index')
-            ->with('status', 'Vehicle archived.');
     }
 
     /**

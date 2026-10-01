@@ -12,16 +12,28 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    @if ($pricings->isEmpty())
-        <x-ui.empty-state title="No pricing rows yet" icon="tags">
-            <x-slot:description>Add at least one vehicle type amount before customers can book.</x-slot:description>
-            <x-slot:actions>
-                <x-ui.button href="{{ route('admin.pricing.create') }}">
-                    <x-ui.icon name="plus" size="size-4" />
-                    Add pricing row
-                </x-ui.button>
-            </x-slot:actions>
-        </x-ui.empty-state>
+    <x-ui.list-filters
+        :action="route('admin.pricing.index')"
+        :clear-url="route('admin.pricing.index')"
+        :q="$search"
+        search-placeholder="Vehicle type"
+        :filters-active="$filtersActive"
+    />
+
+    @if ($pricings->total() === 0)
+        @if ($filtersActive)
+            <x-ui.list-no-results :clear-url="route('admin.pricing.index')" />
+        @else
+            <x-ui.empty-state title="No pricing rows yet" icon="tags">
+                <x-slot:description>Add at least one vehicle type amount before customers can book.</x-slot:description>
+                <x-slot:actions>
+                    <x-ui.button href="{{ route('admin.pricing.create') }}">
+                        <x-ui.icon name="plus" size="size-4" />
+                        Add pricing row
+                    </x-ui.button>
+                </x-slot:actions>
+            </x-ui.empty-state>
+        @endif
     @else
         <x-ui.table>
             <x-slot:head>
@@ -56,5 +68,7 @@
                 </tr>
             @endforeach
         </x-ui.table>
+
+        <x-ui.pagination :paginator="$pricings" />
     @endif
 @endsection

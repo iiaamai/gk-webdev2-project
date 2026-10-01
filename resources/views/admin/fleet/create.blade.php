@@ -12,7 +12,10 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    <x-ui.card class="max-w-xl">
-        @include('admin.fleet._form', ['vehicle' => null, 'action' => route('admin.fleet.store')])
-    </x-ui.card>
+    @include('admin.fleet._form', [
+        'vehicle' => null,
+        'action' => route('admin.fleet.store'),
+        'drivers' => $drivers,
+        'pricings' => $pricings,
+    ])
 @endsection

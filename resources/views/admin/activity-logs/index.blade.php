@@ -5,13 +5,27 @@
 @section('content')
     <x-ui.page-header
         title="Activity logs"
-        subtitle="Latest 100 events (IP captured; geo lookup not enabled)."
+        subtitle="Search and filter audit events (IP captured; geo lookup not enabled)."
     />
 
-    @if ($logs->isEmpty())
-        <x-ui.empty-state title="No activity logged yet" icon="activity">
-            <x-slot:description>Actions across the app will appear here as they occur.</x-slot:description>
-        </x-ui.empty-state>
+    <x-ui.list-filters
+        :action="route('admin.activity-logs.index')"
+        :clear-url="route('admin.activity-logs.index')"
+        :q="$search"
+        search-placeholder="Action, description, or user"
+        :filters-active="$filtersActive"
+        :log-action="$logActionFilter"
+        :log-action-options="$logActionOptions"
+    />
+
+    @if ($logs->total() === 0)
+        @if ($filtersActive)
+            <x-ui.list-no-results :clear-url="route('admin.activity-logs.index')" />
+        @else
+            <x-ui.empty-state title="No activity logged yet" icon="activity">
+                <x-slot:description>Actions across the app will appear here as they occur.</x-slot:description>
+            </x-ui.empty-state>
+        @endif
     @else
         <x-ui.table>
             <x-slot:head>
@@ -35,5 +49,7 @@
                 </tr>
             @endforeach
         </x-ui.table>
+
+        <x-ui.pagination :paginator="$logs" />
     @endif
 @endsection

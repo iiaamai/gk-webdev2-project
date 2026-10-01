@@ -20,4 +20,7 @@
     <x-ui.nav-link :href="route('staff.bookings.index')" icon="clipboard-list" :active="request()->routeIs('staff.bookings.*')">
         Bookings
     </x-ui.nav-link>
+    <x-ui.nav-link :href="route('staff.fleet.index')" icon="truck" :active="request()->routeIs('staff.fleet.*')">
+        Fleet
+    </x-ui.nav-link>
 @endsection
