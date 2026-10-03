@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'GK Trucking Services') — GK Trucking Services</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>[x-cloak]{display:none!important}</style>
 </head>
 <body class="min-h-screen bg-surface text-text">
     <header class="sticky top-0 z-30 border-b border-border bg-surface-elevated">
@@ -23,6 +24,9 @@
 
             <div class="ms-auto flex items-center gap-3">
                 <span class="hidden text-sm text-text-muted md:inline">{{ auth()->user()?->name }}</span>
+                @hasSection('header-actions')
+                    @yield('header-actions')
+                @endif
                 <form method="post" action="{{ route('logout') }}">
                     @csrf
                     <x-ui.button type="submit" variant="secondary" class="!py-1.5 !text-xs">

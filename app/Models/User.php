@@ -21,6 +21,7 @@ use Illuminate\Notifications\Notifiable;
     'email',
     'password',
     'mobile',
+    'avatar_path',
     'role',
     'email_verified_at',
 ])]
@@ -29,6 +30,11 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use Archivable, HasFactory, Notifiable;
+
+    public function hasAvatar(): bool
+    {
+        return filled($this->avatar_path);
+    }
 
     /**
      * @return array<string, string>

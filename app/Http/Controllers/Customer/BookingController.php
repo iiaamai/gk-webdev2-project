@@ -52,7 +52,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['eir', 'pod', 'invoice', 'rating']);
+        $booking->load(['eir', 'pod', 'invoice', 'rating', 'driver']);
 
         return view('customer.bookings.show', [
             'booking' => $booking,

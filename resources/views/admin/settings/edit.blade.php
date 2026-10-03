@@ -8,10 +8,23 @@
         subtitle="Company profile, booking sequence, and map defaults."
     />
 
+    <x-ui.card class="mb-4 max-w-xl">
+        <x-ui.section-heading icon="user" title="My profile" description="Your name, mobile, and photo." />
+        <div class="mt-4">
+            @include('profile._form', ['user' => auth()->user()])
+        </div>
+        <dl class="mt-6 grid grid-cols-[6rem_1fr] gap-x-3 gap-y-2 border-t border-border pt-4 text-sm">
+            <dt class="text-text-muted">Email</dt>
+            <dd>{{ auth()->user()->email }}</dd>
+        </dl>
+    </x-ui.card>
+
     <x-ui.card class="max-w-xl">
         <form method="post" action="{{ route('admin.settings.update') }}" class="space-y-4">
             @csrf
             @method('PUT')
+
+            <x-ui.section-heading icon="settings" title="Company settings" description="Company profile, booking sequence, and map defaults." />
 
             <div>
                 <x-ui.label for="company_name">Company name</x-ui.label>

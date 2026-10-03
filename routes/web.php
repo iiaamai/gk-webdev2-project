@@ -20,7 +20,9 @@ use App\Http\Controllers\BookingDocumentController;
 use App\Http\Controllers\Customer\BookingController as CustomerBookingController;
 use App\Http\Controllers\Customer\BookingRatingController;
 use App\Http\Controllers\Driver\DeliveryController as DriverDeliveryController;
+use App\Http\Controllers\Driver\OverviewController as DriverOverviewController;
 use App\Http\Controllers\PortalHomeController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Staff\BookingController as StaffBookingController;
 use App\Http\Controllers\Staff\OverviewController as StaffOverviewController;
 use App\Http\Controllers\Staff\VehicleController as StaffVehicleController;
@@ -66,11 +68,16 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
         ->name('documents.bookings.pod.photo');
     Route::get('documents/bookings/{booking}/pod/signature', [BookingDocumentController::class, 'podSignature'])
         ->name('documents.bookings.pod.signature');
+    Route::get('users/{user}/avatar', [ProfileController::class, 'avatar'])
+        ->name('users.avatar');
+    Route::put('profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
     Route::middleware('role:'.UserRole::Customer->value)
         ->prefix('customer')
         ->name('customer.')
         ->group(function (): void {
             Route::get('/', PortalHomeController::class)->name('home');
+            Route::view('settings', 'customer.settings')->name('settings.edit');
             Route::resource('bookings', CustomerBookingController::class)->only(['index', 'create', 'store', 'show']);
             Route::post('bookings/{booking}/rating', [BookingRatingController::class, 'store'])
                 ->name('bookings.rating.store');
@@ -80,7 +87,9 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
         ->prefix('driver')
         ->name('driver.')
         ->group(function (): void {
-            Route::get('/', PortalHomeController::class)->name('home');
+            Route::get('/', DriverOverviewController::class)->name('home');
+
+            Route::view('settings', 'driver.settings')->name('settings.edit');
 
             Route::get('deliveries', [DriverDeliveryController::class, 'index'])->name('deliveries.index');
             Route::get('deliveries/{booking}', [DriverDeliveryController::class, 'show'])->name('deliveries.show');

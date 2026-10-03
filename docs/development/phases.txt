@@ -109,7 +109,7 @@ FRONTEND PHASES (backend B0–B10 complete; UI from F1 onward)
 
 [x] F4. Staff UI: overview, bookings list/show, gatepass upload
 
-[ ] F5. Driver UI: deliveries available / active / show
+[x] F5. Driver UI: overview, deliveries available / active / show, settings
 
 [ ] F6. Customer UI: My Bookings, new booking, booking details (beyond B3 stubs)
 

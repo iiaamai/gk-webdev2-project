@@ -6,6 +6,7 @@
 <form
     method="post"
     action="{{ $action }}"
+    enctype="multipart/form-data"
     class="space-y-4"
     x-data="{ role: @js($initialRole), displayName: @js($displayName) }"
 >
@@ -19,22 +20,37 @@
             <x-ui.card>
                 <x-ui.section-heading icon="user" title="Basic information" description="Name, email, and contact number." />
                 <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
-                    <div class="flex justify-center sm:justify-start">
-                        <div
-                            class="inline-flex size-16 shrink-0 items-center justify-center rounded-full text-lg font-semibold"
-                            :class="{
-                                'bg-primary text-text-on-primary': role === 'system_admin',
-                                'bg-info/20 text-info': role === 'staff',
-                                'bg-warning/25 text-warning': role === 'driver',
-                                'bg-primary-tone-2 text-primary-shade-1': role === 'customer',
-                            }"
-                            x-text="(() => {
-                                const parts = displayName.trim().split(/\s+/).filter(Boolean);
-                                let initials = parts.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('');
-                                return initials || '?';
-                            })()"
-                            aria-hidden="true"
-                        ></div>
+                    <div class="flex flex-col items-center gap-2 sm:items-start">
+                        @if ($user?->hasAvatar())
+                            <x-ui.user-avatar :user="$user" size="lg" />
+                        @else
+                            <div
+                                class="inline-flex size-16 shrink-0 items-center justify-center rounded-full text-lg font-semibold"
+                                :class="{
+                                    'bg-primary text-text-on-primary': role === 'system_admin',
+                                    'bg-info/20 text-info': role === 'staff',
+                                    'bg-warning/25 text-warning': role === 'driver',
+                                    'bg-primary-tone-2 text-primary-shade-1': role === 'customer',
+                                }"
+                                x-text="(() => {
+                                    const parts = displayName.trim().split(/\s+/).filter(Boolean);
+                                    let initials = parts.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('');
+                                    return initials || '?';
+                                })()"
+                                aria-hidden="true"
+                            ></div>
+                        @endif
+                        <div class="w-full max-w-[12rem]">
+                            <x-ui.label for="avatar">Photo</x-ui.label>
+                            <input
+                                id="avatar"
+                                type="file"
+                                name="avatar"
+                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                class="block w-full text-xs text-text-muted file:me-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-1.5 file:text-xs file:font-medium file:text-text-on-primary"
+                            >
+                            <x-ui.field-error name="avatar" />
+                        </div>
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="grid gap-4 sm:grid-cols-2">

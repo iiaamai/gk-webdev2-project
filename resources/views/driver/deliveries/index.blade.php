@@ -3,54 +3,53 @@
 @section('title', 'Deliveries')
 
 @section('content')
-    <h1>Deliveries</h1>
+    @php
+        $hasActiveDelivery = $active->isNotEmpty();
+    @endphp
 
-    <h2>Active</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Booking</th>
-                <th>Status</th>
-                <th>Pickup</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($active as $booking)
-                <tr>
-                    <td>{{ $booking->booking_number }}</td>
-                    <td>{{ $booking->status->value }}</td>
-                    <td>{{ $booking->pickup_address }}</td>
-                    <td><a href="{{ route('driver.deliveries.show', $booking) }}">Open</a></td>
-                </tr>
-            @empty
-                <tr><td colspan="4">No active delivery.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+    <x-ui.page-header
+        title="Deliveries"
+        subtitle="Active trip and jobs matching {{ $driver->assignedVehicle?->pricing?->vehicle_type ?? 'your vehicle type' }}."
+    />
 
-    <h2>Available jobs</h2>
-    <p>Jobs with gatepass matching your vehicle type ({{ $driver->assignedVehicle?->pricing?->vehicle_type ?? 'unassigned' }}).</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Booking</th>
-                <th>Vehicle type</th>
-                <th>Pickup</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($available as $booking)
-                <tr>
-                    <td>{{ $booking->booking_number }}</td>
-                    <td>{{ $booking->vehicle_type }}</td>
-                    <td>{{ $booking->pickup_address }}</td>
-                    <td><a href="{{ route('driver.deliveries.show', $booking) }}">View</a></td>
-                </tr>
-            @empty
-                <tr><td colspan="4">No available jobs right now.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+    <section class="mb-8">
+        <x-ui.section-heading icon="truck" title="Active delivery" />
+        @if ($active->isEmpty())
+            <p class="mt-4 text-sm text-text-muted">No active delivery. Accept a job below when you are ready.</p>
+        @else
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                @foreach ($active as $booking)
+                    <x-driver.job-card :booking="$booking" cta-label="Open" />
+                @endforeach
+            </div>
+        @endif
+    </section>
+
+    <section>
+        <x-ui.section-heading
+            icon="clipboard-list"
+            title="Available jobs"
+            description="Gatepass uploaded; matching your assigned vehicle type."
+        />
+
+        @if ($hasActiveDelivery)
+            <div class="mt-4 rounded-lg border border-border bg-surface-inset px-4 py-3 text-sm text-text-muted" role="status">
+                Finish your current delivery to accept new jobs. You can still view available jobs below.
+            </div>
+        @endif
+
+        @if ($available->isEmpty())
+            <p class="mt-4 text-sm text-text-muted">No available jobs right now. Check back later.</p>
+        @else
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                @foreach ($available as $booking)
+                    <x-driver.job-card
+                        :booking="$booking"
+                        cta-label="View"
+                        :view-only="$hasActiveDelivery"
+                    />
+                @endforeach
+            </div>
+        @endif
+    </section>
 @endsection

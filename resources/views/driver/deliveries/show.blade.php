@@ -3,66 +3,103 @@
 @section('title', $booking->booking_number)
 
 @section('content')
-    <h1>{{ $booking->booking_number }}</h1>
-    <p><a href="{{ route('driver.deliveries.index') }}">Back to deliveries</a></p>
+    @php
+        $statusTone = match ($booking->status->value) {
+            'in_transit' => 'info',
+            'accepted' => 'success',
+            'completed' => 'neutral',
+            'cancelled' => 'danger',
+            default => 'warning',
+        };
+    @endphp
 
-    <p>Status: <strong>{{ $booking->status->value }}</strong></p>
+    <x-ui.page-header :title="$booking->booking_number" subtitle="Delivery workspace">
+        <x-slot:actions>
+            <x-ui.button href="{{ route('driver.deliveries.index') }}" variant="secondary">
+                <x-ui.icon name="arrow-left" size="size-4" />
+                Back to deliveries
+            </x-ui.button>
+        </x-slot:actions>
+    </x-ui.page-header>
 
-    <dl>
-        <dt>Vehicle type</dt><dd>{{ $booking->vehicle_type }}</dd>
-        <dt>Pickup</dt><dd>{{ $booking->pickup_address }}</dd>
-        <dt>Dropoff</dt><dd>{{ $booking->dropoff_address }}</dd>
-        <dt>Payout</dt><dd>₱{{ number_format((float) $booking->payout, 2) }}</dd>
-        @if ($booking->cargo_desc)
-            <dt>Cargo</dt><dd>{{ $booking->cargo_desc }}</dd>
-        @endif
-    </dl>
+    <div class="mb-6 flex flex-wrap items-center gap-2">
+        <x-ui.badge :tone="$statusTone">{{ $booking->status->value }}</x-ui.badge>
+        <span class="text-sm text-text-muted">{{ $booking->vehicle_type }}</span>
+    </div>
 
-    @can('viewGatepass', $booking)
-        <p><a href="{{ route('documents.bookings.gatepass', $booking) }}">Download gatepass</a></p>
-    @endcan
+    <x-ui.card class="mb-6">
+        <x-ui.section-heading icon="map-pin" title="Trip details" />
+        <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+                <dt class="text-text-muted">Pickup</dt>
+                <dd class="mt-1 font-medium text-text">{{ $booking->pickup_address }}</dd>
+            </div>
+            <div>
+                <dt class="text-text-muted">Dropoff</dt>
+                <dd class="mt-1 font-medium text-text">{{ $booking->dropoff_address }}</dd>
+            </div>
+            <div>
+                <dt class="text-text-muted">Payout</dt>
+                <dd class="mt-1 font-medium text-text">₱{{ number_format((float) $booking->payout, 2) }}</dd>
+            </div>
+            @if ($booking->cargo_desc)
+                <div class="sm:col-span-2">
+                    <dt class="text-text-muted">Cargo</dt>
+                    <dd class="mt-1 text-text">{{ $booking->cargo_desc }}</dd>
+                </div>
+            @endif
+        </dl>
+    </x-ui.card>
 
-    @include('bookings._eir_pod_links', ['booking' => $booking])
+    <div class="mb-6 space-y-4">
+        @can('accept', $booking)
+            <x-ui.card>
+                <x-ui.section-heading icon="package" title="Accept delivery" />
+                <form method="post" action="{{ route('driver.deliveries.accept', $booking) }}" class="mt-4" onsubmit="return confirm('Accept this delivery?');">
+                    @csrf
+                    <x-ui.button type="submit">
+                        Accept delivery
+                    </x-ui.button>
+                </form>
+            </x-ui.card>
+        @endcan
+
+        @can('updateDeliveryStatus', $booking)
+            <x-ui.card>
+                <x-ui.section-heading icon="activity" title="Update status" />
+                <div class="mt-4 flex flex-wrap gap-3">
+                    @if ($booking->status === \App\Enums\BookingStatus::Accepted)
+                        <form method="post" action="{{ route('driver.deliveries.status.update', $booking) }}">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="status" value="in_transit">
+                            <x-ui.button type="submit">Mark in transit</x-ui.button>
+                        </form>
+                    @endif
+
+                    @if ($booking->status === \App\Enums\BookingStatus::InTransit)
+                        <form method="post" action="{{ route('driver.deliveries.status.update', $booking) }}">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="status" value="completed">
+                            <x-ui.button type="submit">Mark completed</x-ui.button>
+                        </form>
+                        <p class="text-sm text-text-muted">Upload EIR and POD before completing.</p>
+                    @endif
+                </div>
+            </x-ui.card>
+        @endcan
+    </div>
+
+    @include('driver.deliveries._documents', ['booking' => $booking])
+
+    <x-ui.card class="mb-6">
+        @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
+    </x-ui.card>
 
     @can('downloadReceipt', $booking)
-        <p><a href="{{ route('driver.deliveries.receipt', $booking) }}">Download delivery receipt (PDF)</a></p>
-    @endcan
-
-    @if ($booking->driver_id)
-        @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
-    @endif
-
-    @can('accept', $booking)
-        <form method="post" action="{{ route('driver.deliveries.accept', $booking) }}" onsubmit="return confirm('Accept this delivery?');">
-            @csrf
-            <button type="submit">Accept delivery</button>
-        </form>
-    @endcan
-
-    @include('bookings._eir_pod_upload', [
-        'booking' => $booking,
-        'eirAction' => route('driver.deliveries.eir.store', $booking),
-        'podAction' => route('driver.deliveries.pod.store', $booking),
-    ])
-
-    @can('updateDeliveryStatus', $booking)
-        @if ($booking->status === \App\Enums\BookingStatus::Accepted)
-            <form method="post" action="{{ route('driver.deliveries.status.update', $booking) }}">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="status" value="in_transit">
-                <button type="submit">Mark in transit</button>
-            </form>
-        @endif
-
-        @if ($booking->status === \App\Enums\BookingStatus::InTransit)
-            <form method="post" action="{{ route('driver.deliveries.status.update', $booking) }}">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="status" value="completed">
-                <button type="submit">Mark completed</button>
-            </form>
-            <p><em>Upload EIR and POD before completing.</em></p>
-        @endif
+        <p class="mb-4 text-sm">
+            <a href="{{ route('driver.deliveries.receipt', $booking) }}" class="font-medium text-primary hover:text-primary-shade-1">Download delivery receipt (PDF)</a>
+        </p>
     @endcan
 @endsection

@@ -11,6 +11,7 @@ use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class DriverDeliveryTest extends TestCase
@@ -186,5 +187,110 @@ class DriverDeliveryTest extends TestCase
         $this->actingAs($customer)
             ->get(route('driver.deliveries.index'))
             ->assertRedirect(route('customer.home'));
+    }
+
+    public function test_deliveries_index_renders_job_cards(): void
+    {
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $driver = User::factory()->driver()->create();
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
+            'status' => VehicleStatus::Available,
+        ]);
+
+        Booking::factory()->withGatepass()->create([
+            'booking_number' => 'GK-TEST-CARD',
+            'pricing_id' => $pricing->id,
+        ]);
+
+        $this->actingAs($driver)
+            ->get(route('driver.deliveries.index'))
+            ->assertOk()
+            ->assertSee('Active delivery')
+            ->assertSee('Available jobs')
+            ->assertSee('GK-TEST-CARD')
+            ->assertSee('View', false)
+            ->assertDontSee('Finish your current delivery to accept new jobs', false);
+    }
+
+    public function test_delivery_show_renders_documents_and_route_cards(): void
+    {
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $driver = User::factory()->driver()->create();
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
+            'status' => VehicleStatus::InUse,
+        ]);
+        $booking = Booking::factory()->withGatepass()->create([
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
+            'status' => BookingStatus::InTransit,
+            'is_locked' => true,
+        ]);
+
+        $this->actingAs($driver)
+            ->get(route('driver.deliveries.show', $booking))
+            ->assertOk()
+            ->assertSee('Documents', false)
+            ->assertSee('Gatepass', false)
+            ->assertSee('EIR', false)
+            ->assertSee('POD', false)
+            ->assertSee('Destination &amp; route', false)
+            ->assertSee('Update status', false);
+    }
+
+    public function test_document_routes_stream_inline_for_preview(): void
+    {
+        Storage::fake('local');
+        $driver = User::factory()->driver()->create();
+        $booking = Booking::factory()->withGatepass()->create([
+            'booking_number' => 'GK-TEST-INLINE',
+            'gatepass_path' => 'bookings/GK-TEST-INLINE/gatepass.jpg',
+            'driver_id' => $driver->id,
+            'status' => BookingStatus::Accepted,
+            'is_locked' => true,
+        ]);
+        Storage::disk('local')->put($booking->gatepass_path, 'fake-image-bytes');
+
+        $response = $this->actingAs($driver)
+            ->get(route('documents.bookings.gatepass', $booking))
+            ->assertOk();
+
+        $disposition = (string) $response->headers->get('content-disposition');
+        $this->assertStringContainsString('inline', $disposition);
+        $this->assertStringContainsString('GK-TEST-INLINE-gatepass', $disposition);
+    }
+
+    public function test_available_jobs_are_view_only_when_driver_has_active_delivery(): void
+    {
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $driver = User::factory()->driver()->create();
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
+            'status' => VehicleStatus::InUse,
+        ]);
+
+        Booking::factory()->withGatepass()->create([
+            'booking_number' => 'GK-TEST-ACTIVE',
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
+            'status' => BookingStatus::Accepted,
+            'is_locked' => true,
+        ]);
+        Booking::factory()->withGatepass()->create([
+            'booking_number' => 'GK-TEST-WAITING',
+            'pricing_id' => $pricing->id,
+        ]);
+
+        $this->actingAs($driver)
+            ->get(route('driver.deliveries.index'))
+            ->assertOk()
+            ->assertSee('GK-TEST-ACTIVE')
+            ->assertSee('GK-TEST-WAITING')
+            ->assertSee('Finish your current delivery to accept new jobs', false)
+            ->assertSee('View only', false);
     }
 }

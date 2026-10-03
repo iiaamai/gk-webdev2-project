@@ -16,6 +16,21 @@ class AuthTest extends TestCase
         $this->get(route('login'))->assertOk();
     }
 
+    public function test_authenticated_user_visiting_login_is_redirected_to_role_home(): void
+    {
+        $staff = User::factory()->staff()->create();
+
+        $this->actingAs($staff)
+            ->get(route('login'))
+            ->assertRedirect(route('staff.home'));
+
+        $driver = User::factory()->driver()->create();
+
+        $this->actingAs($driver)
+            ->get(route('login'))
+            ->assertRedirect(route('driver.home'));
+    }
+
     public function test_user_can_login_and_is_redirected_by_role(): void
     {
         $customer = User::factory()->customer()->create([

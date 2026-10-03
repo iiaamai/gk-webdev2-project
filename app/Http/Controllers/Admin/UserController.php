@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\SyncVehicleDriverAssignment;
+use App\Actions\UploadUserAvatar;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
@@ -67,6 +68,7 @@ class UserController extends Controller
     public function store(
         StoreUserRequest $request,
         SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
+        UploadUserAvatar $uploadUserAvatar,
     ): RedirectResponse {
         $data = $request->safe()->only([
             'name',
@@ -84,6 +86,10 @@ class UserController extends Controller
         $data['email_verified_at'] = MailIntegration::isEnabled() ? null : now();
 
         $user = User::query()->create($data);
+
+        if ($request->hasFile('avatar')) {
+            $uploadUserAvatar->execute($user, $request->file('avatar'));
+        }
 
         if ($role === UserRole::Driver) {
             $vehicleId = $request->validated('vehicle_id');
@@ -114,6 +120,7 @@ class UserController extends Controller
         UpdateUserRequest $request,
         User $user,
         SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
+        UploadUserAvatar $uploadUserAvatar,
     ): RedirectResponse {
         $data = $request->safe()->only([
             'name',
@@ -134,6 +141,10 @@ class UserController extends Controller
         }
 
         $user->update($data);
+
+        if ($request->hasFile('avatar')) {
+            $uploadUserAvatar->execute($user->fresh(), $request->file('avatar'));
+        }
 
         $vehicleId = $role === UserRole::Driver
             ? $request->validated('vehicle_id')

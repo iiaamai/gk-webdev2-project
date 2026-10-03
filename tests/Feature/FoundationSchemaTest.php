@@ -41,6 +41,7 @@ class FoundationSchemaTest extends TestCase
         $this->assertTrue(Schema::hasColumns('users', [
             'role',
             'mobile',
+            'avatar_path',
             'archived_at',
         ]));
         $this->assertFalse(Schema::hasColumn('users', 'vehicle_type'));

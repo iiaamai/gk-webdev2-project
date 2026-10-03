@@ -26,6 +26,7 @@ class StoreUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'mobile' => ['nullable', 'string', 'max:30'],
+            'avatar' => ['nullable', 'file', 'mimes:jpeg,jpg,png,webp,gif', 'max:5120'],
             'role' => ['required', Rule::enum(UserRole::class)],
             'vehicle_id' => [
                 'nullable',

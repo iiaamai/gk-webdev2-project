@@ -26,12 +26,6 @@ class PortalHomeController extends Controller
             ]);
         }
 
-        if ($user->isDriver()) {
-            return view('portals.driver-home', [
-                'name' => $user->name,
-            ]);
-        }
-
         return view('portals.home', [
             'role' => $user->role->value,
             'name' => $user->name,

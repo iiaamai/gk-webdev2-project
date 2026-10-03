@@ -12,7 +12,8 @@ Fields
 - email                 TEXT NOT NULL UNIQUE
 - email_verified_at     TEXT NULL (datetime; required for login after register)
 - password              TEXT NOT NULL (hashed)
-- mobile                TEXT NULL
+- mobile                TEXT NULL (contact number; shown to customers for assigned drivers after accept)
+- avatar_path           TEXT NULL (private disk path; profile photo for all roles)
 - role                  TEXT NOT NULL
                         values: customer | driver | staff | system_admin
 - remember_token        TEXT NULL

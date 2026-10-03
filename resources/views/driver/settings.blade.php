@@ -1,4 +1,4 @@
-@extends('layouts.staff')
+@extends('layouts.driver')
 
 @section('title', 'Settings')
 
@@ -7,7 +7,7 @@
 
     <div class="max-w-xl space-y-4">
         <x-ui.card>
-            <x-ui.section-heading icon="user" title="Profile" description="Update your name, mobile, and photo." />
+            <x-ui.section-heading icon="user" title="Profile" description="Name, mobile, and photo visible to customers on accepted trips." />
             <div class="mt-4">
                 @include('profile._form', ['user' => auth()->user()])
             </div>
@@ -18,7 +18,7 @@
         </x-ui.card>
 
         <x-ui.card>
-            <x-ui.section-heading icon="log-out" title="Sign out" description="End your staff session on this device." />
+            <x-ui.section-heading icon="log-out" title="Sign out" description="End your driver session on this device." />
             <form method="post" action="{{ route('logout') }}" class="mt-4">
                 @csrf
                 <x-ui.button type="submit" variant="secondary">

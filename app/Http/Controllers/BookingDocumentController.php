@@ -16,7 +16,7 @@ class BookingDocumentController extends Controller
             abort(404);
         }
 
-        return Storage::disk('local')->download(
+        return $this->streamInline(
             $booking->gatepass_path,
             $booking->booking_number.'-gatepass',
         );
@@ -31,7 +31,7 @@ class BookingDocumentController extends Controller
             abort(404);
         }
 
-        return Storage::disk('local')->download(
+        return $this->streamInline(
             $eir->eir_path,
             $booking->booking_number.'-eir',
         );
@@ -46,10 +46,8 @@ class BookingDocumentController extends Controller
             abort(404);
         }
 
-        $path = $pod->photo_paths[$index];
-
-        return Storage::disk('local')->download(
-            $path,
+        return $this->streamInline(
+            $pod->photo_paths[$index],
             $booking->booking_number.'-pod-photo-'.($index + 1),
         );
     }
@@ -63,9 +61,23 @@ class BookingDocumentController extends Controller
             abort(404);
         }
 
-        return Storage::disk('local')->download(
+        return $this->streamInline(
             $pod->signature_path,
             $booking->booking_number.'-pod-signature',
+        );
+    }
+
+    private function streamInline(string $path, string $filename): StreamedResponse
+    {
+        abort_unless(Storage::disk('local')->exists($path), 404);
+
+        $mimeType = Storage::disk('local')->mimeType($path) ?: 'application/octet-stream';
+
+        return Storage::disk('local')->response(
+            $path,
+            $filename,
+            ['Content-Type' => $mimeType],
+            'inline',
         );
     }
 }
