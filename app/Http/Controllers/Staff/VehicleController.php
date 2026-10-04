@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Staff;
 
 use App\Actions\SyncVehicleDriverAssignment;
 use App\Enums\UserRole;
+use App\Enums\VehicleStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\UpdateVehicleRequest;
+use App\Http\Requests\Staff\UpdateVehicleRequest;
 use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -38,11 +39,17 @@ class VehicleController extends Controller
         $this->authorize('update', $vehicle);
 
         $vehicle->load('driver');
+        $isInUse = $vehicle->status === VehicleStatus::InUse;
 
         return view('staff.fleet.edit', [
             'vehicle' => $vehicle,
             'drivers' => $this->fleetDrivers(),
             'pricings' => Pricing::query()->orderBy('vehicle_type')->get(),
+            'lockDetails' => true,
+            'canEditStatus' => ! $isInUse,
+            'canEditDriver' => ! $isInUse,
+            'showSubmit' => ! $isInUse,
+            'isReadOnly' => $isInUse,
         ]);
     }
 
@@ -51,15 +58,21 @@ class VehicleController extends Controller
         Vehicle $vehicle,
         SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
     ): RedirectResponse {
-        $data = $request->safe()->except(['driver_id']);
-        $driverId = $request->validated('driver_id');
+        $this->authorize('updateStatus', $vehicle);
 
-        $vehicle->update($data);
+        $canUpdateDriver = $request->user()?->can('updateDriver', $vehicle) ?? false;
+        $status = VehicleStatus::from($request->validated('status'));
 
-        $syncVehicleDriverAssignment->forVehicle(
-            $vehicle->fresh(['pricing']),
-            $driverId !== null ? (int) $driverId : null,
-        );
+        $vehicle->update(['status' => $status]);
+
+        if ($canUpdateDriver) {
+            $driverId = $request->validated('driver_id');
+
+            $syncVehicleDriverAssignment->forVehicle(
+                $vehicle->fresh(['pricing']),
+                $driverId !== null ? (int) $driverId : null,
+            );
+        }
 
         return redirect()
             ->route('staff.fleet.index')

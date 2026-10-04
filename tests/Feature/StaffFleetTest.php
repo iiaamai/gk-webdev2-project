@@ -13,16 +13,18 @@ class StaffFleetTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_staff_can_view_and_update_fleet(): void
+    public function test_staff_can_view_and_update_status_and_driver_without_changing_details(): void
     {
         $staff = User::factory()->staff()->create();
         $pricing = Pricing::factory()->create();
+        $driver = User::factory()->driver()->create();
         $vehicle = Vehicle::factory()->create([
             'plate_number' => 'STF-0001',
             'brand' => 'Isuzu',
             'color' => 'White',
             'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
+            'driver_id' => null,
         ]);
 
         $this->actingAs($staff)
@@ -34,22 +36,78 @@ class StaffFleetTest extends TestCase
 
         $this->actingAs($staff)
             ->get(route('staff.fleet.edit', $vehicle))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('view only for staff', false);
 
         $this->actingAs($staff)
             ->put(route('staff.fleet.update', $vehicle), [
-                'plate_number' => 'STF-0002',
-                'brand' => 'Isuzu',
-                'color' => 'Blue',
+                'plate_number' => 'HACK-9999',
+                'brand' => 'Hacked',
+                'color' => 'Neon',
                 'pricing_id' => $pricing->id,
                 'status' => VehicleStatus::Maintenance->value,
-                'driver_id' => null,
+                'driver_id' => $driver->id,
             ])
             ->assertRedirect(route('staff.fleet.index'));
 
         $vehicle->refresh();
-        $this->assertSame('STF-0002', $vehicle->plate_number);
+        $this->assertSame('STF-0001', $vehicle->plate_number);
+        $this->assertSame('Isuzu', $vehicle->brand);
+        $this->assertSame('White', $vehicle->color);
         $this->assertSame(VehicleStatus::Maintenance, $vehicle->status);
+        $this->assertSame($driver->id, $vehicle->driver_id);
+    }
+
+    public function test_staff_cannot_update_in_use_vehicle(): void
+    {
+        $staff = User::factory()->staff()->create();
+        $pricing = Pricing::factory()->create();
+        $driver = User::factory()->driver()->create();
+        $vehicle = Vehicle::factory()->create([
+            'plate_number' => 'INUSE-01',
+            'brand' => 'Fuso',
+            'color' => 'Blue',
+            'pricing_id' => $pricing->id,
+            'status' => VehicleStatus::InUse,
+            'driver_id' => $driver->id,
+        ]);
+
+        $this->actingAs($staff)
+            ->get(route('staff.fleet.edit', $vehicle))
+            ->assertOk()
+            ->assertSee('in use', false)
+            ->assertDontSee('Save changes', false);
+
+        $this->actingAs($staff)
+            ->put(route('staff.fleet.update', $vehicle), [
+                'status' => VehicleStatus::Available->value,
+                'driver_id' => null,
+            ])
+            ->assertForbidden();
+
+        $vehicle->refresh();
+        $this->assertSame(VehicleStatus::InUse, $vehicle->status);
+        $this->assertSame($driver->id, $vehicle->driver_id);
+        $this->assertSame('INUSE-01', $vehicle->plate_number);
+    }
+
+    public function test_staff_can_set_status_to_in_use_when_not_currently_in_use(): void
+    {
+        $staff = User::factory()->staff()->create();
+        $pricing = Pricing::factory()->create();
+        $vehicle = Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'status' => VehicleStatus::Available,
+        ]);
+
+        $this->actingAs($staff)
+            ->put(route('staff.fleet.update', $vehicle), [
+                'status' => VehicleStatus::InUse->value,
+                'driver_id' => null,
+            ])
+            ->assertRedirect(route('staff.fleet.index'));
+
+        $this->assertSame(VehicleStatus::InUse, $vehicle->fresh()->status);
     }
 
     public function test_staff_cannot_create_or_archive_fleet(): void
