@@ -68,6 +68,8 @@ class CreateCustomerBooking
                 'pickup_address' => $data['pickup_address'],
                 'pickup_lat' => $data['pickup_lat'],
                 'pickup_lng' => $data['pickup_lng'],
+                'pickup_port_number' => $data['pickup_port_number'],
+                'pickup_container_number' => $data['pickup_container_number'],
                 'dropoff_address' => $data['dropoff_address'],
                 'dropoff_lat' => $data['dropoff_lat'],
                 'dropoff_lng' => $data['dropoff_lng'],

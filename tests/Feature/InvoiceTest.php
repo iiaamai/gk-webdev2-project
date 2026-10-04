@@ -31,6 +31,8 @@ class InvoiceTest extends TestCase
             'pickup_address' => 'A',
             'pickup_lat' => 14.5,
             'pickup_lng' => 121.0,
+            'pickup_port_number' => 'PORT-01',
+            'pickup_container_number' => 'CONT-01',
             'dropoff_address' => 'B',
             'dropoff_lat' => 14.6,
             'dropoff_lng' => 121.1,

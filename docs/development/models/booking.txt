@@ -18,6 +18,8 @@ Fields
 - pickup_address        TEXT NOT NULL
 - pickup_lat            REAL NOT NULL
 - pickup_lng            REAL NOT NULL
+- pickup_port_number    TEXT NULL      (required on customer create)
+- pickup_container_number TEXT NULL    (required on customer create)
 - dropoff_address       TEXT NOT NULL
 - dropoff_lat           REAL NOT NULL
 - dropoff_lng           REAL NOT NULL

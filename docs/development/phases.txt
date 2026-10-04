@@ -111,7 +111,7 @@ FRONTEND PHASES (backend B0–B10 complete; UI from F1 onward)
 
 [x] F5. Driver UI: overview, deliveries available / active / show, settings
 
-[ ] F6. Customer UI: My Bookings, new booking, booking details (beyond B3 stubs)
+[x] F6. Customer UI: overview, My Bookings, new booking, booking details
 
 [ ] F7. Document upload/view UI (gatepass, EIR, POD — ACL streamed routes)
 

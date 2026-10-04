@@ -35,6 +35,8 @@ class CustomerBookingTest extends TestCase
             'pickup_address' => 'Makati City',
             'pickup_lat' => 14.5547,
             'pickup_lng' => 121.0244,
+            'pickup_port_number' => 'PORT-01',
+            'pickup_container_number' => 'CONT-ABC123',
             'dropoff_address' => 'Quezon City',
             'dropoff_lat' => 14.6760,
             'dropoff_lng' => 121.0437,
@@ -49,9 +51,38 @@ class CustomerBookingTest extends TestCase
         $this->assertSame("GK-{$year}-0042", $booking->booking_number);
         $this->assertSame(BookingStatus::Pending, $booking->status);
         $this->assertSame($pricing->id, $booking->pricing_id);
+        $this->assertSame('PORT-01', $booking->pickup_port_number);
+        $this->assertSame('CONT-ABC123', $booking->pickup_container_number);
         $this->assertSame('9200.00', (string) $booking->payout);
         $this->assertSame('9200.00', (string) $booking->invoice?->amount);
         $this->assertSame('43', Setting::getValue('booking_seq'));
+    }
+
+    public function test_customer_create_requires_port_and_container_numbers(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'status' => VehicleStatus::Available,
+        ]);
+
+        $this->actingAs($customer)
+            ->from(route('customer.bookings.create'))
+            ->post(route('customer.bookings.store'), [
+                'pricing_id' => $pricing->id,
+                'booking_datetime' => now('Asia/Manila')->addDay()->format('Y-m-d H:i:s'),
+                'pickup_address' => 'Makati City',
+                'pickup_lat' => 14.5547,
+                'pickup_lng' => 121.0244,
+                'dropoff_address' => 'Quezon City',
+                'dropoff_lat' => 14.6760,
+                'dropoff_lng' => 121.0437,
+            ])
+            ->assertRedirect(route('customer.bookings.create'))
+            ->assertSessionHasErrors(['pickup_port_number', 'pickup_container_number']);
+
+        $this->assertSame(0, Booking::query()->count());
     }
 
     public function test_customer_cannot_create_booking_without_available_vehicle(): void
@@ -70,6 +101,8 @@ class CustomerBookingTest extends TestCase
                 'pickup_address' => 'A',
                 'pickup_lat' => 14.5,
                 'pickup_lng' => 121.0,
+                'pickup_port_number' => 'PORT-01',
+                'pickup_container_number' => 'CONT-01',
                 'dropoff_address' => 'B',
                 'dropoff_lat' => 14.6,
                 'dropoff_lng' => 121.1,

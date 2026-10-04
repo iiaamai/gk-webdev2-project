@@ -14,12 +14,6 @@ class PortalHomeController extends Controller
     {
         $user = $request->user();
 
-        if ($user->isCustomer()) {
-            return view('portals.customer-home', [
-                'name' => $user->name,
-            ]);
-        }
-
         if ($user->isStaff()) {
             return view('portals.staff-home', [
                 'name' => $user->name,

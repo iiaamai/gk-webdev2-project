@@ -26,6 +26,8 @@ class StoreBookingRequest extends FormRequest
             'pickup_address' => ['required', 'string', 'max:500'],
             'pickup_lat' => ['required', 'numeric', 'between:-90,90'],
             'pickup_lng' => ['required', 'numeric', 'between:-180,180'],
+            'pickup_port_number' => ['required', 'string', 'max:100'],
+            'pickup_container_number' => ['required', 'string', 'max:100'],
             'dropoff_address' => ['required', 'string', 'max:500'],
             'dropoff_lat' => ['required', 'numeric', 'between:-90,90'],
             'dropoff_lng' => ['required', 'numeric', 'between:-180,180'],

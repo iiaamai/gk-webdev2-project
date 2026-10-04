@@ -19,9 +19,9 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BookingDocumentController;
 use App\Http\Controllers\Customer\BookingController as CustomerBookingController;
 use App\Http\Controllers\Customer\BookingRatingController;
+use App\Http\Controllers\Customer\OverviewController as CustomerOverviewController;
 use App\Http\Controllers\Driver\DeliveryController as DriverDeliveryController;
 use App\Http\Controllers\Driver\OverviewController as DriverOverviewController;
-use App\Http\Controllers\PortalHomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Staff\BookingController as StaffBookingController;
 use App\Http\Controllers\Staff\OverviewController as StaffOverviewController;
@@ -76,7 +76,7 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
         ->prefix('customer')
         ->name('customer.')
         ->group(function (): void {
-            Route::get('/', PortalHomeController::class)->name('home');
+            Route::get('/', CustomerOverviewController::class)->name('home');
             Route::view('settings', 'customer.settings')->name('settings.edit');
             Route::resource('bookings', CustomerBookingController::class)->only(['index', 'create', 'store', 'show']);
             Route::post('bookings/{booking}/rating', [BookingRatingController::class, 'store'])

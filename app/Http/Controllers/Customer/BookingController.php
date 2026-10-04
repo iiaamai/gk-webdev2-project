@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Actions\CreateCustomerBooking;
+use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\StoreBookingRequest;
 use App\Models\Booking;
@@ -18,13 +19,30 @@ class BookingController extends Controller
     {
         $this->authorize('viewAny', Booking::class);
 
-        $bookings = Booking::query()
-            ->where('customer_id', $request->user()->id)
-            ->with(['pricing', 'vehicle.pricing'])
+        $customerId = $request->user()->id;
+
+        $active = Booking::query()
+            ->where('customer_id', $customerId)
+            ->whereIn('status', [
+                BookingStatus::Pending,
+                BookingStatus::Accepted,
+                BookingStatus::InTransit,
+            ])
+            ->with(['pricing', 'vehicle.pricing', 'invoice'])
             ->orderByDesc('created_at')
             ->get();
 
-        return view('customer.bookings.index', compact('bookings'));
+        $history = Booking::query()
+            ->where('customer_id', $customerId)
+            ->whereIn('status', [
+                BookingStatus::Completed,
+                BookingStatus::Cancelled,
+            ])
+            ->with(['pricing', 'vehicle.pricing', 'invoice'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('customer.bookings.index', compact('active', 'history'));
     }
 
     public function create(Request $request): View

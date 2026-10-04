@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'pickup_address',
     'pickup_lat',
     'pickup_lng',
+    'pickup_port_number',
+    'pickup_container_number',
     'dropoff_address',
     'dropoff_lat',
     'dropoff_lng',
