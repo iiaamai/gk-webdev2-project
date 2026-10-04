@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'booking_id',
     'photo_paths',
-    'signature_path',
     'captured_at',
 ])]
 class Pod extends Model

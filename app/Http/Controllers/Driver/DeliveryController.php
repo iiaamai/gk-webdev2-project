@@ -29,7 +29,7 @@ class DeliveryController extends Controller
         $available = Booking::query()
             ->availableForDriver($driver)
             ->with(['pricing', 'vehicle.pricing'])
-            ->orderByDesc('created_at')
+            ->orderBy('created_at')
             ->get();
 
         $active = Booking::query()
@@ -101,7 +101,6 @@ class DeliveryController extends Controller
         $uploadBookingPod->execute(
             $booking,
             $request->file('photos'),
-            $request->file('signature'),
         );
 
         return redirect()

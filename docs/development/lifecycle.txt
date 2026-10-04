@@ -15,7 +15,7 @@ Normal path
    - Vehicle status → in_use
    - Max one active delivery per driver (accepted or in_transit)
 4. Driver → in_transit
-5. Driver uploads EIR; on complete also POD (photos + signature)
+5. Driver uploads EIR; on complete also POD (photos)
 6. Driver → completed only if EIR AND POD both exist
    - Vehicle → available (if it was in_use)
 

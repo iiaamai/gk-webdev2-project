@@ -39,7 +39,6 @@ class EirPodTest extends TestCase
                     UploadedFile::fake()->image('pod-1.jpg'),
                     UploadedFile::fake()->image('pod-2.jpg'),
                 ],
-                'signature' => UploadedFile::fake()->image('signature.png'),
             ])
             ->assertRedirect(route('driver.deliveries.show', $booking));
 
@@ -48,7 +47,7 @@ class EirPodTest extends TestCase
         $this->assertNotNull($booking->pod);
         $this->assertCount(2, $booking->pod->photo_paths);
         Storage::disk('local')->assertExists($booking->eir->eir_path);
-        Storage::disk('local')->assertExists($booking->pod->signature_path);
+        Storage::disk('local')->assertExists($booking->pod->photo_paths[0]);
     }
 
     public function test_driver_cannot_upload_eir_when_not_assigned(): void
@@ -86,7 +85,6 @@ class EirPodTest extends TestCase
         $this->actingAs($driver)
             ->post(route('driver.deliveries.pod.store', $booking), [
                 'photos' => [UploadedFile::fake()->image('pod.jpg')],
-                'signature' => UploadedFile::fake()->image('sign.png'),
             ]);
 
         $this->actingAs($driver)
@@ -127,7 +125,7 @@ class EirPodTest extends TestCase
             ->assertOk();
 
         $this->actingAs($customer)
-            ->get(route('documents.bookings.pod.signature', $booking))
+            ->get(route('documents.bookings.pod.photo', [$booking, 0]))
             ->assertForbidden();
     }
 
@@ -153,7 +151,6 @@ class EirPodTest extends TestCase
         $this->actingAs($driver)
             ->post(route('driver.deliveries.pod.store', $booking), [
                 'photos' => [UploadedFile::fake()->image('pod.jpg')],
-                'signature' => UploadedFile::fake()->image('sign.png'),
             ]);
 
         $this->actingAs($driver)
@@ -162,10 +159,10 @@ class EirPodTest extends TestCase
             ]);
 
         $pod = $booking->fresh()->pod;
-        Storage::disk('local')->put($pod->signature_path, 'sig');
+        Storage::disk('local')->put($pod->photo_paths[0], 'photo');
 
         $this->actingAs($customer)
-            ->get(route('documents.bookings.pod.signature', $booking))
+            ->get(route('documents.bookings.pod.photo', [$booking, 0]))
             ->assertOk();
     }
 

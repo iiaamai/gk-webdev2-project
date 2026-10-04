@@ -23,7 +23,6 @@ class UploadPodRequest extends FormRequest
         return [
             'photos' => ['required', 'array', 'min:1'],
             'photos.*' => ['required', 'file', 'mimes:jpeg,jpg,png,webp,gif', 'max:20480'],
-            'signature' => ['required', 'file', 'mimes:jpeg,jpg,png,webp,gif', 'max:20480'],
         ];
     }
 }

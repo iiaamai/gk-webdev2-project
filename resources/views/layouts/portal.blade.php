@@ -27,13 +27,7 @@
                 @hasSection('header-actions')
                     @yield('header-actions')
                 @endif
-                <form method="post" action="{{ route('logout') }}">
-                    @csrf
-                    <x-ui.button type="submit" variant="secondary" class="!py-1.5 !text-xs">
-                        <x-ui.icon name="log-out" size="size-3.5" />
-                        Log out
-                    </x-ui.button>
-                </form>
+                <x-ui.logout-button variant="secondary" icon-size="size-3.5" class="!py-1.5 !text-xs" />
             </div>
         </div>
 

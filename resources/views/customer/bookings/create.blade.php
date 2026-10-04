@@ -22,7 +22,13 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    <form method="post" action="{{ route('customer.bookings.store') }}" class="mx-auto w-full max-w-3xl space-y-6">
+    <div class="mx-auto w-full max-w-3xl" x-data="{ open: false }">
+    <form
+        method="post"
+        action="{{ route('customer.bookings.store') }}"
+        class="space-y-6"
+        x-ref="bookingForm"
+    >
         @csrf
 
         <input type="hidden" name="pickup_lat" value="{{ $pickupLat }}">
@@ -135,8 +141,18 @@
             </div>
         </x-ui.card>
 
-        <x-ui.button type="submit" class="m-0">
+        <x-ui.button type="button" class="m-0" @click="open = true">
             Submit booking
         </x-ui.button>
+
     </form>
+
+        <x-ui.confirm-dialog
+            title="Submit this booking?"
+            description="A Pay Later invoice will be created with this booking."
+            confirm-label="Submit booking"
+            cancel-label="Cancel"
+            form-ref="bookingForm"
+        />
+    </div>
 @endsection

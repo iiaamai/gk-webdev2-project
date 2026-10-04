@@ -3,7 +3,7 @@ GK Trucking Services 2.0 — Document ACL and storage
 Storage (private disk; not public URLs)
 storage/app/private/bookings/{booking_number}/gatepass.*
 storage/app/private/bookings/{booking_number}/eir.*
-storage/app/private/bookings/{booking_number}/pod/   (photos + signature)
+storage/app/private/bookings/{booking_number}/pod/   (photos)
 
 Serve only through authenticated controllers + policies.
 

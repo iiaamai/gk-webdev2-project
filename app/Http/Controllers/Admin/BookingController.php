@@ -216,7 +216,6 @@ class BookingController extends Controller
         $uploadBookingPod->execute(
             $booking,
             $request->file('photos'),
-            $request->file('signature'),
         );
 
         return redirect()

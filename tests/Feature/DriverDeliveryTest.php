@@ -210,7 +210,7 @@ class DriverDeliveryTest extends TestCase
             ->assertSee('Active delivery')
             ->assertSee('Available jobs')
             ->assertSee('GK-TEST-CARD')
-            ->assertSee('View', false)
+            ->assertSee('Accept', false)
             ->assertDontSee('Finish your current delivery to accept new jobs', false);
     }
 
@@ -291,6 +291,38 @@ class DriverDeliveryTest extends TestCase
             ->assertSee('GK-TEST-ACTIVE')
             ->assertSee('GK-TEST-WAITING')
             ->assertSee('Finish your current delivery to accept new jobs', false)
-            ->assertSee('View only', false);
+            ->assertSee('View only', false)
+            ->assertSee('View', false);
+    }
+
+    public function test_available_jobs_are_ordered_oldest_first(): void
+    {
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $driver = User::factory()->driver()->create();
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
+            'status' => VehicleStatus::Available,
+        ]);
+
+        Booking::factory()->withGatepass()->create([
+            'booking_number' => 'GK-TEST-LATER',
+            'pricing_id' => $pricing->id,
+            'created_at' => now('Asia/Manila')->subHour(),
+        ]);
+        Booking::factory()->withGatepass()->create([
+            'booking_number' => 'GK-TEST-EARLIER',
+            'pricing_id' => $pricing->id,
+            'created_at' => now('Asia/Manila')->subHours(2),
+        ]);
+
+        $response = $this->actingAs($driver)
+            ->get(route('driver.deliveries.index'))
+            ->assertOk()
+            ->assertSee('Accept', false);
+
+        $this->assertTrue(
+            strpos($response->getContent(), 'GK-TEST-EARLIER') < strpos($response->getContent(), 'GK-TEST-LATER'),
+        );
     }
 }

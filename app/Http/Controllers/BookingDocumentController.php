@@ -52,21 +52,6 @@ class BookingDocumentController extends Controller
         );
     }
 
-    public function podSignature(Booking $booking): StreamedResponse
-    {
-        $this->authorize('viewPod', $booking);
-
-        $pod = $booking->pod;
-        if ($pod === null) {
-            abort(404);
-        }
-
-        return $this->streamInline(
-            $pod->signature_path,
-            $booking->booking_number.'-pod-signature',
-        );
-    }
-
     private function streamInline(string $path, string $filename): StreamedResponse
     {
         abort_unless(Storage::disk('local')->exists($path), 404);

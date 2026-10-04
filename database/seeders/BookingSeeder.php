@@ -151,7 +151,6 @@ class BookingSeeder extends Seeder
                             'bookings/demo/gk-0005-pod-1.jpg',
                             'bookings/demo/gk-0005-pod-2.jpg',
                         ],
-                        'signature_path' => 'bookings/demo/gk-0005-signature.png',
                         'captured_at' => now('Asia/Manila')->subDays(2),
                     ],
                 );

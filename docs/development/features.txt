@@ -21,7 +21,7 @@ pending
   → Staff or System Admin uploads gatepass (booking still pending; now visible to drivers)
   → Driver accepts (one active delivery per driver; vehicle locked in use)
   → in_transit
-  → Driver uploads EIR; on completed, POD photos + digital signature
+  → Driver uploads EIR; on completed, POD photos
   → completed (vehicle released)
 
 - Drivers only see available jobs after a gatepass is uploaded, matching their vehicle type, and not already locked to another driver.
@@ -84,7 +84,7 @@ Driver modules
 - Deliveries
   - Available: bookings that match the driver's vehicle type and already have a gatepass
   - Active: at most one active delivery
-  - Active delivery details: update status; upload/update EIR; on the completed status, capture POD photos and a digital signature
+  - Active delivery details: update status; upload/update EIR; on the completed status, capture POD photos
   - Details: Mapbox static optimal route to the destination
 - Profile
 - Gatepass is uploaded by Staff or System Admin before the job appears. System Admin can also CRUD gatepass/EIR/POD.

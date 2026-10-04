@@ -25,34 +25,50 @@
         </x-ui.card>
     </div>
 
-    <form method="post" action="{{ route('admin.bookings.store') }}" enctype="multipart/form-data" class="space-y-4">
-        @csrf
+    <div x-data="{ open: false }">
+        <form
+            method="post"
+            action="{{ route('admin.bookings.store') }}"
+            enctype="multipart/form-data"
+            class="space-y-4"
+            x-ref="bookingForm"
+        >
+            @csrf
 
-        @include('bookings._workspace_status_gatepass', [
-            'booking' => null,
-            'statuses' => $statuses,
-            'mode' => 'create',
-        ])
+            @include('bookings._workspace_status_gatepass', [
+                'booking' => null,
+                'statuses' => $statuses,
+                'mode' => 'create',
+            ])
 
-        <x-ui.card>
-            <x-ui.section-heading
-                icon="package"
-                title="Trip details"
-                description="Customer, driver, vehicle type, schedule, and addresses."
-            />
-            <div class="mt-4 space-y-4">
-                @include('bookings._trip_fields', [
-                    'booking' => null,
-                    'customers' => $customers,
-                    'drivers' => $drivers,
-                    'pricings' => $pricings,
-                    'showCustomer' => true,
-                ])
-                <x-ui.button type="submit">
-                    <x-ui.icon name="save" size="size-4" />
-                    Create booking
-                </x-ui.button>
-            </div>
-        </x-ui.card>
-    </form>
+            <x-ui.card>
+                <x-ui.section-heading
+                    icon="package"
+                    title="Trip details"
+                    description="Customer, driver, vehicle type, schedule, and addresses."
+                />
+                <div class="mt-4 space-y-4">
+                    @include('bookings._trip_fields', [
+                        'booking' => null,
+                        'customers' => $customers,
+                        'drivers' => $drivers,
+                        'pricings' => $pricings,
+                        'showCustomer' => true,
+                    ])
+                    <x-ui.button type="button" @click="open = true">
+                        <x-ui.icon name="save" size="size-4" />
+                        Create booking
+                    </x-ui.button>
+                </div>
+            </x-ui.card>
+        </form>
+
+        <x-ui.confirm-dialog
+            title="Create this booking?"
+            description="A booking and Pay Later invoice will be created for the selected customer."
+            confirm-label="Create booking"
+            cancel-label="Cancel"
+            form-ref="bookingForm"
+        />
+    </div>
 @endsection

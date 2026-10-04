@@ -19,13 +19,9 @@
 
         <x-ui.card>
             <x-ui.section-heading icon="log-out" title="Sign out" description="End your staff session on this device." />
-            <form method="post" action="{{ route('logout') }}" class="mt-4">
-                @csrf
-                <x-ui.button type="submit" variant="secondary">
-                    <x-ui.icon name="log-out" size="size-4" />
-                    Log out
-                </x-ui.button>
-            </form>
+            <div class="mt-4">
+                <x-ui.logout-button />
+            </div>
         </x-ui.card>
     </div>
 @endsection

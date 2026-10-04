@@ -45,7 +45,7 @@
                 @foreach ($available as $booking)
                     <x-driver.job-card
                         :booking="$booking"
-                        cta-label="View"
+                        :cta-label="$hasActiveDelivery ? 'View' : 'Accept'"
                         :view-only="$hasActiveDelivery"
                     />
                 @endforeach

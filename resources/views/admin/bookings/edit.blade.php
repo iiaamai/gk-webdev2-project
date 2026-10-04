@@ -93,20 +93,40 @@
             <x-ui.section-heading icon="archive" title="Danger zone" />
             <div class="mt-4 flex flex-wrap gap-3">
                 @can('cancel', $booking)
-                    <form method="post" action="{{ route('admin.bookings.cancel', $booking) }}" onsubmit="return confirm('Cancel this booking?');">
-                        @csrf
-                        <x-ui.button type="submit" variant="danger">Cancel booking</x-ui.button>
-                    </form>
+                    <div x-data="{ open: false }">
+                        <form x-ref="cancelForm" method="post" action="{{ route('admin.bookings.cancel', $booking) }}">
+                            @csrf
+                            <x-ui.button type="button" variant="danger" @click="open = true">Cancel booking</x-ui.button>
+                        </form>
+                        <x-ui.confirm-dialog
+                            title="Cancel this booking?"
+                            description="The booking will be cancelled. This cannot be undone from the staff workflow."
+                            confirm-label="Cancel booking"
+                            cancel-label="Keep booking"
+                            confirm-variant="danger"
+                            form-ref="cancelForm"
+                        />
+                    </div>
                 @endcan
 
-                <form method="post" action="{{ route('admin.bookings.destroy', $booking) }}" onsubmit="return confirm('Archive this booking?');">
-                    @csrf
-                    @method('DELETE')
-                    <x-ui.button type="submit" variant="ghost" class="!text-danger">
-                        <x-ui.icon name="archive" size="size-4" />
-                        Archive booking
-                    </x-ui.button>
-                </form>
+                <div x-data="{ open: false }">
+                    <form x-ref="archiveForm" method="post" action="{{ route('admin.bookings.destroy', $booking) }}">
+                        @csrf
+                        @method('DELETE')
+                        <x-ui.button type="button" variant="ghost" class="!text-danger" @click="open = true">
+                            <x-ui.icon name="archive" size="size-4" />
+                            Archive booking
+                        </x-ui.button>
+                    </form>
+                    <x-ui.confirm-dialog
+                        title="Archive this booking?"
+                        description="The booking will be soft-deleted and removed from the active list."
+                        confirm-label="Archive booking"
+                        cancel-label="Keep booking"
+                        confirm-variant="danger"
+                        form-ref="archiveForm"
+                    />
+                </div>
             </div>
         </x-ui.card>
     </div>

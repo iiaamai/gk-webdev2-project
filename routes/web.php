@@ -66,8 +66,6 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
     Route::get('documents/bookings/{booking}/pod/photos/{index}', [BookingDocumentController::class, 'podPhoto'])
         ->whereNumber('index')
         ->name('documents.bookings.pod.photo');
-    Route::get('documents/bookings/{booking}/pod/signature', [BookingDocumentController::class, 'podSignature'])
-        ->name('documents.bookings.pod.signature');
     Route::get('users/{user}/avatar', [ProfileController::class, 'avatar'])
         ->name('users.avatar');
     Route::put('profile', [ProfileController::class, 'update'])

@@ -32,8 +32,12 @@
     method="post"
     action="{{ $action }}"
     class="grid gap-4 lg:grid-cols-2 lg:items-start"
+    x-ref="vehicleForm"
     x-data="{
         status: @js($initialStatus),
+        originalStatus: @js($vehicle?->status?->value ?? 'available'),
+        requireInUseConfirm: @js($lockDetails),
+        open: false,
         driverId: @js($initialDriverId),
         search: '',
         drivers: @js($driverOptions),
@@ -70,6 +74,13 @@
                 return;
             }
             this.status = value;
+        },
+        requestSave() {
+            if (this.requireInUseConfirm && this.status === 'in_use' && this.originalStatus !== 'in_use') {
+                this.open = true;
+                return;
+            }
+            this.$refs.vehicleForm.requestSubmit();
         },
     }"
 >
@@ -124,7 +135,7 @@
             <div>
                 <x-ui.label for="pricing_id">Vehicle type (pricing)</x-ui.label>
                 @if ($lockDetails)
-                    <x-ui.select id="pricing_id" disabled>
+                    <x-ui.select id="pricing_id" disabled class="appearance-none bg-none pe-3">
                         <option value="">Select pricing…</option>
                         @foreach ($pricings ?? [] as $pricing)
                             <option value="{{ $pricing->id }}" @selected((string) old('pricing_id', $vehicle?->pricing_id) === (string) $pricing->id)>
@@ -254,10 +265,17 @@
 
     @if ($showSubmit)
         <div class="order-4 flex justify-start lg:col-start-1 lg:row-start-3">
-            <x-ui.button type="submit">
-                <x-ui.icon :name="$vehicle ? 'save' : 'plus'" size="size-4" />
-                {{ $vehicle ? 'Save changes' : 'Create vehicle' }}
-            </x-ui.button>
+            @if ($lockDetails)
+                <x-ui.button type="button" @click="requestSave()">
+                    <x-ui.icon :name="$vehicle ? 'save' : 'plus'" size="size-4" />
+                    {{ $vehicle ? 'Save changes' : 'Create vehicle' }}
+                </x-ui.button>
+            @else
+                <x-ui.button type="submit">
+                    <x-ui.icon :name="$vehicle ? 'save' : 'plus'" size="size-4" />
+                    {{ $vehicle ? 'Save changes' : 'Create vehicle' }}
+                </x-ui.button>
+            @endif
         </div>
     @else
         <div class="order-4 flex justify-start lg:col-start-1 lg:row-start-3">
@@ -266,5 +284,15 @@
                 Back to fleet
             </x-ui.button>
         </div>
+    @endif
+
+    @if ($showSubmit && $lockDetails)
+        <x-ui.confirm-dialog
+            title="Mark this vehicle in use?"
+            description="Staff will not be able to change details, status, or driver until the vehicle is released."
+            confirm-label="Save as in use"
+            cancel-label="Cancel"
+            form-ref="vehicleForm"
+        />
     @endif
 </form>

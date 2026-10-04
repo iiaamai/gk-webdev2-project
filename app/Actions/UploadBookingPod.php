@@ -13,9 +13,9 @@ class UploadBookingPod
     /**
      * @param  array<int, UploadedFile>  $photos
      */
-    public function execute(Booking $booking, array $photos, UploadedFile $signature): Pod
+    public function execute(Booking $booking, array $photos): Pod
     {
-        return DB::transaction(function () use ($booking, $photos, $signature): Pod {
+        return DB::transaction(function () use ($booking, $photos): Pod {
             $directory = 'bookings/'.$booking->booking_number.'/pod';
 
             $existing = $booking->pod;
@@ -23,7 +23,6 @@ class UploadBookingPod
                 foreach ($existing->photo_paths as $oldPath) {
                     Storage::disk('local')->delete($oldPath);
                 }
-                Storage::disk('local')->delete($existing->signature_path);
             }
 
             $photoPaths = [];
@@ -34,16 +33,10 @@ class UploadBookingPod
                 $photoPaths[] = $directory.'/'.$filename;
             }
 
-            $signatureExtension = strtolower($signature->getClientOriginalExtension());
-            $signatureFilename = 'signature.'.$signatureExtension;
-            Storage::disk('local')->putFileAs($directory, $signature, $signatureFilename);
-            $signaturePath = $directory.'/'.$signatureFilename;
-
             return Pod::query()->updateOrCreate(
                 ['booking_id' => $booking->id],
                 [
                     'photo_paths' => $photoPaths,
-                    'signature_path' => $signaturePath,
                     'captured_at' => now('Asia/Manila'),
                 ],
             );

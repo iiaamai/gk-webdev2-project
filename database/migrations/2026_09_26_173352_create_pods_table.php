@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('pods', function (Blueprint $table) {
             $table->foreignId('booking_id')->primary()->constrained('bookings');
             $table->text('photo_paths');
-            $table->string('signature_path');
             $table->timestamp('captured_at');
             $table->timestamp('archived_at')->nullable();
             $table->timestamps();

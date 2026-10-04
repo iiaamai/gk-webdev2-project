@@ -55,14 +55,24 @@
                                 <x-ui.icon name="pencil" size="size-3.5" />
                                 Edit
                             </x-ui.button>
-                            <form method="post" action="{{ route('admin.pricing.destroy', $pricing) }}" onsubmit="return confirm('Archive this pricing row?');">
-                                @csrf
-                                @method('DELETE')
-                                <x-ui.button type="submit" variant="ghost" class="!py-1.5 !text-xs !text-danger">
-                                    <x-ui.icon name="archive" size="size-3.5" />
-                                    Archive
-                                </x-ui.button>
-                            </form>
+                            <div x-data="{ open: false }">
+                                <form x-ref="archiveForm" method="post" action="{{ route('admin.pricing.destroy', $pricing) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-ui.button type="button" variant="ghost" class="!py-1.5 !text-xs !text-danger" @click="open = true">
+                                        <x-ui.icon name="archive" size="size-3.5" />
+                                        Archive
+                                    </x-ui.button>
+                                </form>
+                                <x-ui.confirm-dialog
+                                    title="Archive this pricing row?"
+                                    description="The pricing row will be soft-deleted and removed from the active list."
+                                    confirm-label="Archive"
+                                    cancel-label="Cancel"
+                                    confirm-variant="danger"
+                                    form-ref="archiveForm"
+                                />
+                            </div>
                         </div>
                     </td>
                 </tr>

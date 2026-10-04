@@ -20,11 +20,7 @@
         </x-ui.button>
     </form>
 
-    <form method="post" action="{{ route('logout') }}" class="mt-3">
-        @csrf
-        <x-ui.button type="submit" variant="secondary" class="w-full">
-            <x-ui.icon name="log-out" size="size-4" />
-            Log out
-        </x-ui.button>
-    </form>
+    <div class="mt-3">
+        <x-ui.logout-button class="w-full justify-center" />
+    </div>
 @endsection

@@ -14,7 +14,6 @@
                 <li><a href="{{ route('documents.bookings.pod.photo', [$booking, $index]) }}">Photo {{ $index + 1 }}</a></li>
             @endforeach
         </ul>
-        <p>POD signature: <a href="{{ route('documents.bookings.pod.signature', $booking) }}">Download</a></p>
     @elseif (auth()->user()?->isCustomer())
         <p>POD: available when the delivery is completed.</p>
     @else

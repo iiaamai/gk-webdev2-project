@@ -3,13 +3,12 @@ Table: pods
 Database: SQLite
 
 Purpose
-- Proof of Delivery: photos and digital signature on the completed status.
+- Proof of Delivery: photos on the completed status.
 - One POD record per booking (1:1), may store multiple photo paths.
 
 Fields
 - booking_id            INTEGER PRIMARY KEY  → bookings.id
 - photo_paths           TEXT NOT NULL        (JSON array of private storage paths)
-- signature_path        TEXT NOT NULL        (private storage path)
 - captured_at           TEXT NOT NULL
 - archived_at           TEXT NULL
 - created_at            TEXT NULL

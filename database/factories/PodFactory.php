@@ -22,7 +22,6 @@ class PodFactory extends Factory
                 'bookings/demo/pod-1.jpg',
                 'bookings/demo/pod-2.jpg',
             ],
-            'signature_path' => 'bookings/demo/signature.png',
             'captured_at' => now(),
         ];
     }
