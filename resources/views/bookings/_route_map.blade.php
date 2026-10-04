@@ -13,11 +13,17 @@
 
     <div class="grid gap-3 sm:grid-cols-2">
         <div class="rounded-md border border-border bg-surface-inset p-3">
-            <p class="text-xs font-medium uppercase tracking-wide text-text-subtle">Pickup</p>
+            <p class="flex items-center gap-1.5 text-sm font-medium uppercase tracking-wide text-text-subtle">
+                <x-ui.icon name="map-pin" size="size-5" class="fill-primary stroke-white" />
+                Pickup
+            </p>
             <p class="mt-1 text-sm font-medium text-text">{{ $booking->pickup_address }}</p>
         </div>
         <div class="rounded-md border border-border bg-surface-inset p-3">
-            <p class="text-xs font-medium uppercase tracking-wide text-text-subtle">Dropoff</p>
+            <p class="flex items-center gap-1.5 text-sm font-medium uppercase tracking-wide text-text-subtle">
+                <x-ui.icon name="map-pin" size="size-5" class="fill-success stroke-white" />
+                Dropoff
+            </p>
             <p class="mt-1 text-sm font-medium text-text">{{ $booking->dropoff_address }}</p>
         </div>
     </div>
@@ -29,7 +35,7 @@
             'mapSize' => $mapSize,
         ])
     @elseif ($routeMap !== null)
-        @if ($routeMap->hasImage())
+        @if ($routeMap->hasRoute())
             <div class="overflow-hidden rounded-md border border-dashed border-border-strong bg-primary-tone-1">
                 <div class="border-b border-border bg-surface-elevated px-4 py-2 text-sm text-text-muted">
                     @if ($routeMap->distanceKm !== null && $routeMap->durationMinutes !== null)
@@ -38,13 +44,11 @@
                         Route preview
                     @endif
                 </div>
-                <img
-                    src="{{ $routeMap->imageUrl }}"
-                    alt="Route from pickup to dropoff for {{ $booking->booking_number }}"
-                    class="h-auto w-full max-h-80 object-cover"
-                    width="640"
-                    height="400"
-                >
+                @include('bookings._interactive_route_map', [
+                    'booking' => $booking,
+                    'routeMap' => $routeMap,
+                    'mapSize' => $mapSize,
+                ])
             </div>
         @else
             @include('bookings._map_placeholder', [

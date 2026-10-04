@@ -115,13 +115,10 @@
             </x-ui.card>
 
             <x-ui.card>
-                <x-ui.section-heading icon="package" title="Invoice" />
-                <div class="mt-3">
-                    @include('bookings._invoice', [
-                        'booking' => $booking,
-                        'markPaidAction' => route('staff.bookings.invoice.mark-paid', $booking),
-                    ])
-                </div>
+                @include('bookings._invoice', [
+                    'booking' => $booking,
+                    'markPaidAction' => route('staff.bookings.invoice.mark-paid', $booking),
+                ])
             </x-ui.card>
         </div>
 

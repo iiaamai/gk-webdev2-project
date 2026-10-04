@@ -138,6 +138,38 @@ class StaffOverviewQuery
         ];
     }
 
+    /**
+     * @param  Collection<int, Booking>  $activeBookings
+     */
+    public function resolveMapBooking(Collection $activeBookings, ?int $requestedId): ?Booking
+    {
+        if ($requestedId !== null) {
+            $selected = $activeBookings->firstWhere('id', $requestedId);
+
+            if ($selected !== null) {
+                return $selected;
+            }
+        }
+
+        $inTransit = $activeBookings->first(
+            fn (Booking $booking): bool => $booking->status === BookingStatus::InTransit,
+        );
+
+        if ($inTransit !== null) {
+            return $inTransit;
+        }
+
+        $accepted = $activeBookings->first(
+            fn (Booking $booking): bool => $booking->status === BookingStatus::Accepted,
+        );
+
+        if ($accepted !== null) {
+            return $accepted;
+        }
+
+        return $activeBookings->first();
+    }
+
     public function nowInManila(): Carbon
     {
         return now(self::TIMEZONE);

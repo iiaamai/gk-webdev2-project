@@ -4,15 +4,16 @@
 
 @section('content')
     @php
-        $pickupLat = old('pickup_lat', '14.5547');
-        $pickupLng = old('pickup_lng', '121.0244');
-        $dropoffLat = old('dropoff_lat', '14.6760');
-        $dropoffLng = old('dropoff_lng', '121.0437');
+        $locationPicker = \App\Support\MapboxIntegration::isConfigured();
+        $pickupLat = old('pickup_lat', $locationPicker ? '' : '14.5547');
+        $pickupLng = old('pickup_lng', $locationPicker ? '' : '121.0244');
+        $dropoffLat = old('dropoff_lat', $locationPicker ? '' : '14.6760');
+        $dropoffLng = old('dropoff_lng', $locationPicker ? '' : '121.0437');
     @endphp
 
     <x-ui.page-header
         title="New booking"
-        subtitle="Prices come from the pricing list. Pay Later invoice is created with your booking."
+        subtitle="Prices come from the pricing list. An unpaid invoice is created with your booking."
     >
         <x-slot:actions>
             <x-ui.button href="{{ route('customer.bookings.index') }}" variant="secondary">
@@ -31,10 +32,10 @@
     >
         @csrf
 
-        <input type="hidden" name="pickup_lat" value="{{ $pickupLat }}">
-        <input type="hidden" name="pickup_lng" value="{{ $pickupLng }}">
-        <input type="hidden" name="dropoff_lat" value="{{ $dropoffLat }}">
-        <input type="hidden" name="dropoff_lng" value="{{ $dropoffLng }}">
+        <input type="hidden" id="pickup_lat" name="pickup_lat" value="{{ $pickupLat }}">
+        <input type="hidden" id="pickup_lng" name="pickup_lng" value="{{ $pickupLng }}">
+        <input type="hidden" id="dropoff_lat" name="dropoff_lat" value="{{ $dropoffLat }}">
+        <input type="hidden" id="dropoff_lng" name="dropoff_lng" value="{{ $dropoffLng }}">
 
         <x-ui.card>
             <x-ui.section-heading icon="truck" title="Vehicle & schedule" description="Choose a vehicle type and preferred pickup time." />
@@ -65,65 +66,132 @@
             </div>
         </x-ui.card>
 
-        <x-ui.card>
-            <x-ui.section-heading icon="map-pin" title="Pickup" />
-            <div class="mt-4 space-y-4">
-                <p class="text-xs text-text-muted">
-                    Lat {{ number_format((float) $pickupLat, 4) }} · Lng {{ number_format((float) $pickupLng, 4) }}
-                </p>
-                @include('bookings._map_placeholder', [
-                    'placeholderCaption' => 'Pickup location map preview.',
-                ])
-                <x-ui.field-error name="pickup_lat" />
-                <x-ui.field-error name="pickup_lng" />
-                <div>
-                    <x-ui.label for="pickup_address">Address</x-ui.label>
-                    <x-ui.input id="pickup_address" name="pickup_address" value="{{ old('pickup_address') }}" required />
-                    <x-ui.field-error name="pickup_address" />
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
+        @if ($locationPicker)
+            <x-ui.card>
+                <x-ui.section-heading
+                    icon="map-pin"
+                    title="Pickup & dropoff"
+                    description="Search or click the map. Switch between pickup and dropoff before you set each pin."
+                />
+                <div class="mt-4 space-y-4">
+                    @include('bookings._location_picker')
+                    <x-ui.field-error name="pickup_lat" />
+                    <x-ui.field-error name="dropoff_lat" />
                     <div>
-                        <x-ui.label for="pickup_port_number">Port number</x-ui.label>
-                        <x-ui.input
-                            id="pickup_port_number"
-                            name="pickup_port_number"
-                            value="{{ old('pickup_port_number') }}"
-                            required
-                        />
-                        <x-ui.field-error name="pickup_port_number" />
+                        <x-ui.label for="pickup_address">
+                            <span class="inline-flex items-center gap-1.5">
+                                <x-ui.icon name="map-pin" size="size-5" class="fill-primary stroke-white" />
+                                Pickup address
+                            </span>
+                        </x-ui.label>
+                        <x-ui.input id="pickup_address" name="pickup_address" value="{{ old('pickup_address') }}" required />
+                        <x-ui.field-error name="pickup_address" />
                     </div>
                     <div>
-                        <x-ui.label for="pickup_container_number">Container number</x-ui.label>
-                        <x-ui.input
-                            id="pickup_container_number"
-                            name="pickup_container_number"
-                            value="{{ old('pickup_container_number') }}"
-                            required
-                        />
-                        <x-ui.field-error name="pickup_container_number" />
+                        <x-ui.label for="dropoff_address">
+                            <span class="inline-flex items-center gap-1.5">
+                                <x-ui.icon name="map-pin" size="size-5" class="fill-success stroke-white" />
+                                Dropoff address
+                            </span>
+                        </x-ui.label>
+                        <x-ui.input id="dropoff_address" name="dropoff_address" value="{{ old('dropoff_address') }}" required />
+                        <x-ui.field-error name="dropoff_address" />
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <x-ui.label for="pickup_port_number">Port number</x-ui.label>
+                            <x-ui.input
+                                id="pickup_port_number"
+                                name="pickup_port_number"
+                                value="{{ old('pickup_port_number') }}"
+                                required
+                            />
+                            <x-ui.field-error name="pickup_port_number" />
+                        </div>
+                        <div>
+                            <x-ui.label for="pickup_container_number">Container number</x-ui.label>
+                            <x-ui.input
+                                id="pickup_container_number"
+                                name="pickup_container_number"
+                                value="{{ old('pickup_container_number') }}"
+                                required
+                            />
+                            <x-ui.field-error name="pickup_container_number" />
+                        </div>
                     </div>
                 </div>
-            </div>
-        </x-ui.card>
+            </x-ui.card>
+        @else
+            <x-ui.card>
+                <x-ui.section-heading icon="map-pin" title="Pickup" icon-class="fill-primary stroke-white" />
+                <div class="mt-4 space-y-4">
+                    <p class="text-xs text-text-muted">
+                        Lat {{ number_format((float) ($pickupLat !== '' ? $pickupLat : 0), 4) }} · Lng {{ number_format((float) ($pickupLng !== '' ? $pickupLng : 0), 4) }}
+                    </p>
+                    @include('bookings._map_placeholder', [
+                        'placeholderCaption' => 'Pickup location map preview.',
+                    ])
+                    <x-ui.field-error name="pickup_lat" />
+                    <x-ui.field-error name="pickup_lng" />
+                    <div>
+                        <x-ui.label for="pickup_address">
+                            <span class="inline-flex items-center gap-1.5">
+                                <x-ui.icon name="map-pin" size="size-5" class="fill-primary stroke-white" />
+                                Address
+                            </span>
+                        </x-ui.label>
+                        <x-ui.input id="pickup_address" name="pickup_address" value="{{ old('pickup_address') }}" required />
+                        <x-ui.field-error name="pickup_address" />
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <x-ui.label for="pickup_port_number">Port number</x-ui.label>
+                            <x-ui.input
+                                id="pickup_port_number"
+                                name="pickup_port_number"
+                                value="{{ old('pickup_port_number') }}"
+                                required
+                            />
+                            <x-ui.field-error name="pickup_port_number" />
+                        </div>
+                        <div>
+                            <x-ui.label for="pickup_container_number">Container number</x-ui.label>
+                            <x-ui.input
+                                id="pickup_container_number"
+                                name="pickup_container_number"
+                                value="{{ old('pickup_container_number') }}"
+                                required
+                            />
+                            <x-ui.field-error name="pickup_container_number" />
+                        </div>
+                    </div>
+                </div>
+            </x-ui.card>
 
-        <x-ui.card>
-            <x-ui.section-heading icon="map-pin" title="Dropoff" />
-            <div class="mt-4 space-y-4">
-                <p class="text-xs text-text-muted">
-                    Lat {{ number_format((float) $dropoffLat, 4) }} · Lng {{ number_format((float) $dropoffLng, 4) }}
-                </p>
-                @include('bookings._map_placeholder', [
-                    'placeholderCaption' => 'Dropoff location map preview.',
-                ])
-                <x-ui.field-error name="dropoff_lat" />
-                <x-ui.field-error name="dropoff_lng" />
-                <div>
-                    <x-ui.label for="dropoff_address">Address</x-ui.label>
-                    <x-ui.input id="dropoff_address" name="dropoff_address" value="{{ old('dropoff_address') }}" required />
-                    <x-ui.field-error name="dropoff_address" />
+            <x-ui.card>
+                <x-ui.section-heading icon="map-pin" title="Dropoff" icon-class="fill-success stroke-white" />
+                <div class="mt-4 space-y-4">
+                    <p class="text-xs text-text-muted">
+                        Lat {{ number_format((float) ($dropoffLat !== '' ? $dropoffLat : 0), 4) }} · Lng {{ number_format((float) ($dropoffLng !== '' ? $dropoffLng : 0), 4) }}
+                    </p>
+                    @include('bookings._map_placeholder', [
+                        'placeholderCaption' => 'Dropoff location map preview.',
+                    ])
+                    <x-ui.field-error name="dropoff_lat" />
+                    <x-ui.field-error name="dropoff_lng" />
+                    <div>
+                        <x-ui.label for="dropoff_address">
+                            <span class="inline-flex items-center gap-1.5">
+                                <x-ui.icon name="map-pin" size="size-5" class="fill-success stroke-white" />
+                                Address
+                            </span>
+                        </x-ui.label>
+                        <x-ui.input id="dropoff_address" name="dropoff_address" value="{{ old('dropoff_address') }}" required />
+                        <x-ui.field-error name="dropoff_address" />
+                    </div>
                 </div>
-            </div>
-        </x-ui.card>
+            </x-ui.card>
+        @endif
 
         <x-ui.card>
             <x-ui.section-heading icon="package" title="Cargo details" description="Optional notes for the trip." />
@@ -149,7 +217,7 @@
 
         <x-ui.confirm-dialog
             title="Submit this booking?"
-            description="A Pay Later invoice will be created with this booking."
+            description="An unpaid invoice will be created with this booking."
             confirm-label="Submit booking"
             cancel-label="Cancel"
             form-ref="bookingForm"

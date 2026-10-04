@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'GK Trucking Services') — GK Trucking Services</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('head')
     <style>[x-cloak]{display:none!important}</style>
 </head>
 <body class="min-h-screen bg-surface text-text">

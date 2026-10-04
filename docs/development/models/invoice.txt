@@ -3,7 +3,7 @@ Table: invoices
 Database: SQLite
 
 Purpose
-- Pay Later / invoice for a booking. One invoice per booking.
+- Invoice for a booking (unpaid / paid). One invoice per booking.
 - Online PayMongo can be added later via optional reference fields.
 
 Fields

@@ -3,6 +3,10 @@
 @section('title', 'New booking')
 
 @section('content')
+    @php
+        $locationPicker = \App\Support\MapboxIntegration::isConfigured();
+    @endphp
+
     <x-ui.page-header
         title="Create booking"
         subtitle="Set status and route, then trip details at the bottom."
@@ -21,7 +25,18 @@
         </x-ui.card>
 
         <x-ui.card>
-            @include('bookings._create_destination')
+            @if ($locationPicker)
+                <x-ui.section-heading
+                    icon="map-pin"
+                    title="Destination & route"
+                    description="Search or click the map. Pickup and dropoff addresses below stay in sync."
+                />
+                <div class="mt-4">
+                    @include('bookings._location_picker')
+                </div>
+            @else
+                @include('bookings._create_destination')
+            @endif
         </x-ui.card>
     </div>
 
@@ -53,8 +68,9 @@
                         'customers' => $customers,
                         'drivers' => $drivers,
                         'pricings' => $pricings,
-                        'showCustomer' => true,
-                    ])
+                    'showCustomer' => true,
+                    'suppressTripMap' => $locationPicker,
+                ])
                     <x-ui.button type="button" @click="open = true">
                         <x-ui.icon name="save" size="size-4" />
                         Create booking
@@ -65,7 +81,7 @@
 
         <x-ui.confirm-dialog
             title="Create this booking?"
-            description="A booking and Pay Later invoice will be created for the selected customer."
+            description="A booking and unpaid invoice will be created for the selected customer."
             confirm-label="Create booking"
             cancel-label="Cancel"
             form-ref="bookingForm"

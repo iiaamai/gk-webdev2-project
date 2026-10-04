@@ -1,8 +1,9 @@
 @php
-    $pickupLat = old('pickup_lat', $booking?->pickup_lat ?? 14.5547);
-    $pickupLng = old('pickup_lng', $booking?->pickup_lng ?? 121.0244);
-    $dropoffLat = old('dropoff_lat', $booking?->dropoff_lat ?? 14.6760);
-    $dropoffLng = old('dropoff_lng', $booking?->dropoff_lng ?? 121.0437);
+    $useLocationPicker = (bool) ($suppressTripMap ?? false);
+    $pickupLat = old('pickup_lat', $booking?->pickup_lat ?? ($useLocationPicker ? '' : 14.5547));
+    $pickupLng = old('pickup_lng', $booking?->pickup_lng ?? ($useLocationPicker ? '' : 121.0244));
+    $dropoffLat = old('dropoff_lat', $booking?->dropoff_lat ?? ($useLocationPicker ? '' : 14.6760));
+    $dropoffLng = old('dropoff_lng', $booking?->dropoff_lng ?? ($useLocationPicker ? '' : 121.0437));
     $tripRouteMap = $routeMap ?? null;
     $drivers = $drivers ?? collect();
     $initialPricingId = old('pricing_id', $booking?->pricing_id);
@@ -18,10 +19,10 @@
     $showDriverSelect = ($showDriver ?? true) && $drivers->isNotEmpty();
 @endphp
 
-<input type="hidden" name="pickup_lat" value="{{ $pickupLat }}">
-<input type="hidden" name="pickup_lng" value="{{ $pickupLng }}">
-<input type="hidden" name="dropoff_lat" value="{{ $dropoffLat }}">
-<input type="hidden" name="dropoff_lng" value="{{ $dropoffLng }}">
+<input type="hidden" id="pickup_lat" name="pickup_lat" value="{{ $pickupLat }}">
+<input type="hidden" id="pickup_lng" name="pickup_lng" value="{{ $pickupLng }}">
+<input type="hidden" id="dropoff_lat" name="dropoff_lat" value="{{ $dropoffLat }}">
+<input type="hidden" id="dropoff_lng" name="dropoff_lng" value="{{ $dropoffLng }}">
 
 <div
     class="grid gap-4 md:grid-cols-2"
@@ -97,27 +98,44 @@
     </div>
 
     <div>
-        <x-ui.label for="pickup_address">Pickup address</x-ui.label>
+        <x-ui.label for="pickup_address">
+            <span class="inline-flex items-center gap-1.5">
+                <x-ui.icon name="map-pin" size="size-5" class="fill-primary stroke-white" />
+                Pickup address
+            </span>
+        </x-ui.label>
         <x-ui.input id="pickup_address" name="pickup_address" value="{{ old('pickup_address', $booking?->pickup_address) }}" required />
         <x-ui.field-error name="pickup_address" />
     </div>
 
     <div>
-        <x-ui.label for="dropoff_address">Dropoff address</x-ui.label>
+        <x-ui.label for="dropoff_address">
+            <span class="inline-flex items-center gap-1.5">
+                <x-ui.icon name="map-pin" size="size-5" class="fill-success stroke-white" />
+                Dropoff address
+            </span>
+        </x-ui.label>
         <x-ui.input id="dropoff_address" name="dropoff_address" value="{{ old('dropoff_address', $booking?->dropoff_address) }}" required />
         <x-ui.field-error name="dropoff_address" />
     </div>
 
-    <div class="md:col-span-2">
-        @include('bookings._map_placeholder', [
-            'booking' => $booking ?? null,
-            'routeMap' => $tripRouteMap,
-        ])
+    @if ($useLocationPicker)
         <x-ui.field-error name="pickup_lat" />
-        <x-ui.field-error name="pickup_lng" />
         <x-ui.field-error name="dropoff_lat" />
-        <x-ui.field-error name="dropoff_lng" />
-    </div>
+    @endif
+
+    @unless ($useLocationPicker)
+        <div class="md:col-span-2">
+            @include('bookings._map_placeholder', [
+                'booking' => $booking ?? null,
+                'routeMap' => $tripRouteMap,
+            ])
+            <x-ui.field-error name="pickup_lat" />
+            <x-ui.field-error name="pickup_lng" />
+            <x-ui.field-error name="dropoff_lat" />
+            <x-ui.field-error name="dropoff_lng" />
+        </div>
+    @endunless
 
     <div>
         <x-ui.label for="cargo_desc">Cargo description</x-ui.label>

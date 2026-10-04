@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CustomerOverviewTest extends TestCase
@@ -73,10 +74,14 @@ class CustomerOverviewTest extends TestCase
             'cargo_desc' => 'Office desks',
         ]);
 
+        Http::fake();
+
         $this->actingAs($customer)
             ->get(route('customer.bookings.show', $booking))
             ->assertOk()
             ->assertSee('Trip details')
+            ->assertSee('Pickup and dropoff for this booking.', false)
+            ->assertDontSee('Shown after a driver accepts this booking.', false)
             ->assertSee('Waiting for gatepass and driver assignment')
             ->assertSee('Office desks')
             ->assertSee('Back to list', false);
@@ -84,6 +89,8 @@ class CustomerOverviewTest extends TestCase
 
     public function test_customer_create_booking_form_is_polished(): void
     {
+        config(['gk.mapbox_enabled' => false]);
+
         $customer = User::factory()->customer()->create();
 
         $this->actingAs($customer)

@@ -1,43 +1,61 @@
-@if ($booking->invoice)
-    @can('view', $booking->invoice)
-        <div class="space-y-3 text-sm">
-            <p class="font-semibold text-text">Invoice (Pay Later)</p>
-            <dl class="grid grid-cols-[6.5rem_1fr] gap-x-3 gap-y-2">
-                <dt class="text-text-muted">Amount</dt>
-                <dd class="font-medium text-text">₱{{ number_format((float) $booking->invoice->amount, 2) }}</dd>
-                <dt class="text-text-muted">Status</dt>
-                <dd>
-                    @php
-                        $invoiceTone = $booking->invoice->status->value === 'paid' ? 'success' : 'warning';
-                    @endphp
-                    <x-ui.badge :tone="$invoiceTone">{{ $booking->invoice->status->value }}</x-ui.badge>
-                </dd>
-                @if ($booking->invoice->issued_at)
-                    <dt class="text-text-muted">Issued</dt>
-                    <dd class="text-text">{{ $booking->invoice->issued_at->timezone('Asia/Manila')->format('Y-m-d H:i') }}</dd>
-                @endif
-                @if ($booking->invoice->paid_at)
-                    <dt class="text-text-muted">Paid</dt>
-                    <dd class="text-text">{{ $booking->invoice->paid_at->timezone('Asia/Manila')->format('Y-m-d H:i') }}</dd>
-                @endif
-                @if ($booking->invoice->notes)
-                    <dt class="text-text-muted">Notes</dt>
-                    <dd class="text-text">{{ $booking->invoice->notes }}</dd>
-                @endif
-            </dl>
-        </div>
-    @endcan
+@php
+    $invoice = $booking->invoice;
+    $canView = $invoice && (auth()->user()?->can('view', $invoice) ?? false);
+    $canMarkPaid = $invoice && ! empty($markPaidAction ?? null) && (auth()->user()?->can('markAsPaid', $invoice) ?? false);
+    $canMarkUnpaid = $invoice && ! empty($markUnpaidAction ?? null) && (auth()->user()?->can('markAsUnpaid', $invoice) ?? false);
+    $invoiceTone = $invoice?->status->value === 'paid' ? 'success' : 'warning';
+@endphp
 
-    @can('markAsPaid', $booking->invoice)
-        @if (! empty($markPaidAction ?? null))
+@if ($invoice && $canView)
+    <div class="space-y-4">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <x-ui.section-heading
+                icon="receipt"
+                title="Invoice"
+                description="Payment status for this booking."
+            />
+            <x-ui.badge :tone="$invoiceTone">{{ $invoice->status->value }}</x-ui.badge>
+        </div>
+
+        <dl class="mt-1 grid gap-3 text-sm sm:grid-cols-2">
+            <div class="rounded-md border border-border bg-surface-inset px-4 py-3 sm:col-span-2">
+                <dt class="text-xs font-medium uppercase tracking-wide text-text-subtle">Amount</dt>
+                <dd class="mt-1 text-2xl font-semibold text-text">₱{{ number_format((float) $invoice->amount, 2) }}</dd>
+            </div>
+            @if ($invoice->issued_at)
+                <div>
+                    <dt class="text-text-muted">Issued</dt>
+                    <dd class="mt-1 text-text">{{ $invoice->issued_at->timezone('Asia/Manila')->format('M j, Y g:i A') }}</dd>
+                </div>
+            @endif
+            @if ($invoice->paid_at)
+                <div>
+                    <dt class="text-text-muted">Paid</dt>
+                    <dd class="mt-1 text-text">{{ $invoice->paid_at->timezone('Asia/Manila')->format('M j, Y g:i A') }}</dd>
+                </div>
+            @elseif ($invoice->status->value === 'unpaid')
+                <div>
+                    <dt class="text-text-muted">Paid</dt>
+                    <dd class="mt-1 text-text-muted">Not paid yet</dd>
+                </div>
+            @endif
+            @if ($invoice->notes)
+                <div class="sm:col-span-2">
+                    <dt class="text-text-muted">Notes</dt>
+                    <dd class="mt-1 text-text">{{ $invoice->notes }}</dd>
+                </div>
+            @endif
+        </dl>
+
+        @if ($canMarkPaid)
             <div
                 x-data="{ open: false }"
-                class="mt-6 space-y-4 border-t border-border pt-4"
+                class="space-y-4 border-t border-border pt-4"
             >
                 <x-ui.section-heading
-                    icon="file-up"
-                    title="Mark invoice paid"
-                    description="Record that payment was received (Pay Later)."
+                    icon="check"
+                    title="Mark as paid"
+                    description="Record that payment was received for this invoice."
                 />
                 <form
                     x-ref="markPaidForm"
@@ -63,23 +81,21 @@
 
                 <x-ui.confirm-dialog
                     title="Mark this invoice as paid?"
-                    description="This records that payment was received (Pay Later)."
+                    description="The invoice status will change from unpaid to paid."
                     confirm-label="Mark as paid"
                     cancel-label="Cancel"
                     form-ref="markPaidForm"
                 />
             </div>
         @endif
-    @endcan
 
-    @can('markAsUnpaid', $booking->invoice)
-        @if (! empty($markUnpaidAction ?? null))
+        @if ($canMarkUnpaid)
             <div
                 x-data="{ open: false }"
-                class="mt-6 space-y-4 border-t border-border pt-4"
+                class="space-y-4 border-t border-border pt-4"
             >
                 <x-ui.section-heading
-                    icon="file-up"
+                    icon="rotate-ccw"
                     title="Revert to unpaid"
                     description="Undo a mistaken paid status (admin only)."
                 />
@@ -92,7 +108,7 @@
                     @csrf
                     <div>
                         <x-ui.label for="invoice_unpaid_notes">Notes (optional)</x-ui.label>
-                        <x-ui.textarea id="invoice_unpaid_notes" name="notes" rows="2">{{ old('notes', $booking->invoice->notes) }}</x-ui.textarea>
+                        <x-ui.textarea id="invoice_unpaid_notes" name="notes" rows="2">{{ old('notes', $invoice->notes) }}</x-ui.textarea>
                         <x-ui.field-error name="notes" />
                     </div>
                     <x-ui.button
@@ -115,7 +131,14 @@
                 />
             </div>
         @endif
-    @endcan
+    </div>
 @else
-    <p class="text-sm italic text-text-muted">No invoice on file for this booking.</p>
+    <div class="space-y-3">
+        <x-ui.section-heading
+            icon="receipt"
+            title="Invoice"
+            description="Payment status for this booking."
+        />
+        <p class="text-sm text-text-muted">No invoice on file for this booking.</p>
+    </div>
 @endif

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Data\StaticRouteMapResult;
-use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Support\MapboxIntegration;
 use Illuminate\Support\Facades\Http;
@@ -16,7 +15,7 @@ class BookingStaticRouteMapService
             return new StaticRouteMapResult(
                 configured: MapboxIntegration::isConfigured(),
                 eligible: false,
-                message: 'Shown after a driver accepts this booking.',
+                message: 'Pickup and dropoff coordinates are required to show this route.',
             );
         }
 
@@ -32,15 +31,10 @@ class BookingStaticRouteMapService
 
     public function isEligible(Booking $booking): bool
     {
-        if ($booking->driver_id === null) {
-            return false;
-        }
-
-        return in_array($booking->status, [
-            BookingStatus::Accepted,
-            BookingStatus::InTransit,
-            BookingStatus::Completed,
-        ], true);
+        return $booking->pickup_lat !== null
+            && $booking->pickup_lng !== null
+            && $booking->dropoff_lat !== null
+            && $booking->dropoff_lng !== null;
     }
 
     private function fetchRouteMap(Booking $booking): StaticRouteMapResult
@@ -57,7 +51,7 @@ class BookingStaticRouteMapService
         $response = Http::timeout(15)->get(
             'https://api.mapbox.com/directions/v5/mapbox/driving/'.$coordinates,
             [
-                'geometries' => 'polyline',
+                'geometries' => 'geojson',
                 'overview' => 'full',
                 'access_token' => $token,
             ],
@@ -72,8 +66,9 @@ class BookingStaticRouteMapService
         }
 
         $route = $response->json('routes.0');
+        $geometry = is_array($route) ? ($route['geometry'] ?? null) : null;
 
-        if (! is_array($route) || ! isset($route['geometry'])) {
+        if (! is_array($geometry) || ($geometry['type'] ?? null) !== 'LineString' || ($geometry['coordinates'] ?? []) === []) {
             return new StaticRouteMapResult(
                 configured: true,
                 eligible: true,
@@ -81,25 +76,19 @@ class BookingStaticRouteMapService
             );
         }
 
-        $polyline = (string) $route['geometry'];
-        $style = (string) config('gk.mapbox_style', 'mapbox/streets-v12');
-        $path = 'path-5+1e40af-0.75('.rawurlencode($polyline).')';
-        $imageUrl = sprintf(
-            'https://api.mapbox.com/styles/v1/%s/static/%s/auto/640x400@2x?padding=48&access_token=%s',
-            $style,
-            $path,
-            $token,
-        );
-
         $distanceKm = isset($route['distance']) ? round((float) $route['distance'] / 1000, 1) : null;
         $durationMinutes = isset($route['duration']) ? (int) round((float) $route['duration'] / 60) : null;
 
         return new StaticRouteMapResult(
             configured: true,
             eligible: true,
-            imageUrl: $imageUrl,
+            geometry: $geometry,
             distanceKm: $distanceKm,
             durationMinutes: $durationMinutes,
+            pickupLng: (float) $booking->pickup_lng,
+            pickupLat: (float) $booking->pickup_lat,
+            dropoffLng: (float) $booking->dropoff_lng,
+            dropoffLat: (float) $booking->dropoff_lat,
         );
     }
 }

@@ -3,6 +3,10 @@
 @section('title', 'Edit '.$booking->booking_number)
 
 @section('content')
+    @php
+        $locationPicker = \App\Support\MapboxIntegration::isConfigured();
+    @endphp
+
     <x-ui.page-header
         title="Edit {{ $booking->booking_number }}"
         subtitle="Main workspace: status, documents, trip details, and receipt."
@@ -27,11 +31,22 @@
         </x-ui.card>
 
         <x-ui.card>
-            @include('bookings._route_map', [
-                'booking' => $booking,
-                'routeMap' => $routeMap,
-                'editMapSlot' => true,
-            ])
+            @if ($locationPicker)
+                <x-ui.section-heading
+                    icon="map-pin"
+                    title="Destination & route"
+                    description="Search or click the map. Pickup and dropoff addresses below stay in sync."
+                />
+                <div class="mt-4">
+                    @include('bookings._location_picker')
+                </div>
+            @else
+                @include('bookings._route_map', [
+                    'booking' => $booking,
+                    'routeMap' => $routeMap,
+                    'editMapSlot' => true,
+                ])
+            @endif
         </x-ui.card>
     </div>
 
@@ -57,14 +72,11 @@
             </x-ui.card>
 
             <x-ui.card>
-                <x-ui.section-heading icon="package" title="Invoice" />
-                <div class="mt-3">
-                    @include('bookings._invoice', [
-                        'booking' => $booking,
-                        'markPaidAction' => route('admin.bookings.invoice.mark-paid', $booking),
-                        'markUnpaidAction' => route('admin.bookings.invoice.mark-unpaid', $booking),
-                    ])
-                </div>
+                @include('bookings._invoice', [
+                    'booking' => $booking,
+                    'markPaidAction' => route('admin.bookings.invoice.mark-paid', $booking),
+                    'markUnpaidAction' => route('admin.bookings.invoice.mark-unpaid', $booking),
+                ])
             </x-ui.card>
         </div>
 
@@ -85,6 +97,7 @@
                     'showCustomer' => true,
                     'submitLabel' => 'Save trip details',
                     'routeMap' => $routeMap,
+                    'suppressTripMap' => $locationPicker,
                 ])
             </div>
         </x-ui.card>

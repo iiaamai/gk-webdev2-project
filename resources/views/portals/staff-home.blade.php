@@ -32,6 +32,65 @@
         </x-ui.card>
     </div>
 
+    <x-ui.card class="mb-6">
+        <x-ui.section-heading
+            icon="map"
+            title="Live operations map"
+            description="Pickup-to-dropoff route for the selected active trip."
+        />
+
+        @if ($overview['active_bookings']->isEmpty())
+            <div class="mt-4">
+                @include('bookings._map_placeholder', [
+                    'routeMap' => null,
+                    'mapSize' => 'overview',
+                    'placeholderCaption' => 'No active trips to preview.',
+                ])
+            </div>
+        @else
+            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <form method="get" action="{{ route('staff.home') }}" class="min-w-0 flex-1">
+                    <x-ui.label for="map_booking">Active booking</x-ui.label>
+                    <x-ui.select id="map_booking" name="map_booking" class="mt-1" onchange="this.form.submit()">
+                        @foreach ($overview['active_bookings'] as $booking)
+                            <option value="{{ $booking->id }}" @selected($selectedMapBookingId === $booking->id)>
+                                {{ $booking->booking_number }} · {{ $booking->status->value }}
+                            </option>
+                        @endforeach
+                    </x-ui.select>
+                </form>
+                @if ($mapBooking)
+                    <x-ui.button
+                        href="{{ route('staff.bookings.show', $mapBooking) }}"
+                        variant="secondary"
+                        class="flex w-full justify-center sm:w-auto"
+                    >
+                        <x-ui.icon name="eye" size="size-4" />
+                        View booking
+                    </x-ui.button>
+                @endif
+            </div>
+
+            @if ($mapBooking)
+                <div class="mt-4">
+                    <p class="mb-3 text-sm text-text-muted">
+                        <span class="font-medium text-text">{{ Str::limit($mapBooking->pickup_address, 48) }}</span>
+                        →
+                        <span class="font-medium text-text">{{ Str::limit($mapBooking->dropoff_address, 48) }}</span>
+                        @if ($routeMap?->distanceKm !== null && $routeMap?->durationMinutes !== null)
+                            <span class="text-text-subtle"> · {{ $routeMap->distanceKm }} km · {{ $routeMap->durationMinutes }} min</span>
+                        @endif
+                    </p>
+                    @include('bookings._map_placeholder', [
+                        'booking' => $mapBooking,
+                        'routeMap' => $routeMap,
+                        'mapSize' => 'overview',
+                    ])
+                </div>
+            @endif
+        @endif
+    </x-ui.card>
+
     <div class="mb-6 grid gap-4 lg:grid-cols-2">
         <x-ui.card>
             <x-ui.section-heading

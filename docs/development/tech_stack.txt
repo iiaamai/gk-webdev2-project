@@ -13,7 +13,7 @@ Product
 Integrations (by phase)
 - Laravel Mail (log/Mailtrap in dev; SMTP later) — not Nodemailer
 - Mapbox static optimal route on booking details (after accept) — post-MVP
-- Pay Later invoice now; PayMongo later (after MVP B)
+- Fare from Pricing list in MVP; PayMongo online pay later (post-MVP)
 
 Defaults
 - Session / cache / queue: database (Laravel .env.example)

@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class StaffOverviewTest extends TestCase
@@ -14,6 +15,8 @@ class StaffOverviewTest extends TestCase
 
     public function test_staff_overview_renders_ops_sections(): void
     {
+        Http::fake();
+
         $staff = User::factory()->staff()->create();
         Booking::factory()->create([
             'status' => BookingStatus::Pending,
@@ -28,6 +31,7 @@ class StaffOverviewTest extends TestCase
             ->get(route('staff.home'))
             ->assertOk()
             ->assertSee('Staff overview')
+            ->assertSee('Live operations map', false)
             ->assertSee('Needs gatepass')
             ->assertSee('Needs attention')
             ->assertSee('Active bookings')

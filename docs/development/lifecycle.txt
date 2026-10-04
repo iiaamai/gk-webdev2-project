@@ -6,7 +6,7 @@ pending | accepted | in_transit | completed | cancelled
 Normal path
 1. Customer or Admin creates booking → pending
    - Payout copied from Pricing for vehicle_type
-   - Invoice may be created unpaid (Pay Later)
+   - Invoice may be created unpaid
 2. Staff or Admin uploads gatepass (first time)
    - Still pending; now visible to matching drivers
    - Email matching drivers (when email phase is built)

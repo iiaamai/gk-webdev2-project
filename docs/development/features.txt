@@ -39,7 +39,7 @@ Pricing
 - System Admin module: Pricing List (CRUD the price list).
 
 Payments
-- In scope. Start with Pay Later / invoice for B2B (quote from the pricing list, invoice, unpaid / paid settlement).
+- In scope. Invoice for B2B (quote from the pricing list, unpaid / paid settlement).
 - Online collection later via PayMongo (GCash, Maya, cards). No SMS.
 
 Maps (Mapbox)
@@ -74,7 +74,7 @@ Customer modules
   - History, active bookings, and details for each booking
   - New Booking button → separate booking form page
   - Form shows vehicle options and prices from the database
-  - Payment / quotation (Pay Later / invoice)
+  - Payment / quotation (invoice unpaid / paid)
   - Details page: Mapbox static optimal route after a driver has accepted (nothing before that)
   - View gatepass, EIR, and POD when the booking status allows it
   - Rate the overall trip after completion

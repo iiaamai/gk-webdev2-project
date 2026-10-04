@@ -10,6 +10,8 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/admin-earnings.js',
+                'resources/js/booking-location-map.js',
+                'resources/js/booking-route-map.js',
             ],
             refresh: true,
             fonts: [

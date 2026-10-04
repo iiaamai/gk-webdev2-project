@@ -86,20 +86,21 @@ Notes
 - When enabling: wire Laravel Mail + events in email_events.txt.
 
 2. Mapbox
-Status: placeholder until enabled
+Status: enabled when GK_MAPBOX_ENABLED=true and MAPBOX_TOKEN (or MAPBOX_ACCESS_TOKEN) is set
 Phases: B8 (helpers), F9 (map on booking details); settings map_center_* keys
-Env when enabling: MAPBOX_TOKEN (or MAPBOX_ACCESS_TOKEN)
+Env when enabling: MAPBOX_TOKEN (or MAPBOX_ACCESS_TOKEN), GK_MAPBOX_ENABLED=true
 Notes
-- Stub Mapbox/route helper: return null / “not configured”; no HTTP to Mapbox.
-- Booking still stores pickup/dropoff lat/lng for later use.
-- When enabling: static optimal route from coords only (no live GPS).
+- BookingStaticRouteMapService loads a Directions GeoJSON route whenever pickup and dropoff coordinates exist.
+- Booking details and the admin overview render an interactive Mapbox map (zoom out floor 8, zoom in cap 17). No live GPS.
+- Maps open at Settings map_center_* (fallback config Metro Manila) then jump to the route without animation; no country maxBounds.
+- When disabled/missing token: UI shows a placeholder. Customer and admin create use search + map click only while configured.
 
 3. PayMongo
 Status: placeholder until enabled (after MVP B)
 Phases: reserved on Invoice (paymongo_reference); online pay after checkpoint B
 Env when enabling: PAYMONGO_SECRET_KEY, PAYMONGO_PUBLIC_KEY
 Notes
-- MVP uses Pay Later only (invoice unpaid / paid). No PayMongo API calls.
+- MVP uses in-app invoice unpaid / paid only. No PayMongo API calls.
 - Stub payment service if scaffolded early; keep DB field nullable.
 - When enabling: field mapping + webhooks (see missing_dev_contents item 12).
 
@@ -156,17 +157,17 @@ What is still “real” vs placeholder
 Real (not dummy)
 - Laravel auth: hashed passwords, roles, middleware, role-based redirect.
 - Seeded demo users (seed_plan.txt) are sample data, not fake “pretend login”.
-- Full booking lifecycle, gatepass, accept, vehicle lock, EIR/POD, Pay Later invoice.
+- Full booking lifecycle, gatepass, accept, vehicle lock, EIR/POD, unpaid/paid invoice.
 - Policies, Form Requests, private document ACL, portal CRUD + Blade UI.
 
 Placeholder until user enables external API
 - Mail: no real send (verify/notification code paths may exist as stubs).
-- Mapbox: no route/map HTTP calls.
-- PayMongo: Pay Later only; no online payment API.
+- Mapbox: interactive route map when GK_MAPBOX_ENABLED + token set; otherwise placeholder.
+- PayMongo: not enabled in MVP; invoice is unpaid/paid in-app only.
 
 ---
 
 Other notes
-- phases.txt B8 / B9 / F9 call out “placeholder until keys”.
-- Pay Later invoice (B7 / F8) is in-app and does not need an external API.
+- phases.txt B9 still awaits MAIL_* / GK_MAIL_ENABLED; Mapbox F9 is enabled via env.
+- Invoice unpaid/paid (B7 / F8) is in-app and does not need an external API.
 - Pre-B0 checklist: see “Before starting” section above; phases.txt B0/B1 reference it.

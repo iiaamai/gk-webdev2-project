@@ -31,7 +31,7 @@ File: docs/development/phases.txt
 Notes / decisions
 - Backend then UI per feature (test piece by piece).
 - phases.txt has Backend + Frontend sections.
-- MVP = checkpoint B (full trip + EIR/POD + pay-later invoice).
+- MVP = checkpoint B (full trip + EIR/POD; fare from Pricing, no invoice).
 - After MVP: map, emails, ratings, logs, earnings (checkpoint C features).
 
 ---
@@ -44,7 +44,7 @@ Notes / decisions
 - Staff can change status and cancel only before gatepass.
 - After gatepass: Admin only for status/cancel/gatepass replace.
 - Admin full CRUD including create booking for a customer.
-- Staff can view gatepass/EIR/POD; can mark invoice paid (with Admin).
+- Staff can view gatepass/EIR/POD (no invoice mark-paid).
 - Customer cannot see gatepass.
 
 ---
@@ -65,7 +65,7 @@ Status: done
 File: docs/development/tech_stack.txt (renamed; old “tech _stack.txt” removed)
 
 Notes / decisions
-- SQLite; Laravel Mail (not Nodemailer); Mapbox post-MVP; Pay Later in MVP.
+- SQLite; Laravel Mail (not Nodemailer); Mapbox post-MVP; fare from Pricing (no invoice).
 - Brand: GK Trucking Services.
 
 ---
@@ -105,7 +105,7 @@ File: docs/development/email_events.txt
 
 Notes / decisions
 - Booking created → customer; gatepass uploaded → matching drivers.
-- Status emails to customer; cancel also driver if assigned; invoice to customer.
+- Status emails to customer; cancel also driver if assigned.
 
 ---
 
@@ -133,7 +133,7 @@ Notes / decisions
 Can wait until that feature slice
 
 11. Invoice PDF layout / branding
-Status: deferred
+Status: cancelled (invoice feature removed)
 
 12. PayMongo field mapping + webhooks
 Status: deferred

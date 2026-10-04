@@ -162,7 +162,8 @@ class InvoiceTest extends TestCase
         $this->actingAs($customer)
             ->get(route('customer.bookings.show', $booking))
             ->assertOk()
-            ->assertSee('Invoice (Pay Later)')
-            ->assertSee('unpaid');
+            ->assertSee('Invoice')
+            ->assertSee('unpaid')
+            ->assertSee('Not paid yet', false);
     }
 }

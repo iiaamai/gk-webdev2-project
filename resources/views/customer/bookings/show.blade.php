@@ -63,11 +63,9 @@
         </x-ui.card>
     @endif
 
-    @if ($booking->driver_id)
-        <x-ui.card class="mb-6">
-            @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
-        </x-ui.card>
-    @endif
+    <x-ui.card class="mb-6">
+        @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
+    </x-ui.card>
 
     @if ($canViewEir || $canViewPod)
         <x-ui.card class="mb-6">
@@ -86,11 +84,17 @@
         <x-ui.section-heading icon="map-pin" title="Trip details" />
         <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
             <div>
-                <dt class="text-text-muted">Pickup</dt>
+                <dt class="inline-flex items-center gap-1.5 text-text-muted">
+                    <x-ui.icon name="map-pin" size="size-5" class="fill-primary stroke-white" />
+                    Pickup
+                </dt>
                 <dd class="mt-1 font-medium text-text">{{ $booking->pickup_address }}</dd>
             </div>
             <div>
-                <dt class="text-text-muted">Dropoff</dt>
+                <dt class="inline-flex items-center gap-1.5 text-text-muted">
+                    <x-ui.icon name="map-pin" size="size-5" class="fill-success stroke-white" />
+                    Dropoff
+                </dt>
                 <dd class="mt-1 font-medium text-text">{{ $booking->dropoff_address }}</dd>
             </div>
             @if (filled($booking->pickup_port_number))
