@@ -17,7 +17,7 @@
 
     <div class="mb-6 grid gap-4 lg:grid-cols-2">
         <x-ui.card>
-            @include('bookings._edit_summary', ['booking' => $booking, 'thin' => true])
+            @include('bookings._edit_summary', ['booking' => $booking, 'thin' => false])
         </x-ui.card>
 
         <x-ui.card>
@@ -107,12 +107,11 @@
         @endcan
 
         <div class="grid items-start gap-4 lg:grid-cols-2">
-            <x-ui.card>
-                <x-ui.section-heading icon="package" title="Documents" description="Delivery documents (EIR and POD)" />
-                <div class="mt-3 text-sm">
-                    @include('bookings._eir_pod_links', ['booking' => $booking])
-                </div>
-            </x-ui.card>
+            @include('bookings._documents_panel', [
+                'booking' => $booking,
+                'cardClass' => '',
+                'description' => 'Delivery documents (EIR and POD). Expand a row to preview.',
+            ])
 
             <x-ui.card>
                 @include('bookings._invoice', [

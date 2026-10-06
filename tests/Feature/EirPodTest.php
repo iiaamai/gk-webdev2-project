@@ -180,4 +180,31 @@ class EirPodTest extends TestCase
 
         $this->assertNotNull($booking->fresh()->eir);
     }
+
+    public function test_admin_and_customer_booking_show_use_documents_panel(): void
+    {
+        Storage::fake('local');
+
+        $admin = User::factory()->systemAdmin()->create();
+        $customer = User::factory()->customer()->create();
+        $booking = Booking::factory()->withGatepass()->create([
+            'customer_id' => $customer->id,
+            'status' => BookingStatus::Completed,
+            'gatepass_path' => 'bookings/GK-TEST-DOCS/gatepass.jpg',
+        ]);
+        Storage::disk('local')->put($booking->gatepass_path, 'gatepass');
+
+        $this->actingAs($admin)
+            ->get(route('admin.bookings.show', $booking))
+            ->assertOk()
+            ->assertSee('Documents')
+            ->assertSee('documents/bookings/'.$booking->id.'/gatepass', false)
+            ->assertDontSee('EIR: <a', false);
+
+        $this->actingAs($customer)
+            ->get(route('customer.bookings.show', $booking))
+            ->assertOk()
+            ->assertSee('Documents')
+            ->assertDontSee('documents/bookings/'.$booking->id.'/gatepass', false);
+    }
 }

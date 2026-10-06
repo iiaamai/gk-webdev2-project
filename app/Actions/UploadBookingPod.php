@@ -4,18 +4,25 @@ namespace App\Actions;
 
 use App\Models\Booking;
 use App\Models\Pod;
+use App\Services\ActivityLogger;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class UploadBookingPod
 {
+    public function __construct(
+        private readonly ActivityLogger $activityLogger,
+    ) {}
+
     /**
      * @param  array<int, UploadedFile>  $photos
      */
     public function execute(Booking $booking, array $photos): Pod
     {
-        return DB::transaction(function () use ($booking, $photos): Pod {
+        $wasReplace = $booking->pod !== null;
+
+        $pod = DB::transaction(function () use ($booking, $photos): Pod {
             $directory = 'bookings/'.$booking->booking_number.'/pod';
 
             $existing = $booking->pod;
@@ -41,5 +48,16 @@ class UploadBookingPod
                 ],
             );
         });
+
+        $this->activityLogger->log(
+            action: $wasReplace ? 'booking.pod_replaced' : 'booking.pod_uploaded',
+            subject: $booking,
+            description: ($wasReplace ? 'POD replaced' : 'POD uploaded')." for {$booking->booking_number}.",
+            properties: [
+                'photo_count' => count($pod->photo_paths),
+            ],
+        );
+
+        return $pod;
     }
 }

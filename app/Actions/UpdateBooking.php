@@ -6,17 +6,37 @@ use App\Enums\VehicleStatus;
 use App\Models\Booking;
 use App\Models\Pricing;
 use App\Models\Vehicle;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class UpdateBooking
 {
+    public function __construct(
+        private readonly ActivityLogger $activityLogger,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
     public function execute(Booking $booking, array $data): Booking
     {
-        return DB::transaction(function () use ($booking, $data): Booking {
+        $before = $booking->only([
+            'pricing_id',
+            'booking_datetime',
+            'pickup_address',
+            'pickup_lat',
+            'pickup_lng',
+            'dropoff_address',
+            'dropoff_lat',
+            'dropoff_lng',
+            'cargo_desc',
+            'additional_requirements',
+            'driver_id',
+            'customer_id',
+        ]);
+
+        $fresh = DB::transaction(function () use ($booking, $data): Booking {
             $pricingId = (int) $data['pricing_id'];
 
             if ($pricingId !== (int) $booking->pricing_id) {
@@ -62,5 +82,17 @@ class UpdateBooking
 
             return $booking->fresh();
         });
+
+        $this->activityLogger->log(
+            action: 'booking.updated',
+            subject: $fresh,
+            description: "Booking {$fresh->booking_number} details updated.",
+            properties: [
+                'before' => $before,
+                'after' => $fresh->only(array_keys($before)),
+            ],
+        );
+
+        return $fresh;
     }
 }

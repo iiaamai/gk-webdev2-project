@@ -10,6 +10,7 @@ use App\Models\Rating;
 use App\Models\User;
 use App\Services\EarningsQuery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class RatingsActivityEarningsTest extends TestCase
@@ -69,12 +70,72 @@ class RatingsActivityEarningsTest extends TestCase
         $this->post(route('login'), [
             'email' => 'rater@example.com',
             'password' => 'password',
+            'geo_lat' => '14.5995000',
+            'geo_lng' => '120.9842000',
         ])->assertRedirect();
 
         $log = ActivityLog::query()->where('action', 'user.login')->first();
         $this->assertNotNull($log);
         $this->assertSame($user->id, $log->user_id);
         $this->assertNotNull($log->ip_address);
+        $this->assertEqualsWithDelta(14.5995, (float) $log->geo_lat, 0.0001);
+        $this->assertEqualsWithDelta(120.9842, (float) $log->geo_lng, 0.0001);
+    }
+
+    public function test_admin_activity_logs_filter_by_date_and_show_location(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        ActivityLog::factory()->create([
+            'action' => 'booking.created',
+            'description' => 'User logged in yesterday',
+            'ip_location' => 'Manila, PH',
+            'properties' => ['note' => 'seed'],
+            'created_at' => now('Asia/Manila')->subDays(2),
+        ]);
+        ActivityLog::factory()->create([
+            'action' => 'user.login',
+            'description' => 'User logged in today',
+            'created_at' => now('Asia/Manila'),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.activity-logs.index', [
+                'date_from' => now('Asia/Manila')->toDateString(),
+                'date_to' => now('Asia/Manila')->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertSee('User logged in today')
+            ->assertSee('Showing 1 result', false)
+            ->assertDontSee('User logged in yesterday');
+    }
+
+    public function test_ip_location_resolver_stores_location_when_enabled(): void
+    {
+        config(['gk.activity_ip_lookup' => true]);
+
+        Http::fake([
+            'ip-api.com/*' => Http::response([
+                'status' => 'success',
+                'city' => 'Quezon City',
+                'regionName' => 'Metro Manila',
+                'country' => 'Philippines',
+            ]),
+        ]);
+
+        $user = User::factory()->customer()->create([
+            'email' => 'geo@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.10'])
+            ->post(route('login'), [
+                'email' => 'geo@example.com',
+                'password' => 'password',
+            ])
+            ->assertRedirect();
+
+        $log = ActivityLog::query()->where('action', 'user.login')->first();
+        $this->assertSame('Quezon City, Metro Manila, Philippines', $log?->ip_location);
     }
 
     public function test_admin_can_view_activity_logs_and_staff_cannot(): void

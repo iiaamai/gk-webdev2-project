@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Auth;
 
 class ActivityLogger
 {
+    public function __construct(
+        private readonly IpLocationResolver $ipLocationResolver,
+    ) {}
+
     /**
      * @param  array<string, mixed>|null  $properties
      */
@@ -23,6 +27,7 @@ class ActivityLogger
     ): ActivityLog {
         $request ??= request();
         $actor = $user ?? Auth::user();
+        $ip = $request instanceof Request ? $request->ip() : null;
 
         return ActivityLog::query()->create([
             'user_id' => $actor?->id,
@@ -30,8 +35,8 @@ class ActivityLogger
             'subject_type' => $subject !== null ? $subject::class : null,
             'subject_id' => $subject?->getKey(),
             'description' => $description,
-            'ip_address' => $request instanceof Request ? $request->ip() : null,
-            'ip_location' => null,
+            'ip_address' => $ip,
+            'ip_location' => $this->ipLocationResolver->resolve($ip),
             'geo_lat' => $this->optionalFloat($request, 'geo_lat'),
             'geo_lng' => $this->optionalFloat($request, 'geo_lng'),
             'properties' => $properties,

@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\UpdateVehicleRequest;
 use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\ActivityLogger;
 use App\Services\VehicleListQuery;
 use App\Support\ListFilter;
 use Illuminate\Database\Eloquent\Collection;
@@ -47,6 +48,7 @@ class VehicleController extends Controller
     public function store(
         StoreVehicleRequest $request,
         SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
+        ActivityLogger $activityLogger,
     ): RedirectResponse {
         $data = $request->safe()->except(['driver_id']);
         $driverId = $request->validated('driver_id');
@@ -56,6 +58,13 @@ class VehicleController extends Controller
         $syncVehicleDriverAssignment->forVehicle(
             $vehicle,
             $driverId !== null ? (int) $driverId : null,
+        );
+
+        $activityLogger->log(
+            action: 'fleet.created',
+            subject: $vehicle,
+            description: "Vehicle {$vehicle->plate_number} created.",
+            request: $request,
         );
 
         return redirect()
@@ -80,6 +89,7 @@ class VehicleController extends Controller
         UpdateVehicleRequest $request,
         Vehicle $vehicle,
         SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
+        ActivityLogger $activityLogger,
     ): RedirectResponse {
         $data = $request->safe()->except(['driver_id']);
         $driverId = $request->validated('driver_id');
@@ -91,6 +101,13 @@ class VehicleController extends Controller
             $driverId !== null ? (int) $driverId : null,
         );
 
+        $activityLogger->log(
+            action: 'fleet.updated',
+            subject: $vehicle,
+            description: "Vehicle {$vehicle->plate_number} updated.",
+            request: $request,
+        );
+
         return redirect()
             ->route('admin.fleet.index')
             ->with('status', 'Vehicle updated.');
@@ -99,11 +116,19 @@ class VehicleController extends Controller
     public function destroy(
         Vehicle $vehicle,
         SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
+        ActivityLogger $activityLogger,
     ): RedirectResponse {
         $this->authorize('delete', $vehicle);
 
+        $plate = $vehicle->plate_number;
         $syncVehicleDriverAssignment->forVehicle($vehicle, null);
         $vehicle->archive();
+
+        $activityLogger->log(
+            action: 'fleet.archived',
+            subject: $vehicle,
+            description: "Vehicle {$plate} archived.",
+        );
 
         return redirect()
             ->route('admin.fleet.index')

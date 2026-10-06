@@ -18,8 +18,6 @@
                 \App\Enums\BookingStatus::Completed,
             ], true);
         $driver = $booking->driver;
-        $canViewEir = auth()->user()?->can('viewEir', $booking) ?? false;
-        $canViewPod = auth()->user()?->can('viewPod', $booking) ?? false;
     @endphp
 
     <x-ui.page-header :title="$booking->booking_number" subtitle="Booking details">
@@ -67,18 +65,10 @@
         @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
     </x-ui.card>
 
-    @if ($canViewEir || $canViewPod)
-        <x-ui.card class="mb-6">
-            <x-ui.section-heading
-                icon="file"
-                title="Documents"
-                description="EIR and POD when available for this status. Gatepass is not shown to customers."
-            />
-            <div class="mt-4 space-y-3 text-sm">
-                @include('bookings._eir_pod_links', ['booking' => $booking])
-            </div>
-        </x-ui.card>
-    @endif
+    @include('bookings._documents_panel', [
+        'booking' => $booking,
+        'description' => 'EIR and POD when available for this status. Gatepass is not shown to customers.',
+    ])
 
     <x-ui.card class="mb-6">
         <x-ui.section-heading icon="map-pin" title="Trip details" />

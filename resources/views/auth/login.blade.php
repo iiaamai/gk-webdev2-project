@@ -8,8 +8,10 @@
     <h1 class="text-xl font-semibold text-text">Login</h1>
     <p class="mt-1 text-sm text-text-muted">Use your email and password to continue.</p>
 
-    <form method="post" action="{{ route('login') }}" class="mt-6 space-y-4">
+    <form method="post" action="{{ route('login') }}" class="mt-6 space-y-4" id="login-form">
         @csrf
+        <input type="hidden" name="geo_lat" id="geo_lat" value="{{ old('geo_lat') }}">
+        <input type="hidden" name="geo_lng" id="geo_lng" value="{{ old('geo_lng') }}">
 
         <div>
             <x-ui.label for="email">Email</x-ui.label>
@@ -43,3 +45,30 @@
         <a href="{{ route('register.driver') }}" class="font-medium text-primary hover:text-primary-shade-1">driver</a>
     </p>
 @endsection
+
+@pushOnce('scripts')
+    <script>
+        (() => {
+            if (! navigator.geolocation) {
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = document.getElementById('geo_lat');
+                    const lng = document.getElementById('geo_lng');
+
+                    if (lat) {
+                        lat.value = position.coords.latitude.toFixed(7);
+                    }
+
+                    if (lng) {
+                        lng.value = position.coords.longitude.toFixed(7);
+                    }
+                },
+                () => {},
+                { enableHighAccuracy: false, timeout: 3000, maximumAge: 60000 },
+            );
+        })();
+    </script>
+@endpushOnce

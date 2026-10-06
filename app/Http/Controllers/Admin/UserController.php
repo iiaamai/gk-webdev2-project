@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\ActivityLogger;
 use App\Support\ListFilter;
 use App\Support\MailIntegration;
 use Illuminate\Database\Eloquent\Collection;
@@ -69,6 +70,7 @@ class UserController extends Controller
         StoreUserRequest $request,
         SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
         UploadUserAvatar $uploadUserAvatar,
+        ActivityLogger $activityLogger,
     ): RedirectResponse {
         $data = $request->safe()->only([
             'name',
@@ -99,6 +101,13 @@ class UserController extends Controller
             );
         }
 
+        $activityLogger->log(
+            action: 'user.created',
+            subject: $user,
+            description: "User {$user->email} created ({$role->value}).",
+            request: $request,
+        );
+
         return redirect()
             ->route('admin.users.index')
             ->with('status', 'User created successfully.');
@@ -121,6 +130,7 @@ class UserController extends Controller
         User $user,
         SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
         UploadUserAvatar $uploadUserAvatar,
+        ActivityLogger $activityLogger,
     ): RedirectResponse {
         $data = $request->safe()->only([
             'name',
@@ -155,6 +165,13 @@ class UserController extends Controller
             $vehicleId !== null ? (int) $vehicleId : null,
         );
 
+        $activityLogger->log(
+            action: 'user.updated',
+            subject: $user,
+            description: "User {$user->email} updated.",
+            request: $request,
+        );
+
         return redirect()
             ->route('admin.users.index')
             ->with('status', 'User updated.');
@@ -163,14 +180,23 @@ class UserController extends Controller
     public function destroy(
         User $user,
         SyncVehicleDriverAssignment $syncVehicleDriverAssignment,
+        ActivityLogger $activityLogger,
     ): RedirectResponse {
         $this->authorize('delete', $user);
+
+        $email = $user->email;
 
         if ($user->isDriver()) {
             $syncVehicleDriverAssignment->forDriver($user, null);
         }
 
         $user->archive();
+
+        $activityLogger->log(
+            action: 'user.archived',
+            subject: $user,
+            description: "User {$email} archived.",
+        );
 
         return redirect()
             ->route('admin.users.index')

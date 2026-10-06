@@ -7,8 +7,10 @@ Approach
 - UI page polish priority by role: Admin → Staff → Driver → Customer (F3–F6).
 - Frontend foundations (F1–F2) before role-specific polish; see development_notes.txt “UI”.
 - Remind to add env keys when each phase needs them (see env_checklist.txt).
-- External APIs (Mail, Mapbox, PayMongo): placeholders first — stub services,
+- External APIs (Mail, Mapbox): placeholders first — stub services,
   no live calls until keys are set. See development_notes.txt.
+- PayMongo: cancelled / not in scope.
+- E-payment: QR Ph (InstaPay P2M) — Metro Manila static merchant QR; not a PayMongo gateway.
 
 Status legend: [ ] pending · [x] done
 
@@ -68,7 +70,7 @@ BACKEND PHASES (do before matching UI)
 
 [x] B7. Invoice (MVP end)
 - One per booking; unpaid / paid; Staff + Admin mark paid
-- PayMongo: placeholder only (nullable paymongo_reference; no API until after MVP)
+- PayMongo: cancelled (not implemented). Online pay via QR Ph / InstaPay instead (see F11).
 → Checkpoint B (MVP)
 
 [x] B8. Mapbox helpers (post-MVP)
@@ -113,7 +115,9 @@ FRONTEND PHASES (backend B0–B10 complete; UI from F1 onward)
 
 [x] F6. Customer UI: overview, My Bookings, new booking, booking details
 
-[ ] F7. Document upload/view UI (gatepass, EIR, POD — ACL streamed routes)
+[x] F7. Document upload/view UI (gatepass, EIR, POD — ACL streamed routes)
+    - Shared bookings._documents_panel with inline previews (customer / driver / staff / admin)
+    - ACL streamed document routes unchanged; uploads reuse _eir_pod_upload
 
 [x] F8. Invoice UI (unpaid/paid; Staff/Admin mark paid)
 
@@ -123,7 +127,19 @@ FRONTEND PHASES (backend B0–B10 complete; UI from F1 onward)
     - Customer and admin create: one map to search or click pickup and dropoff (Mapbox Geocoding)
     - Requires MAPBOX_TOKEN (or MAPBOX_ACCESS_TOKEN) + GK_MAPBOX_ENABLED=true
 
-[ ] F10. Ratings, activity logs presentation, earnings/overview charts
+[x] F10. Ratings, activity logs presentation, earnings/overview charts
+    - Customer star rating UI; staff/admin booking show displays ratings
+    - Activity logs: date range, location/geo/properties expand, login geo (best-effort)
+    - Optional IP location via GK_ACTIVITY_IP_LOOKUP; admin overview keeps KPI snapshot + link to earnings charts
+
+[ ] F11. QR Ph (InstaPay) e-payment for invoices
+    - PayMongo out of scope. Use BSP QR Ph person-to-merchant (P2M) over InstaPay rails
+      (common Metro Manila merchant QR: GCash / Maya / bank apps scan one code).
+    - Static company QR from GK’s bank or EMI (Settings upload); show on unpaid invoice
+      with amount; customer enters amount in their app after scan.
+    - No direct InstaPay ACH integration in-app (requires licensed PSP). Staff/Admin still
+      mark invoice paid after verifying bank/SMS (optional: customer reference or proof).
+    - UI wording: prefer “Pay via QR Ph (InstaPay)” over generic “InstaPay QR” (avoids P2P confusion).
 
 ---
 

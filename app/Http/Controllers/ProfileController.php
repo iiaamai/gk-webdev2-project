@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\UploadUserAvatar;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Support\RoleHome;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
@@ -12,8 +13,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProfileController extends Controller
 {
-    public function update(UpdateProfileRequest $request, UploadUserAvatar $uploadUserAvatar): RedirectResponse
-    {
+    public function update(
+        UpdateProfileRequest $request,
+        UploadUserAvatar $uploadUserAvatar,
+        ActivityLogger $activityLogger,
+    ): RedirectResponse {
         $user = $request->user();
 
         $user->fill($request->safe()->only(['name', 'mobile']));
@@ -22,6 +26,14 @@ class ProfileController extends Controller
         if ($request->hasFile('avatar')) {
             $uploadUserAvatar->execute($user, $request->file('avatar'));
         }
+
+        $activityLogger->log(
+            action: 'user.profile_updated',
+            subject: $user,
+            description: "Profile updated for {$user->email}.",
+            user: $user,
+            request: $request,
+        );
 
         return redirect()
             ->to($this->settingsUrl($user))

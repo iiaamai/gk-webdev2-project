@@ -35,4 +35,10 @@ return [
 
     'paymongo_enabled' => (bool) env('GK_PAYMONGO_ENABLED', false),
 
+    /*
+    | When true, ActivityLogger resolves a human-readable location from the request IP
+    | (best-effort; disabled by default).
+    */
+    'activity_ip_lookup' => (bool) env('GK_ACTIVITY_IP_LOOKUP', false),
+
 ];

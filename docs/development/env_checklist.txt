@@ -28,3 +28,4 @@ PayMongo (after MVP B, when online pay is added)
 
 Optional later
 - QUEUE_CONNECTION=database (already Laravel default in .env.example)
+- GK_ACTIVITY_IP_LOOKUP=true  (optional; resolves IP city/region for activity logs)

@@ -11,6 +11,9 @@
     'roleOptions' => [],
     'logAction' => null,
     'logActionOptions' => [],
+    'dateFrom' => null,
+    'dateTo' => null,
+    'showDateRange' => false,
 ])
 
 <form method="get" action="{{ $action }}" class="mb-4 flex flex-col gap-3 rounded-md border border-border bg-surface-elevated p-4 lg:flex-row lg:flex-wrap lg:items-end">
@@ -59,6 +62,17 @@
                     <option value="{{ $value }}" @selected((string) $logAction === (string) $value)>{{ $label }}</option>
                 @endforeach
             </x-ui.select>
+        </div>
+    @endif
+
+    @if ($showDateRange)
+        <div class="min-w-[10rem]">
+            <x-ui.label for="list_filter_date_from">From</x-ui.label>
+            <x-ui.input id="list_filter_date_from" type="date" name="date_from" value="{{ $dateFrom }}" class="mt-1" />
+        </div>
+        <div class="min-w-[10rem]">
+            <x-ui.label for="list_filter_date_to">To</x-ui.label>
+            <x-ui.input id="list_filter_date_to" type="date" name="date_to" value="{{ $dateTo }}" class="mt-1" />
         </div>
     @endif
 

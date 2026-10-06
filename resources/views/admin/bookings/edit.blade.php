@@ -58,18 +58,15 @@
         ])
 
         <div class="grid items-start gap-4 lg:grid-cols-2">
-            <x-ui.card>
-                <x-ui.section-heading icon="package" title="Documents" description="Delivery documents (EIR and POD)" />
-                <div class="mt-3 space-y-4 text-sm">
-                    @include('bookings._eir_pod_links', ['booking' => $booking])
-                    @include('bookings._eir_pod_upload', [
-                        'booking' => $booking,
-                        'eirAction' => route('admin.bookings.eir.store', $booking),
-                        'podAction' => route('admin.bookings.pod.store', $booking),
-                        'redirectTo' => 'edit',
-                    ])
-                </div>
-            </x-ui.card>
+            @include('bookings._documents_panel', [
+                'booking' => $booking,
+                'cardClass' => '',
+                'showUploads' => true,
+                'eirAction' => route('admin.bookings.eir.store', $booking),
+                'podAction' => route('admin.bookings.pod.store', $booking),
+                'redirectTo' => 'edit',
+                'description' => 'Delivery documents (EIR and POD). Expand a row to preview or upload.',
+            ])
 
             <x-ui.card>
                 @include('bookings._invoice', [
