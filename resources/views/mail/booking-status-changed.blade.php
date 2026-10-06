@@ -1,9 +1,9 @@
 <x-mail::message>
-# Booking {{ $status->value }}
+# Booking {{ $status->label() }}
 
 Hello {{ $audience === 'driver' ? 'Driver' : ($booking->customer?->name ?? 'Customer') }},
 
-Booking **{{ $booking->booking_number }}** is now **{{ $status->value }}**.
+Booking **{{ $booking->booking_number }}** is now **{{ $status->label() }}**.
 
 - **Pickup:** {{ $booking->pickup_address }}
 - **Dropoff:** {{ $booking->dropoff_address }}

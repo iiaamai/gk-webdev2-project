@@ -16,7 +16,7 @@ class BookingReceiptPdf
 
         $issuedAt = now('Asia/Manila')->format('M j, Y g:i A');
         $amount = $booking->invoice?->amount ?? $booking->pricing?->amount;
-        $invoiceStatus = $booking->invoice?->status?->value ?? '—';
+        $invoiceStatus = $booking->invoice?->status?->label() ?? '—';
 
         $lines = [
             'GK Trucking Services',
@@ -24,7 +24,7 @@ class BookingReceiptPdf
             '',
             'Issued: '.$issuedAt,
             'Booking: '.$booking->booking_number,
-            'Status: '.$booking->status->value,
+            'Status: '.$booking->status->label(),
             '',
             'Customer: '.$booking->customer->name,
             'Email: '.$booking->customer->email,

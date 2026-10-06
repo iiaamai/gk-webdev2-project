@@ -14,7 +14,11 @@
             @click="open = true"
         >
             <x-ui.icon name="log-out" size="{{ $iconSize }}" />
-            {{ $label }}
+            @if ($label !== '')
+                {{ $label }}
+            @else
+                <span class="sr-only">Log out</span>
+            @endif
         </x-ui.button>
     </form>
 

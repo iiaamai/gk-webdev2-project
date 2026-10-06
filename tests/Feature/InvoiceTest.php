@@ -62,7 +62,7 @@ class InvoiceTest extends TestCase
             ->post(route('staff.bookings.invoice.mark-paid', $booking), [
                 'notes' => 'Cash received at office',
             ])
-            ->assertRedirect(route('staff.bookings.edit', $booking));
+            ->assertRedirect(route('staff.bookings.show', $booking));
 
         $invoice->refresh();
         $this->assertSame(InvoiceStatus::Paid, $invoice->status);
@@ -78,7 +78,7 @@ class InvoiceTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('admin.bookings.invoice.mark-paid', $booking))
-            ->assertRedirect(route('admin.bookings.edit', $booking));
+            ->assertRedirect(route('admin.bookings.show', $booking));
 
         $this->assertSame(InvoiceStatus::Paid, $booking->fresh()->invoice->status);
     }
@@ -163,7 +163,7 @@ class InvoiceTest extends TestCase
             ->get(route('customer.bookings.show', $booking))
             ->assertOk()
             ->assertSee('Invoice')
-            ->assertSee('unpaid')
+            ->assertSee('Unpaid')
             ->assertSee('Not paid yet', false);
     }
 }

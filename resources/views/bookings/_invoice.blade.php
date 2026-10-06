@@ -3,7 +3,8 @@
     $canView = $invoice && (auth()->user()?->can('view', $invoice) ?? false);
     $canMarkPaid = $invoice && ! empty($markPaidAction ?? null) && (auth()->user()?->can('markAsPaid', $invoice) ?? false);
     $canMarkUnpaid = $invoice && ! empty($markUnpaidAction ?? null) && (auth()->user()?->can('markAsUnpaid', $invoice) ?? false);
-    $invoiceTone = $invoice?->status->value === 'paid' ? 'success' : 'warning';
+    $invoiceTone = $invoice?->status->badgeTone() ?? 'neutral';
+    $redirectTo = $redirectTo ?? null;
 @endphp
 
 @if ($invoice && $canView)
@@ -14,7 +15,7 @@
                 title="Invoice"
                 description="Payment status for this booking."
             />
-            <x-ui.badge :tone="$invoiceTone">{{ $invoice->status->value }}</x-ui.badge>
+            <x-ui.badge :tone="$invoiceTone">{{ $invoice->status->label() }}</x-ui.badge>
         </div>
 
         <dl class="mt-1 grid gap-3 text-sm sm:grid-cols-2">
@@ -33,7 +34,7 @@
                     <dt class="text-text-muted">Paid</dt>
                     <dd class="mt-1 text-text">{{ $invoice->paid_at->timezone('Asia/Manila')->format('M j, Y g:i A') }}</dd>
                 </div>
-            @elseif ($invoice->status->value === 'unpaid')
+            @elseif ($invoice->status === \App\Enums\InvoiceStatus::Unpaid)
                 <div>
                     <dt class="text-text-muted">Paid</dt>
                     <dd class="mt-1 text-text-muted">Not paid yet</dd>
@@ -64,6 +65,9 @@
                     class="space-y-4"
                 >
                     @csrf
+                    @if ($redirectTo)
+                        <input type="hidden" name="redirect_to" value="{{ $redirectTo }}">
+                    @endif
                     <div>
                         <x-ui.label for="invoice_notes">Notes (optional)</x-ui.label>
                         <x-ui.textarea id="invoice_notes" name="notes" rows="2">{{ old('notes') }}</x-ui.textarea>

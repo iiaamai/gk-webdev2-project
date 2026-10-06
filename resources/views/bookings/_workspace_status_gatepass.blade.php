@@ -18,7 +18,7 @@
                     <x-ui.label for="status">Status</x-ui.label>
                     <x-ui.select id="status" name="status" required x-model="bookingStatus">
                         @foreach ($statuses as $status)
-                            <option value="{{ $status->value }}">{{ $status->value }}</option>
+                            <option value="{{ $status->value }}">{{ $status->label() }}</option>
                         @endforeach
                     </x-ui.select>
                     <x-ui.field-error name="status" />
@@ -33,7 +33,7 @@
                         <x-ui.label for="status">Status</x-ui.label>
                         <x-ui.select id="status" name="status" required>
                             @foreach ($statuses as $status)
-                                <option value="{{ $status->value }}" @selected($booking->status === $status)>{{ $status->value }}</option>
+                                <option value="{{ $status->value }}" @selected($booking->status === $status)>{{ $status->label() }}</option>
                             @endforeach
                         </x-ui.select>
                     </div>
@@ -78,7 +78,21 @@
         ])>
             <x-ui.section-heading icon="file-up" title="Gatepass" />
             <span class="sr-only">Gatepass unavailable when booking is cancelled.</span>
-            <div class="mt-4 space-y-4" x-data="{ open: false }">
+            <div
+                class="mt-4 space-y-4"
+                x-data="{
+                    open: false,
+                    previewUrl: null,
+                    previewName: '',
+                    onFileChange(event) {
+                        const file = event.target.files?.[0];
+                        if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+                        if (! file) { this.previewUrl = null; this.previewName = ''; return; }
+                        this.previewUrl = URL.createObjectURL(file);
+                        this.previewName = file.name;
+                    },
+                }"
+            >
                 <form x-ref="gatepassForm" method="post" action="{{ route('admin.bookings.gatepass.store', $booking) }}" enctype="multipart/form-data" class="space-y-4">
                     @csrf
                     <div>
@@ -91,7 +105,9 @@
                             required
                             @disabled($gatepassDisabled)
                             class="block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-text-on-primary"
+                            @change="onFileChange($event)"
                         >
+                        @include('bookings._file_preview')
                         <x-ui.field-error name="gatepass" />
                     </div>
                     @if ($hasGatepass)

@@ -5,13 +5,7 @@
 ])
 
 @php
-    $statusTone = match ($booking->status->value) {
-        'in_transit' => 'info',
-        'accepted' => 'success',
-        'completed' => 'neutral',
-        'cancelled' => 'danger',
-        default => 'warning',
-    };
+    $statusTone = $booking->status->badgeTone();
 @endphp
 
 <x-ui.card {{ $attributes->class([
@@ -24,7 +18,7 @@
             @if ($viewOnly)
                 <x-ui.badge tone="neutral">View only</x-ui.badge>
             @endif
-            <x-ui.badge :tone="$statusTone">{{ $booking->status->value }}</x-ui.badge>
+            <x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge>
         </div>
     </div>
 
@@ -32,6 +26,10 @@
         <div>
             <dt class="text-text-muted">Pickup</dt>
             <dd class="mt-0.5 text-text">{{ Str::limit($booking->pickup_address, 64) }}</dd>
+        </div>
+        <div>
+            <dt class="text-text-muted">Dropoff</dt>
+            <dd class="mt-0.5 text-text">{{ Str::limit($booking->dropoff_address, 64) }}</dd>
         </div>
         <div class="grid grid-cols-2 gap-3">
             <div>

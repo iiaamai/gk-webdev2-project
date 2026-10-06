@@ -9,7 +9,27 @@
 
 @if ($showEir)
     @can('uploadEir', $booking)
-        <div class="space-y-3" x-data="{ open: false }">
+        <div
+            class="space-y-3"
+            x-data="{
+                open: false,
+                previewUrl: null,
+                previewName: '',
+                onFileChange(event) {
+                    const file = event.target.files?.[0];
+                    if (this.previewUrl) {
+                        URL.revokeObjectURL(this.previewUrl);
+                    }
+                    if (! file) {
+                        this.previewUrl = null;
+                        this.previewName = '';
+                        return;
+                    }
+                    this.previewUrl = URL.createObjectURL(file);
+                    this.previewName = file.name;
+                },
+            }"
+        >
             <h3 class="text-sm font-semibold text-text">{{ $hasEir ? 'Replace EIR' : 'Upload EIR' }}</h3>
             <form x-ref="eirForm" method="post" action="{{ $eirAction }}" enctype="multipart/form-data" class="space-y-3">
                 @csrf
@@ -25,7 +45,9 @@
                         accept="image/jpeg,image/png,image/webp,image/gif"
                         required
                         class="block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-text-on-primary"
+                        @change="onFileChange($event)"
                     >
+                    @include('bookings._file_preview')
                     <x-ui.field-error name="eir" />
                 </div>
                 @if ($hasEir)
@@ -56,10 +78,31 @@
 
 @if ($showPod)
     @can('uploadPod', $booking)
-        <div @class([
-            'space-y-3',
-            'mt-6' => $only === null && auth()->user()?->can('uploadEir', $booking),
-        ]) x-data="{ open: false }">
+        <div
+            @class([
+                'space-y-3',
+                'mt-6' => $only === null && auth()->user()?->can('uploadEir', $booking),
+            ])
+            x-data="{
+                open: false,
+                previewUrl: null,
+                previewName: '',
+                onFileChange(event) {
+                    const file = event.target.files?.[0];
+                    if (this.previewUrl) {
+                        URL.revokeObjectURL(this.previewUrl);
+                    }
+                    if (! file) {
+                        this.previewUrl = null;
+                        this.previewName = '';
+                        return;
+                    }
+                    this.previewUrl = URL.createObjectURL(file);
+                    const count = event.target.files?.length ?? 1;
+                    this.previewName = count > 1 ? file.name + ' (+' + (count - 1) + ' more)' : file.name;
+                },
+            }"
+        >
             <h3 class="text-sm font-semibold text-text">{{ $hasPod ? 'Replace POD' : 'Upload POD' }}</h3>
             <form x-ref="podForm" method="post" action="{{ $podAction }}" enctype="multipart/form-data" class="space-y-3">
                 @csrf
@@ -76,7 +119,9 @@
                         multiple
                         required
                         class="block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-text-on-primary"
+                        @change="onFileChange($event)"
                     >
+                    @include('bookings._file_preview')
                     <x-ui.field-error name="photos" />
                 </div>
                 @if ($hasPod)

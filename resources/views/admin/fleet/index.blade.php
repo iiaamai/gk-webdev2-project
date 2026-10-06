@@ -5,7 +5,7 @@
 @section('content')
     @php
         use App\Enums\VehicleStatus;
-        $statusOptions = collect(VehicleStatus::cases())->mapWithKeys(fn (VehicleStatus $status) => [$status->value => $status->value])->all();
+        $statusOptions = collect(VehicleStatus::cases())->mapWithKeys(fn (VehicleStatus $status) => [$status->value => $status->label()])->all();
     @endphp
 
     <x-ui.page-header title="Fleet" subtitle="Vehicles available for bookings.">
@@ -57,12 +57,7 @@
             </x-slot:head>
             @foreach ($vehicles as $vehicle)
                 @php
-                    $statusTone = match ($vehicle->status->value) {
-                        'available' => 'success',
-                        'in_use' => 'warning',
-                        'maintenance' => 'danger',
-                        default => 'neutral',
-                    };
+                    $statusTone = $vehicle->status->badgeTone();
                 @endphp
                 <tr>
                     <td class="px-4 py-3 font-medium">{{ $vehicle->plate_number }}</td>
@@ -71,7 +66,7 @@
                     <td class="px-4 py-3">{{ $vehicle->pricing?->vehicle_type ?? '—' }}</td>
                     <td class="px-4 py-3">{{ $vehicle->pricing?->capacity_kg ?? '—' }}</td>
                     <td class="px-4 py-3">
-                        <x-ui.badge :tone="$statusTone">{{ $vehicle->status->value }}</x-ui.badge>
+                        <x-ui.badge :tone="$statusTone">{{ $vehicle->status->label() }}</x-ui.badge>
                     </td>
                     <td class="px-4 py-3">
                         @if ($vehicle->driver)

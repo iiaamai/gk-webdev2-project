@@ -6,14 +6,21 @@
     <x-ui.page-header
         title="Edit {{ $booking->booking_number }}"
         subtitle="Gatepass, invoice, and trip details (when unlocked)."
+        class="sticky top-0 z-20 -mx-4 border-b border-border bg-surface/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6"
     >
         <x-slot:actions>
+            <x-ui.button href="{{ route('staff.bookings.show', $booking) }}" variant="secondary">
+                <x-ui.icon name="eye" size="size-4" />
+                View
+            </x-ui.button>
             <x-ui.button href="{{ route('staff.bookings.index') }}" variant="secondary">
                 <x-ui.icon name="arrow-left" size="size-4" />
                 Back to list
             </x-ui.button>
         </x-slot:actions>
     </x-ui.page-header>
+
+    @include('bookings._trip_stepper', ['booking' => $booking])
 
     <div class="mb-6 grid gap-4 lg:grid-cols-2">
         <x-ui.card>
@@ -47,8 +54,41 @@
             </x-ui.card>
         @else
             <x-ui.card>
-                <x-ui.section-heading icon="package" title="Trip details" />
-                <p class="mt-3 text-sm text-text-muted">Trip fields are locked after gatepass upload.</p>
+                <x-ui.section-heading
+                    icon="package"
+                    title="Trip details"
+                    description="Read-only after gatepass upload."
+                />
+                <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                    <div>
+                        <dt class="text-text-muted">Pickup</dt>
+                        <dd class="mt-1 font-medium text-text">{{ $booking->pickup_address }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-text-muted">Dropoff</dt>
+                        <dd class="mt-1 font-medium text-text">{{ $booking->dropoff_address }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-text-muted">Preferred pickup</dt>
+                        <dd class="mt-1 text-text">{{ $booking->booking_datetime->timezone('Asia/Manila')->format('M j, Y g:i A') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-text-muted">Vehicle type</dt>
+                        <dd class="mt-1 text-text">{{ $booking->vehicle_type }}</dd>
+                    </div>
+                    @if ($booking->cargo_desc)
+                        <div class="sm:col-span-2">
+                            <dt class="text-text-muted">Cargo</dt>
+                            <dd class="mt-1 text-text">{{ $booking->cargo_desc }}</dd>
+                        </div>
+                    @endif
+                    @if ($booking->additional_requirements)
+                        <div class="sm:col-span-2">
+                            <dt class="text-text-muted">Requirements</dt>
+                            <dd class="mt-1 text-text">{{ $booking->additional_requirements }}</dd>
+                        </div>
+                    @endif
+                </dl>
             </x-ui.card>
         @endcan
 
@@ -59,7 +99,21 @@
                     title="{{ $booking->hasGatepass() ? 'Replace gatepass' : 'Upload gatepass' }}"
                     description="{{ $booking->hasGatepass() ? 'Replacing the gatepass keeps trip edits locked for staff.' : 'After the first upload, staff can no longer edit trip details.' }}"
                 />
-                <div class="mt-4 space-y-4" x-data="{ open: false }">
+                <div
+                    class="mt-4 space-y-4"
+                    x-data="{
+                        open: false,
+                        previewUrl: null,
+                        previewName: '',
+                        onFileChange(event) {
+                            const file = event.target.files?.[0];
+                            if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+                            if (! file) { this.previewUrl = null; this.previewName = ''; return; }
+                            this.previewUrl = URL.createObjectURL(file);
+                            this.previewName = file.name;
+                        },
+                    }"
+                >
                     <form x-ref="gatepassForm" method="post" action="{{ route('staff.bookings.gatepass.store', $booking) }}" enctype="multipart/form-data" class="space-y-4">
                         @csrf
                         @if ($booking->hasGatepass())
@@ -77,7 +131,9 @@
                                 accept="image/jpeg,image/png,image/webp,image/gif"
                                 required
                                 class="block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-text-on-primary"
+                                @change="onFileChange($event)"
                             >
+                            @include('bookings._file_preview')
                             <x-ui.field-error name="gatepass" />
                         </div>
                         @if ($booking->hasGatepass())
@@ -117,6 +173,7 @@
                 @include('bookings._invoice', [
                     'booking' => $booking,
                     'markPaidAction' => route('staff.bookings.invoice.mark-paid', $booking),
+                    'redirectTo' => route('staff.bookings.edit', $booking),
                 ])
             </x-ui.card>
         </div>

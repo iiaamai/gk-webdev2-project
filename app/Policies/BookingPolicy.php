@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Actions\AcceptDriverBooking;
 use App\Enums\BookingStatus;
+use App\Enums\InvoiceStatus;
 use App\Models\Booking;
 use App\Models\User;
 
@@ -64,11 +65,23 @@ class BookingPolicy
 
     /**
      * Admin: any status. Staff/Driver: completed trips only.
+     * Customer: own booking when completed, or when the invoice is paid.
      */
     public function downloadReceipt(User $user, Booking $booking): bool
     {
         if ($user->isSystemAdmin()) {
             return true;
+        }
+
+        if ($user->isCustomer()) {
+            if ($booking->customer_id !== $user->id) {
+                return false;
+            }
+
+            $booking->loadMissing('invoice');
+
+            return $booking->status === BookingStatus::Completed
+                || $booking->invoice?->status === InvoiceStatus::Paid;
         }
 
         if ($booking->status !== BookingStatus::Completed) {

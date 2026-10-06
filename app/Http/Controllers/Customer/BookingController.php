@@ -8,9 +8,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\StoreBookingRequest;
 use App\Models\Booking;
 use App\Models\Pricing;
+use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class BookingController extends Controller
@@ -76,5 +78,14 @@ class BookingController extends Controller
             'booking' => $booking,
             'routeMap' => $routeMapService->forBooking($booking),
         ]);
+    }
+
+    public function downloadReceipt(
+        Booking $booking,
+        BookingReceiptPdf $bookingReceiptPdf,
+    ): Response {
+        $this->authorize('downloadReceipt', $booking);
+
+        return $bookingReceiptPdf->download($booking);
     }
 }

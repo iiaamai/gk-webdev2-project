@@ -1,12 +1,6 @@
 @php
     $thin = $thin ?? false;
-    $statusTone = match ($booking->status->value) {
-        'pending' => 'warning',
-        'accepted', 'in_transit' => 'info',
-        'completed' => 'success',
-        'cancelled' => 'danger',
-        default => 'neutral',
-    };
+    $statusTone = $booking->status->badgeTone();
 @endphp
 
 <div class="space-y-3">
@@ -26,7 +20,7 @@
             <dd class="font-medium text-text">{{ $booking->customer->name }}</dd>
 
             <dt class="text-text-muted">Status</dt>
-            <dd><x-ui.badge :tone="$statusTone">{{ $booking->status->value }}</x-ui.badge></dd>
+            <dd><x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge></dd>
 
             <dt class="text-text-muted">Driver</dt>
             <dd class="font-medium text-text">{{ $booking->driver?->name ?? 'Unassigned' }}</dd>
@@ -49,7 +43,7 @@
             </div>
             <div class="rounded-md border border-border bg-surface-inset p-3">
                 <p class="text-xs font-medium uppercase tracking-wide text-text-subtle">Status</p>
-                <p class="mt-1"><x-ui.badge :tone="$statusTone">{{ $booking->status->value }}</x-ui.badge></p>
+                <p class="mt-1"><x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge></p>
             </div>
             <div class="rounded-md border border-border bg-surface-inset p-3">
                 <p class="text-xs font-medium uppercase tracking-wide text-text-subtle">Payout (read-only)</p>

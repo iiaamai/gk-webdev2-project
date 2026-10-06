@@ -16,13 +16,21 @@
     $cardClass = $cardClass ?? 'mb-6';
     $showPanel = $canViewGatepass || $canViewEir || $canViewPod
         || ($showUploads && ($canUploadEir || $canUploadPod));
+    $initialOpen = null;
+    if ($canViewGatepass && ! $hasGatepass) {
+        $initialOpen = 'gatepass';
+    } elseif (($canViewEir || ($showUploads && $canUploadEir)) && ! $hasEir) {
+        $initialOpen = 'eir';
+    } elseif (($canViewPod || ($showUploads && $canUploadPod)) && ! $hasPod) {
+        $initialOpen = 'pod';
+    }
 @endphp
 
 @if ($showPanel)
     @if ($wrapCard)
-        <x-ui.card @class([$cardClass]) x-data="{ open: null }">
+        <x-ui.card @class([$cardClass]) x-data="{ open: @js($initialOpen) }">
     @else
-        <div x-data="{ open: null }">
+        <div x-data="{ open: @js($initialOpen) }">
     @endif
 
         <x-ui.section-heading

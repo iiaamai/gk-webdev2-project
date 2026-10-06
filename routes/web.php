@@ -77,6 +77,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
             Route::get('/', CustomerOverviewController::class)->name('home');
             Route::view('settings', 'customer.settings')->name('settings.edit');
             Route::resource('bookings', CustomerBookingController::class)->only(['index', 'create', 'store', 'show']);
+            Route::get('bookings/{booking}/receipt', [CustomerBookingController::class, 'downloadReceipt'])
+                ->name('bookings.receipt');
             Route::post('bookings/{booking}/rating', [BookingRatingController::class, 'store'])
                 ->name('bookings.rating.store');
         });

@@ -16,9 +16,7 @@
     <p>Signed in as <strong>{{ $name }}</strong> ({{ $role }}).</p>
     <p>Portal shell placeholder — full layout arrives in F1.</p>
 
-    @if (session('status'))
-        <p>{{ session('status') }}</p>
-    @endif
+    <x-ui.flash />
 
     <div x-data="{ open: false }">
         <form x-ref="logoutForm" method="post" action="{{ route('logout') }}">

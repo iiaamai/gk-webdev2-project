@@ -28,7 +28,7 @@ class BookingController extends Controller
         $this->authorize('viewAny', Booking::class);
 
         $bookings = $bookingListQuery->paginate($request);
-        $filtersActive = ListFilter::isActive($request, ['q', 'status']);
+        $filtersActive = ListFilter::isActive($request, ['q', 'status', 'scope']);
 
         return view('staff.bookings.index', [
             'bookings' => $bookings,
@@ -112,8 +112,16 @@ class BookingController extends Controller
     ): RedirectResponse {
         $markInvoicePaid->execute($booking->invoice, $request->validated());
 
+        $redirectTo = $request->input('redirect_to');
+
+        if (is_string($redirectTo) && $redirectTo !== '') {
+            return redirect()
+                ->to($redirectTo)
+                ->with('status', 'Invoice marked as paid.');
+        }
+
         return redirect()
-            ->route('staff.bookings.edit', $booking)
+            ->route('staff.bookings.show', $booking)
             ->with('status', 'Invoice marked as paid.');
     }
 

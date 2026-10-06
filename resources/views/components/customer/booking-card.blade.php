@@ -3,19 +3,13 @@
 ])
 
 @php
-    $statusTone = match ($booking->status->value) {
-        'pending' => 'warning',
-        'accepted', 'in_transit' => 'info',
-        'completed' => 'success',
-        'cancelled' => 'danger',
-        default => 'neutral',
-    };
+    $statusTone = $booking->status->badgeTone();
 @endphp
 
 <x-ui.card {{ $attributes->class(['flex h-full flex-col']) }}>
     <div class="flex flex-wrap items-start justify-between gap-2">
         <p class="text-base font-semibold text-text">{{ $booking->booking_number }}</p>
-        <x-ui.badge :tone="$statusTone">{{ $booking->status->value }}</x-ui.badge>
+        <x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge>
     </div>
 
     <dl class="mt-4 grid flex-1 gap-2 text-sm">

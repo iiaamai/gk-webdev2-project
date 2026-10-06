@@ -28,6 +28,7 @@ class MarkInvoicePaidRequest extends FormRequest
     {
         return [
             'notes' => ['nullable', 'string', 'max:2000'],
+            'redirect_to' => ['nullable', 'string', 'max:2048'],
         ];
     }
 }

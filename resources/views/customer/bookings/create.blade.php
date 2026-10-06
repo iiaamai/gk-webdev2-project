@@ -122,17 +122,42 @@
                 </div>
             </x-ui.card>
         @else
+            <div class="rounded-md border border-warning/30 bg-warning-subtle px-4 py-3 text-sm text-warning" role="status">
+                Mapbox is off, so map search is unavailable. Default Metro Manila coordinates are prefilled — edit latitude/longitude below if your trip is elsewhere, or enable Mapbox in settings.
+            </div>
+
             <x-ui.card>
                 <x-ui.section-heading icon="map-pin" title="Pickup" icon-class="fill-primary stroke-white" />
                 <div class="mt-4 space-y-4">
-                    <p class="text-xs text-text-muted">
-                        Lat {{ number_format((float) ($pickupLat !== '' ? $pickupLat : 0), 4) }} · Lng {{ number_format((float) ($pickupLng !== '' ? $pickupLng : 0), 4) }}
-                    </p>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <x-ui.label for="pickup_lat_visible">Pickup latitude</x-ui.label>
+                            <x-ui.input
+                                id="pickup_lat_visible"
+                                type="number"
+                                step="any"
+                                value="{{ $pickupLat }}"
+                                required
+                                oninput="document.getElementById('pickup_lat').value = this.value"
+                            />
+                            <x-ui.field-error name="pickup_lat" />
+                        </div>
+                        <div>
+                            <x-ui.label for="pickup_lng_visible">Pickup longitude</x-ui.label>
+                            <x-ui.input
+                                id="pickup_lng_visible"
+                                type="number"
+                                step="any"
+                                value="{{ $pickupLng }}"
+                                required
+                                oninput="document.getElementById('pickup_lng').value = this.value"
+                            />
+                            <x-ui.field-error name="pickup_lng" />
+                        </div>
+                    </div>
                     @include('bookings._map_placeholder', [
                         'placeholderCaption' => 'Pickup location map preview.',
                     ])
-                    <x-ui.field-error name="pickup_lat" />
-                    <x-ui.field-error name="pickup_lng" />
                     <div>
                         <x-ui.label for="pickup_address">
                             <span class="inline-flex items-center gap-1.5">
@@ -171,14 +196,35 @@
             <x-ui.card>
                 <x-ui.section-heading icon="map-pin" title="Dropoff" icon-class="fill-success stroke-white" />
                 <div class="mt-4 space-y-4">
-                    <p class="text-xs text-text-muted">
-                        Lat {{ number_format((float) ($dropoffLat !== '' ? $dropoffLat : 0), 4) }} · Lng {{ number_format((float) ($dropoffLng !== '' ? $dropoffLng : 0), 4) }}
-                    </p>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <x-ui.label for="dropoff_lat_visible">Dropoff latitude</x-ui.label>
+                            <x-ui.input
+                                id="dropoff_lat_visible"
+                                type="number"
+                                step="any"
+                                value="{{ $dropoffLat }}"
+                                required
+                                oninput="document.getElementById('dropoff_lat').value = this.value"
+                            />
+                            <x-ui.field-error name="dropoff_lat" />
+                        </div>
+                        <div>
+                            <x-ui.label for="dropoff_lng_visible">Dropoff longitude</x-ui.label>
+                            <x-ui.input
+                                id="dropoff_lng_visible"
+                                type="number"
+                                step="any"
+                                value="{{ $dropoffLng }}"
+                                required
+                                oninput="document.getElementById('dropoff_lng').value = this.value"
+                            />
+                            <x-ui.field-error name="dropoff_lng" />
+                        </div>
+                    </div>
                     @include('bookings._map_placeholder', [
                         'placeholderCaption' => 'Dropoff location map preview.',
                     ])
-                    <x-ui.field-error name="dropoff_lat" />
-                    <x-ui.field-error name="dropoff_lng" />
                     <div>
                         <x-ui.label for="dropoff_address">
                             <span class="inline-flex items-center gap-1.5">

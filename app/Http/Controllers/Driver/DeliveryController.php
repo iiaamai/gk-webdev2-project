@@ -45,7 +45,7 @@ class DeliveryController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['eir', 'pod', 'pricing', 'vehicle.pricing']);
+        $booking->load(['eir', 'pod', 'pricing', 'vehicle.pricing', 'customer']);
 
         return view('driver.deliveries.show', [
             'booking' => $booking,

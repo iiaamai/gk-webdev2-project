@@ -74,13 +74,12 @@
             </header>
 
             <main class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 print:overflow-visible print:p-0">
-                <div class="print:hidden">
-                    <x-ui.flash />
-                </div>
                 @yield('content')
             </main>
         </div>
     </div>
+
+    <x-ui.flash />
 
     <style>[x-cloak]{display:none!important}</style>
 </body>

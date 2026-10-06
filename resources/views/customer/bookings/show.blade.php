@@ -4,13 +4,7 @@
 
 @section('content')
     @php
-        $statusTone = match ($booking->status->value) {
-            'pending' => 'warning',
-            'accepted', 'in_transit' => 'info',
-            'completed' => 'success',
-            'cancelled' => 'danger',
-            default => 'neutral',
-        };
+        $statusTone = $booking->status->badgeTone();
         $showDriverContact = $booking->driver_id
             && in_array($booking->status, [
                 \App\Enums\BookingStatus::Accepted,
@@ -26,14 +20,22 @@
                 <x-ui.icon name="arrow-left" size="size-4" />
                 Back to list
             </x-ui.button>
+            @can('downloadReceipt', $booking)
+                <x-ui.button href="{{ route('customer.bookings.receipt', $booking) }}" variant="secondary">
+                    <x-ui.icon name="download" size="size-4" />
+                    Download receipt
+                </x-ui.button>
+            @endcan
         </x-slot:actions>
     </x-ui.page-header>
 
     <div class="mb-6 flex flex-wrap items-center gap-2">
-        <x-ui.badge :tone="$statusTone">{{ $booking->status->value }}</x-ui.badge>
+        <x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge>
         <span class="text-sm text-text-muted">{{ $booking->vehicle_type }}</span>
         <span class="text-sm font-medium text-text">₱{{ number_format((float) $booking->payout, 2) }}</span>
     </div>
+
+    @include('bookings._trip_stepper', ['booking' => $booking])
 
     @if ($showDriverContact && $driver)
         <x-ui.card class="mb-6">
@@ -71,22 +73,8 @@
     ])
 
     <x-ui.card class="mb-6">
-        <x-ui.section-heading icon="map-pin" title="Trip details" />
+        <x-ui.section-heading icon="clipboard-list" title="Trip details" />
         <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-            <div>
-                <dt class="inline-flex items-center gap-1.5 text-text-muted">
-                    <x-ui.icon name="map-pin" size="size-5" class="fill-primary stroke-white" />
-                    Pickup
-                </dt>
-                <dd class="mt-1 font-medium text-text">{{ $booking->pickup_address }}</dd>
-            </div>
-            <div>
-                <dt class="inline-flex items-center gap-1.5 text-text-muted">
-                    <x-ui.icon name="map-pin" size="size-5" class="fill-success stroke-white" />
-                    Dropoff
-                </dt>
-                <dd class="mt-1 font-medium text-text">{{ $booking->dropoff_address }}</dd>
-            </div>
             @if (filled($booking->pickup_port_number))
                 <div>
                     <dt class="text-text-muted">Port number</dt>
@@ -134,6 +122,11 @@
                 'booking' => $booking,
                 'canRate' => auth()->user()?->can('create', [\App\Models\Rating::class, $booking]),
             ])
+        </x-ui.card>
+    @elseif ($booking->status === \App\Enums\BookingStatus::Completed)
+        <x-ui.card class="mb-6">
+            <x-ui.section-heading icon="star" title="Trip rating" />
+            <p class="mt-4 text-sm text-text-muted">No rating yet.</p>
         </x-ui.card>
     @endif
 @endsection

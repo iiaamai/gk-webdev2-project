@@ -11,7 +11,7 @@
             </x-ui.button>
             @can('downloadReceipt', $booking)
                 <x-ui.button href="{{ route('admin.bookings.receipt', $booking) }}" variant="secondary">
-                    <x-ui.icon name="file-up" size="size-4" />
+                    <x-ui.icon name="download" size="size-4" />
                     Download receipt
                 </x-ui.button>
             @endcan
@@ -22,6 +22,8 @@
         </x-slot:actions>
     </x-ui.page-header>
 
+    @include('bookings._trip_stepper', ['booking' => $booking])
+
     <div class="mb-6 grid gap-4 lg:grid-cols-2">
         <x-ui.card>
             @include('bookings._edit_summary', ['booking' => $booking, 'thin' => false])
@@ -31,7 +33,6 @@
             @include('bookings._route_map', [
                 'booking' => $booking,
                 'routeMap' => $routeMap,
-                'editMapSlot' => true,
             ])
         </x-ui.card>
     </div>
@@ -44,11 +45,21 @@
         ])
 
         <x-ui.card>
-            @include('bookings._invoice', ['booking' => $booking])
+            @include('bookings._invoice', [
+                'booking' => $booking,
+                'markPaidAction' => route('admin.bookings.invoice.mark-paid', $booking),
+                'markUnpaidAction' => route('admin.bookings.invoice.mark-unpaid', $booking),
+                'redirectTo' => route('admin.bookings.show', $booking),
+            ])
         </x-ui.card>
 
         <x-ui.card>
-            @include('bookings._rating', ['booking' => $booking])
+            @if ($booking->rating)
+                @include('bookings._rating', ['booking' => $booking])
+            @else
+                <x-ui.section-heading icon="star" title="Trip rating" />
+                <p class="mt-4 text-sm text-text-muted">No rating yet.</p>
+            @endif
         </x-ui.card>
     </div>
 @endsection

@@ -11,6 +11,14 @@
     >
         <x-ui.icon name="settings" size="size-5" />
     </a>
+    <x-ui.logout-button
+        variant="ghost"
+        label=""
+        icon-size="size-5"
+        class="!px-2"
+        aria-label="Log out"
+        title="Log out"
+    />
 @endsection
 
 @section('sidebar')

@@ -5,7 +5,7 @@
 @section('content')
     @php
         use App\Enums\BookingStatus;
-        $statusOptions = collect(BookingStatus::cases())->mapWithKeys(fn (BookingStatus $status) => [$status->value => $status->value])->all();
+        $statusOptions = collect(BookingStatus::cases())->mapWithKeys(fn (BookingStatus $status) => [$status->value => $status->label()])->all();
     @endphp
 
     <x-ui.page-header title="Bookings" subtitle="Create, review, and manage all trips.">
@@ -55,19 +55,13 @@
             </x-slot:head>
             @foreach ($bookings as $booking)
                 @php
-                    $statusTone = match ($booking->status->value) {
-                        'pending' => 'warning',
-                        'accepted', 'in_transit' => 'info',
-                        'completed' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'neutral',
-                    };
+                    $statusTone = $booking->status->badgeTone();
                 @endphp
                 <tr>
                     <td class="px-4 py-3 font-medium">{{ $booking->booking_number }}</td>
                     <td class="px-4 py-3">{{ $booking->customer->name }}</td>
                     <td class="px-4 py-3">
-                        <x-ui.badge :tone="$statusTone">{{ $booking->status->value }}</x-ui.badge>
+                        <x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge>
                     </td>
                     <td class="px-4 py-3">{{ $booking->vehicle_type }}</td>
                     <td class="px-4 py-3">

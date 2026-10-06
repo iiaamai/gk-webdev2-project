@@ -24,4 +24,7 @@
     <x-ui.nav-link variant="portal" :href="route('customer.bookings.create')" icon="plus" :active="request()->routeIs('customer.bookings.create')">
         New Booking
     </x-ui.nav-link>
+    <x-ui.nav-link variant="portal" :href="route('customer.settings.edit')" icon="settings" :active="request()->routeIs('customer.settings.*')" class="sm:hidden">
+        Settings
+    </x-ui.nav-link>
 @endsection

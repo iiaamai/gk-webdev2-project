@@ -4,12 +4,7 @@
 
 @section('content')
     @php
-        $roleTone = match ($user->role->value) {
-            'system_admin' => 'primary',
-            'staff' => 'info',
-            'driver' => 'warning',
-            default => 'neutral',
-        };
+        $roleTone = $user->role->badgeTone();
     @endphp
 
     <x-ui.page-header title="{{ $user->name }}" subtitle="{{ $user->email }}">
@@ -52,7 +47,7 @@
                 <x-ui.section-heading icon="shield" title="Role" />
                 <dl class="mt-4 grid grid-cols-[8rem_1fr] gap-x-3 gap-y-2 text-sm">
                     <dt class="text-text-muted">Role</dt>
-                    <dd><x-ui.badge :tone="$roleTone">{{ $user->role->value }}</x-ui.badge></dd>
+                    <dd><x-ui.badge :tone="$roleTone">{{ $user->role->label() }}</x-ui.badge></dd>
                     <dt class="text-text-muted">Email verified</dt>
                     <dd>{{ $user->email_verified_at ? $user->email_verified_at->timezone(config('app.timezone'))->format('M j, Y g:i A') : 'Not verified' }}</dd>
                 </dl>

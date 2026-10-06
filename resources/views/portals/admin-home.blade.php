@@ -13,32 +13,44 @@
     />
 
     <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <x-ui.card>
-            <p class="text-sm text-text-muted">Pending (no gatepass)</p>
-            <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['pending_no_gatepass'] }}</p>
-        </x-ui.card>
-        <x-ui.card>
-            <p class="text-sm text-text-muted">Ready for drivers</p>
-            <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['ready_for_drivers'] }}</p>
-        </x-ui.card>
-        <x-ui.card>
-            <p class="text-sm text-text-muted">In transit</p>
-            <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['in_transit'] }}</p>
-        </x-ui.card>
-        <x-ui.card>
-            <p class="text-sm text-text-muted">Completed this month</p>
-            <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['completed_this_month'] }}</p>
-        </x-ui.card>
-        <x-ui.card>
-            <p class="text-sm text-text-muted">Unpaid invoices</p>
-            <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['unpaid_invoices_count'] }}</p>
-            <p class="mt-1 text-xs text-text-muted">₱{{ number_format((float) $kpis['unpaid_invoices_amount'], 2) }} total</p>
-        </x-ui.card>
-        <x-ui.card>
-            <p class="text-sm text-text-muted">Fleet</p>
-            <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['fleet_available'] }} <span class="text-base font-normal text-text-muted">avail.</span></p>
-            <p class="text-sm text-text-muted">{{ $kpis['fleet_in_use'] }} in use</p>
-        </x-ui.card>
+        <a href="{{ route('admin.bookings.index', ['scope' => 'pending_no_gatepass']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
+                <p class="text-sm text-text-muted">Pending (no gatepass)</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['pending_no_gatepass'] }}</p>
+            </x-ui.card>
+        </a>
+        <a href="{{ route('admin.bookings.index', ['scope' => 'ready_for_drivers']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
+                <p class="text-sm text-text-muted">Ready for drivers</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['ready_for_drivers'] }}</p>
+            </x-ui.card>
+        </a>
+        <a href="{{ route('admin.bookings.index', ['status' => 'in_transit']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
+                <p class="text-sm text-text-muted">In transit</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['in_transit'] }}</p>
+            </x-ui.card>
+        </a>
+        <a href="{{ route('admin.bookings.index', ['scope' => 'completed_month']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
+                <p class="text-sm text-text-muted">Completed this month</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['completed_this_month'] }}</p>
+            </x-ui.card>
+        </a>
+        <a href="{{ route('admin.bookings.index', ['scope' => 'unpaid']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
+                <p class="text-sm text-text-muted">Unpaid invoices</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['unpaid_invoices_count'] }}</p>
+                <p class="mt-1 text-xs text-text-muted">₱{{ number_format((float) $kpis['unpaid_invoices_amount'], 2) }} total</p>
+            </x-ui.card>
+        </a>
+        <a href="{{ route('admin.fleet.index', ['status' => 'available']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
+                <p class="text-sm text-text-muted">Fleet</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['fleet_available'] }} <span class="text-base font-normal text-text-muted">avail.</span></p>
+                <p class="text-sm text-text-muted">{{ $kpis['fleet_in_use'] }} in use</p>
+            </x-ui.card>
+        </a>
     </div>
 
     <div class="mb-6 grid gap-4 lg:grid-cols-3 lg:items-stretch">
@@ -64,7 +76,7 @@
                         <x-ui.select id="map_booking" name="map_booking" class="mt-1" onchange="this.form.submit()">
                             @foreach ($overview['active_bookings'] as $booking)
                                 <option value="{{ $booking->id }}" @selected($selectedMapBookingId === $booking->id)>
-                                    {{ $booking->booking_number }} · {{ $booking->status->value }}
+                                    {{ $booking->booking_number }} · {{ $booking->status->label() }}
                                 </option>
                             @endforeach
                         </x-ui.select>
@@ -114,11 +126,7 @@
                     <ul class="min-h-0 flex-1 divide-y divide-border overflow-y-auto">
                         @foreach ($overview['active_bookings'] as $booking)
                             @php
-                                $statusTone = match ($booking->status->value) {
-                                    'in_transit' => 'info',
-                                    'accepted' => 'success',
-                                    default => 'warning',
-                                };
+                                $statusTone = $booking->status->badgeTone();
                             @endphp
                             <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div class="min-w-0">
@@ -133,7 +141,7 @@
                                     </p>
                                 </div>
                                 <div class="flex shrink-0 items-center gap-2">
-                                    <x-ui.badge :tone="$statusTone">{{ $booking->status->value }}</x-ui.badge>
+                                    <x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge>
                                     <span class="text-xs text-text-muted">{{ $booking->driver?->name ?? 'Unassigned' }}</span>
                                 </div>
                             </li>

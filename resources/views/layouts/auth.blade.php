@@ -26,7 +26,6 @@
                 </div>
 
                 <x-ui.card>
-                    <x-ui.flash />
                     @yield('content')
                 </x-ui.card>
 
@@ -58,7 +57,6 @@
             <section class="{{ $formOrder }} flex flex-col justify-center bg-primary-tint-1 px-4 py-8 sm:px-8 lg:px-12">
                 <div class="mx-auto w-full max-w-md">
                     <x-ui.card>
-                        <x-ui.flash />
                         @yield('content')
                     </x-ui.card>
 
@@ -71,6 +69,9 @@
             </section>
         </div>
     @endif
+
+    <x-ui.flash />
+    <style>[x-cloak]{display:none!important}</style>
     @stack('scripts')
 </body>
 </html>

@@ -5,7 +5,7 @@
 @section('content')
     @php
         use App\Enums\UserRole;
-        $roleOptions = collect(UserRole::cases())->mapWithKeys(fn (UserRole $role) => [$role->value => $role->value])->all();
+        $roleOptions = collect(UserRole::cases())->mapWithKeys(fn (UserRole $role) => [$role->value => $role->label()])->all();
     @endphp
 
     <x-ui.page-header title="User management" subtitle="Customers, drivers, staff, and system admins.">
@@ -53,18 +53,13 @@
             </x-slot:head>
             @foreach ($users as $user)
                 @php
-                    $roleTone = match ($user->role->value) {
-                        'system_admin' => 'primary',
-                        'staff' => 'info',
-                        'driver' => 'warning',
-                        default => 'neutral',
-                    };
+                    $roleTone = $user->role->badgeTone();
                 @endphp
                 <tr>
                     <td class="px-4 py-3 font-medium">{{ $user->name }}</td>
                     <td class="px-4 py-3 text-text-muted">{{ $user->email }}</td>
                     <td class="px-4 py-3">
-                        <x-ui.badge :tone="$roleTone">{{ $user->role->value }}</x-ui.badge>
+                        <x-ui.badge :tone="$roleTone">{{ $user->role->label() }}</x-ui.badge>
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex flex-wrap items-center justify-end gap-2">

@@ -18,6 +18,7 @@ class CustomerOverviewQuery
      *     active_count: int,
      *     completed_count: int,
      *     active_bookings: Collection<int, Booking>,
+     *     unrated_completed: Collection<int, Booking>,
      *     latest_booking: ?Booking
      * }
      */
@@ -43,6 +44,15 @@ class CustomerOverviewQuery
             ->limit(5)
             ->get();
 
+        $unratedCompleted = Booking::query()
+            ->where('customer_id', $customer->id)
+            ->where('status', BookingStatus::Completed)
+            ->whereDoesntHave('rating')
+            ->with(['pricing', 'invoice'])
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
         $latestBooking = Booking::query()
             ->where('customer_id', $customer->id)
             ->with(['pricing', 'invoice'])
@@ -54,6 +64,7 @@ class CustomerOverviewQuery
             'active_count' => $activeCount,
             'completed_count' => $completedCount,
             'active_bookings' => $activeBookings,
+            'unrated_completed' => $unratedCompleted,
             'latest_booking' => $latestBooking,
         ];
     }

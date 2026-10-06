@@ -10,20 +10,27 @@
     <x-ui.page-header
         title="Edit {{ $booking->booking_number }}"
         subtitle="Main workspace: status, documents, trip details, and receipt."
+        class="sticky top-0 z-20 -mx-4 border-b border-border bg-surface/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6"
     >
         <x-slot:actions>
+            <x-ui.button href="{{ route('admin.bookings.show', $booking) }}" variant="secondary">
+                <x-ui.icon name="eye" size="size-4" />
+                View
+            </x-ui.button>
             <x-ui.button href="{{ route('admin.bookings.index') }}" variant="secondary">
                 <x-ui.icon name="arrow-left" size="size-4" />
                 Back to list
             </x-ui.button>
             @can('downloadReceipt', $booking)
                 <x-ui.button href="{{ route('admin.bookings.receipt', $booking) }}" variant="secondary">
-                    <x-ui.icon name="file-up" size="size-4" />
+                    <x-ui.icon name="download" size="size-4" />
                     Download receipt
                 </x-ui.button>
             @endcan
         </x-slot:actions>
     </x-ui.page-header>
+
+    @include('bookings._trip_stepper', ['booking' => $booking])
 
     <div class="mb-6 grid gap-4 lg:grid-cols-2">
         <x-ui.card>
@@ -73,6 +80,7 @@
                     'booking' => $booking,
                     'markPaidAction' => route('admin.bookings.invoice.mark-paid', $booking),
                     'markUnpaidAction' => route('admin.bookings.invoice.mark-unpaid', $booking),
+                    'redirectTo' => route('admin.bookings.edit', $booking),
                 ])
             </x-ui.card>
         </div>
