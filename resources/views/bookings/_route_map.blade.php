@@ -58,4 +58,11 @@
             ])
         @endif
     @endif
+
+    @php
+        $driverLocationUrl = \App\Support\DriverLocationLinks::forBooking($booking, auth()->user());
+    @endphp
+    @if ($driverLocationUrl && ! $routeMap?->hasRoute())
+        <p class="text-sm text-text-muted">Driver location not shared yet. It appears on the map when Mapbox is enabled and the driver portal is open.</p>
+    @endif
 </div>

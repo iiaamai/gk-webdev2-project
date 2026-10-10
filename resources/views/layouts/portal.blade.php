@@ -39,6 +39,7 @@
     </header>
 
     <main class="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+        @yield('banner')
         @yield('content')
     </main>
 

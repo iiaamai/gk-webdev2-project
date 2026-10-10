@@ -112,8 +112,64 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             map.once('idle', hideLoading);
+
+            if (payload.driverPollUrl) {
+                watchDriver(map, payload.driverPollUrl, element.id);
+            }
         });
 
         map.on('error', hideLoading);
     });
 });
+
+function watchDriver(map, url, mapId) {
+    const status = document.querySelector(`[data-driver-status-for="${mapId}"]`);
+    let marker = null;
+
+    const pull = async () => {
+        try {
+            const response = await fetch(url, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.lat == null || data.lng == null) {
+                if (status) {
+                    status.textContent = 'Driver location not shared yet.';
+                }
+
+                return;
+            }
+
+            const lngLat = [data.lng, data.lat];
+
+            if (marker === null) {
+                marker = new mapboxgl.Marker({ color: '#b45309' })
+                    .setLngLat(lngLat)
+                    .addTo(map);
+            } else {
+                marker.setLngLat(lngLat);
+            }
+
+            const label = data.name ? `${data.name}` : 'Driver';
+            marker.setPopup(new mapboxgl.Popup({ offset: 24 }).setText(label));
+
+            if (status) {
+                status.textContent = data.updated_at
+                    ? `${label} location updated ${new Date(data.updated_at).toLocaleTimeString()}`
+                    : `${label} location is live.`;
+            }
+        } catch {
+            // Keep the route map if a location poll fails.
+        }
+    };
+
+    pull();
+    window.setInterval(pull, 12000);
+}

@@ -3,6 +3,7 @@
 use App\Enums\UserRole;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Admin\DriverMapController as AdminDriverMapController;
 use App\Http\Controllers\Admin\EarningsController;
 use App\Http\Controllers\Admin\OverviewController;
 use App\Http\Controllers\Admin\PricingController;
@@ -17,13 +18,16 @@ use App\Http\Controllers\Auth\RegisterCustomerController;
 use App\Http\Controllers\Auth\RegisterDriverController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BookingDocumentController;
+use App\Http\Controllers\BookingDriverLocationController;
 use App\Http\Controllers\Customer\BookingController as CustomerBookingController;
 use App\Http\Controllers\Customer\BookingRatingController;
 use App\Http\Controllers\Customer\OverviewController as CustomerOverviewController;
 use App\Http\Controllers\Driver\DeliveryController as DriverDeliveryController;
+use App\Http\Controllers\Driver\LocationController as DriverLocationController;
 use App\Http\Controllers\Driver\OverviewController as DriverOverviewController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Staff\BookingController as StaffBookingController;
+use App\Http\Controllers\Staff\DriverMapController as StaffDriverMapController;
 use App\Http\Controllers\Staff\OverviewController as StaffOverviewController;
 use App\Http\Controllers\Staff\VehicleController as StaffVehicleController;
 use Illuminate\Support\Facades\Route;
@@ -77,6 +81,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
             Route::get('/', CustomerOverviewController::class)->name('home');
             Route::view('settings', 'customer.settings')->name('settings.edit');
             Route::resource('bookings', CustomerBookingController::class)->only(['index', 'create', 'store', 'show']);
+            Route::get('bookings/{booking}/driver-location', [BookingDriverLocationController::class, 'show'])
+                ->name('bookings.driver-location');
             Route::get('bookings/{booking}/receipt', [CustomerBookingController::class, 'downloadReceipt'])
                 ->name('bookings.receipt');
             Route::post('bookings/{booking}/rating', [BookingRatingController::class, 'store'])
@@ -90,6 +96,9 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
             Route::get('/', DriverOverviewController::class)->name('home');
 
             Route::view('settings', 'driver.settings')->name('settings.edit');
+            Route::post('location', [DriverLocationController::class, 'store'])
+                ->middleware('throttle:30,1')
+                ->name('location.store');
 
             Route::get('deliveries', [DriverDeliveryController::class, 'index'])->name('deliveries.index');
             Route::get('deliveries/{booking}', [DriverDeliveryController::class, 'show'])->name('deliveries.show');
@@ -112,7 +121,12 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
 
             Route::view('settings', 'staff.settings')->name('settings.edit');
 
+            Route::get('drivers/map', [StaffDriverMapController::class, 'index'])->name('drivers.map');
+            Route::get('drivers/locations', [StaffDriverMapController::class, 'locations'])->name('drivers.locations');
+
             Route::resource('bookings', StaffBookingController::class)->only(['index', 'show', 'edit', 'update']);
+            Route::get('bookings/{booking}/driver-location', [BookingDriverLocationController::class, 'show'])
+                ->name('bookings.driver-location');
             Route::post('bookings/{booking}/gatepass', [StaffBookingController::class, 'storeGatepass'])
                 ->name('bookings.gatepass.store');
             Route::post('bookings/{booking}/cancel', [StaffBookingController::class, 'cancel'])
@@ -142,7 +156,12 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->except(['show']);
             Route::resource('users', UserController::class);
 
+            Route::get('drivers/map', [AdminDriverMapController::class, 'index'])->name('drivers.map');
+            Route::get('drivers/locations', [AdminDriverMapController::class, 'locations'])->name('drivers.locations');
+
             Route::resource('bookings', AdminBookingController::class);
+            Route::get('bookings/{booking}/driver-location', [BookingDriverLocationController::class, 'show'])
+                ->name('bookings.driver-location');
             Route::post('bookings/{booking}/gatepass', [AdminBookingController::class, 'storeGatepass'])
                 ->name('bookings.gatepass.store');
             Route::patch('bookings/{booking}/status', [AdminBookingController::class, 'updateStatus'])

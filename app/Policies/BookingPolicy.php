@@ -36,6 +36,21 @@ class BookingPolicy
         return false;
     }
 
+    public function viewDriverLocation(User $user, Booking $booking): bool
+    {
+        if ($booking->driver_id === null) {
+            return false;
+        }
+
+        if ($user->isSystemAdmin() || $user->isStaff()) {
+            return true;
+        }
+
+        return $user->isCustomer()
+            && $booking->customer_id === $user->id
+            && in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true);
+    }
+
     public function create(User $user): bool
     {
         return $user->isCustomer() || $user->isSystemAdmin();

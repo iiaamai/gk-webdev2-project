@@ -22,3 +22,13 @@
         Deliveries
     </x-ui.nav-link>
 @endsection
+
+@section('banner')
+    <p class="mb-4 text-sm text-text-muted" data-driver-location-note data-driver-location="{{ route('driver.location.store') }}">
+        Sharing location while this portal is open.
+    </p>
+@endsection
+
+@push('head')
+    @vite('resources/js/driver-location.js')
+@endpush

@@ -12,6 +12,8 @@ export default defineConfig({
                 'resources/js/admin-earnings.js',
                 'resources/js/booking-location-map.js',
                 'resources/js/booking-route-map.js',
+                'resources/js/driver-location.js',
+                'resources/js/drivers-map.js',
             ],
             refresh: true,
             fonts: [

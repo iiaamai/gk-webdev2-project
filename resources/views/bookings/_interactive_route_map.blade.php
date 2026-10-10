@@ -19,6 +19,7 @@
         'geometry' => $routeMap->geometry,
         'pickup' => [(float) $routeMap->pickupLng, (float) $routeMap->pickupLat],
         'dropoff' => [(float) $routeMap->dropoffLng, (float) $routeMap->dropoffLat],
+        'driverPollUrl' => isset($booking) ? \App\Support\DriverLocationLinks::forBooking($booking, auth()->user()) : null,
     ];
 @endphp
 
@@ -36,6 +37,9 @@
         Loading map…
     </div>
 </div>
+@if ($payload['driverPollUrl'])
+    <p class="mt-2 text-sm text-text-muted" data-driver-status-for="{{ $canvasId }}">Driver location not shared yet.</p>
+@endif
 <script type="application/json" data-route-map-for="{{ $canvasId }}">@json($payload)</script>
 
 @once

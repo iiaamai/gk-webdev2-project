@@ -22,6 +22,9 @@ use Illuminate\Notifications\Notifiable;
     'password',
     'mobile',
     'avatar_path',
+    'location_lat',
+    'location_lng',
+    'location_updated_at',
     'role',
     'email_verified_at',
 ])]
@@ -43,6 +46,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'location_lat' => 'float',
+            'location_lng' => 'float',
+            'location_updated_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
             'archived_at' => 'datetime',
