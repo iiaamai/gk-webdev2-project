@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Actions\CreateCustomerBooking;
+use App\Actions\SubmitInvoicePaymentProof;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\StoreBookingRequest;
+use App\Http\Requests\SubmitInvoicePaymentProofRequest;
 use App\Models\Booking;
 use App\Models\Pricing;
 use App\Services\BookingReceiptPdf;
@@ -87,5 +89,20 @@ class BookingController extends Controller
         $this->authorize('downloadReceipt', $booking);
 
         return $bookingReceiptPdf->download($booking);
+    }
+
+    public function storePaymentProof(
+        SubmitInvoicePaymentProofRequest $request,
+        Booking $booking,
+        SubmitInvoicePaymentProof $submitInvoicePaymentProof,
+    ): RedirectResponse {
+        $submitInvoicePaymentProof->execute(
+            $booking->invoice,
+            $request->file('proof'),
+        );
+
+        return redirect()
+            ->route('customer.bookings.show', $booking)
+            ->with('status', 'Payment screenshot submitted. Staff will confirm when it arrives in our account.');
     }
 }

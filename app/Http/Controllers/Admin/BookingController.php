@@ -6,6 +6,7 @@ use App\Actions\CancelBooking;
 use App\Actions\CreateAdminBooking;
 use App\Actions\MarkInvoicePaid;
 use App\Actions\MarkInvoiceUnpaid;
+use App\Actions\RejectInvoicePaymentProof;
 use App\Actions\UpdateBooking;
 use App\Actions\UpdateBookingStatus;
 use App\Actions\UploadBookingEir;
@@ -19,6 +20,7 @@ use App\Http\Requests\Admin\UpdateBookingRequest;
 use App\Http\Requests\Admin\UpdateBookingStatusRequest;
 use App\Http\Requests\MarkInvoicePaidRequest;
 use App\Http\Requests\MarkInvoiceUnpaidRequest;
+use App\Http\Requests\RejectInvoicePaymentProofRequest;
 use App\Http\Requests\UploadEirRequest;
 use App\Http\Requests\UploadGatepassRequest;
 use App\Http\Requests\UploadPodRequest;
@@ -250,6 +252,18 @@ class BookingController extends Controller
         return redirect()
             ->route('admin.bookings.show', $booking)
             ->with('status', 'Invoice marked as paid.');
+    }
+
+    public function rejectInvoicePaymentProof(
+        RejectInvoicePaymentProofRequest $request,
+        Booking $booking,
+        RejectInvoicePaymentProof $rejectInvoicePaymentProof,
+    ): RedirectResponse {
+        $rejectInvoicePaymentProof->execute($booking->invoice, $request->validated());
+
+        return redirect()
+            ->route('admin.bookings.show', $booking)
+            ->with('status', 'Payment screenshot rejected. The customer can upload a new one.');
     }
 
     public function markInvoiceUnpaid(

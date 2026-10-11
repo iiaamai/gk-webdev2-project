@@ -50,6 +50,11 @@ class BookingListQuery
                     $invoice->where('status', InvoiceStatus::Unpaid);
                 });
             })
+            ->when($scope === 'pending_payment_proofs', function ($query): void {
+                $query->whereHas('invoice', function ($invoice): void {
+                    $invoice->pendingPaymentProof();
+                });
+            })
             ->when($scope === 'completed_month', function ($query) use ($monthStart, $monthEnd): void {
                 $query->where('status', BookingStatus::Completed)
                     ->whereRaw('COALESCE(accepted_at, created_at) >= ?', [$monthStart])

@@ -57,6 +57,7 @@
             @include('bookings._invoice', [
                 'booking' => $booking,
                 'markPaidAction' => route('staff.bookings.invoice.mark-paid', $booking),
+                'rejectProofAction' => route('staff.bookings.invoice.reject-proof', $booking),
                 'redirectTo' => route('staff.bookings.show', $booking),
             ])
         </x-ui.card>

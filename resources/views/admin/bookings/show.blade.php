@@ -49,6 +49,7 @@
                 'booking' => $booking,
                 'markPaidAction' => route('admin.bookings.invoice.mark-paid', $booking),
                 'markUnpaidAction' => route('admin.bookings.invoice.mark-unpaid', $booking),
+                'rejectProofAction' => route('admin.bookings.invoice.reject-proof', $booking),
                 'redirectTo' => route('admin.bookings.show', $booking),
             ])
         </x-ui.card>

@@ -112,7 +112,10 @@
 
     @if ($booking->invoice)
         <x-ui.card class="mb-6">
-            @include('bookings._invoice', ['booking' => $booking])
+            @include('bookings._invoice', [
+                'booking' => $booking,
+                'submitProofAction' => route('customer.bookings.payment-proof.store', $booking),
+            ])
         </x-ui.card>
     @endif
 

@@ -237,6 +237,9 @@ class DriverDeliveryTest extends TestCase
             ->assertSee('Gatepass', false)
             ->assertSee('EIR', false)
             ->assertSee('POD', false)
+            ->assertSee('Save EIR', false)
+            ->assertSee('Save POD', false)
+            ->assertSee("x-data='{ open: \"eir\" }'", false)
             ->assertSee('Destination &amp; route', false)
             ->assertSee('Update status', false);
     }

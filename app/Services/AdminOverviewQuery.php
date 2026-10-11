@@ -27,9 +27,11 @@ class AdminOverviewQuery
      *         completed_this_month: int,
      *         unpaid_invoices_count: int,
      *         unpaid_invoices_amount: string,
+     *         pending_payment_proofs: int,
      *         fleet_available: int,
      *         fleet_in_use: int
      *     },
+     *     pending_proofs: Collection<int, Booking>,
      *     active_bookings: Collection<int, Booking>,
      *     attention_items: list<array{label: string, booking: Booking}>,
      *     recent_activity: Collection<int, ActivityLog>
@@ -74,6 +76,18 @@ class AdminOverviewQuery
         $unpaidInvoicesAmount = (float) Invoice::query()
             ->where('status', InvoiceStatus::Unpaid)
             ->sum('amount');
+
+        $pendingPaymentProofs = Invoice::query()->pendingPaymentProof()->count();
+
+        $pendingProofs = Invoice::query()
+            ->pendingPaymentProof()
+            ->with(['booking.customer'])
+            ->orderByDesc('payment_proof_submitted_at')
+            ->limit(10)
+            ->get()
+            ->map(fn (Invoice $invoice): ?Booking => $invoice->booking)
+            ->filter()
+            ->values();
 
         $fleetAvailable = Vehicle::query()
             ->where('status', VehicleStatus::Available)
@@ -136,6 +150,13 @@ class AdminOverviewQuery
             ];
         }
 
+        foreach ($pendingProofs->take(5) as $booking) {
+            $attentionItems[] = [
+                'label' => 'Payment screenshot awaiting review',
+                'booking' => $booking,
+            ];
+        }
+
         $recentActivity = ActivityLog::query()
             ->with('user')
             ->orderByDesc('created_at')
@@ -151,9 +172,11 @@ class AdminOverviewQuery
                 'completed_this_month' => $completedThisMonth,
                 'unpaid_invoices_count' => $unpaidInvoicesCount,
                 'unpaid_invoices_amount' => number_format($unpaidInvoicesAmount, 2, '.', ''),
+                'pending_payment_proofs' => $pendingPaymentProofs,
                 'fleet_available' => $fleetAvailable,
                 'fleet_in_use' => $fleetInUse,
             ],
+            'pending_proofs' => $pendingProofs,
             'active_bookings' => $activeBookings,
             'attention_items' => $attentionItems,
             'recent_activity' => $recentActivity,

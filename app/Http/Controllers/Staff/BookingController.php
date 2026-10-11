@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Staff;
 
 use App\Actions\CancelBooking;
 use App\Actions\MarkInvoicePaid;
+use App\Actions\RejectInvoicePaymentProof;
 use App\Actions\UpdateBooking;
 use App\Actions\UploadBookingGatepass;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MarkInvoicePaidRequest;
+use App\Http\Requests\RejectInvoicePaymentProofRequest;
 use App\Http\Requests\Staff\UpdateBookingRequest;
 use App\Http\Requests\UploadGatepassRequest;
 use App\Models\Booking;
@@ -123,6 +125,18 @@ class BookingController extends Controller
         return redirect()
             ->route('staff.bookings.show', $booking)
             ->with('status', 'Invoice marked as paid.');
+    }
+
+    public function rejectInvoicePaymentProof(
+        RejectInvoicePaymentProofRequest $request,
+        Booking $booking,
+        RejectInvoicePaymentProof $rejectInvoicePaymentProof,
+    ): RedirectResponse {
+        $rejectInvoicePaymentProof->execute($booking->invoice, $request->validated());
+
+        return redirect()
+            ->route('staff.bookings.show', $booking)
+            ->with('status', 'Payment screenshot rejected. The customer can upload a new one.');
     }
 
     public function downloadReceipt(

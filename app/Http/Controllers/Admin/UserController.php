@@ -85,9 +85,16 @@ class UserController extends Controller
             : UserRole::from((string) $data['role']);
 
         $data['role'] = $role;
-        $data['email_verified_at'] = MailIntegration::isEnabled() ? null : now();
+        $staffOrAdmin = in_array($role, [UserRole::Staff, UserRole::SystemAdmin], true);
+        $data['email_verified_at'] = ($staffOrAdmin || ! MailIntegration::isEnabled())
+            ? now()
+            : null;
 
         $user = User::query()->create($data);
+
+        if ($user->email_verified_at === null) {
+            $user->sendEmailVerificationNotification();
+        }
 
         if ($request->hasFile('avatar')) {
             $uploadUserAvatar->execute($user, $request->file('avatar'));

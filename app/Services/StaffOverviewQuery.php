@@ -22,9 +22,11 @@ class StaffOverviewQuery
      *         ready_for_drivers: int,
      *         in_transit: int,
      *         unpaid_invoices_count: int,
-     *         unpaid_invoices_amount: string
+     *         unpaid_invoices_amount: string,
+     *         pending_payment_proofs: int
      *     },
      *     needs_gatepass: Collection<int, Booking>,
+     *     pending_proofs: Collection<int, Booking>,
      *     active_bookings: Collection<int, Booking>,
      *     attention_items: list<array{label: string, booking: Booking}>
      * }
@@ -60,6 +62,18 @@ class StaffOverviewQuery
         $unpaidInvoicesAmount = (float) Invoice::query()
             ->where('status', InvoiceStatus::Unpaid)
             ->sum('amount');
+
+        $pendingPaymentProofs = Invoice::query()->pendingPaymentProof()->count();
+
+        $pendingProofs = Invoice::query()
+            ->pendingPaymentProof()
+            ->with(['booking.customer'])
+            ->orderByDesc('payment_proof_submitted_at')
+            ->limit(10)
+            ->get()
+            ->map(fn (Invoice $invoice): ?Booking => $invoice->booking)
+            ->filter()
+            ->values();
 
         $needsGatepass = Booking::query()
             ->with('customer')
@@ -124,6 +138,13 @@ class StaffOverviewQuery
             ];
         }
 
+        foreach ($pendingProofs->take(5) as $booking) {
+            $attentionItems[] = [
+                'label' => 'Payment screenshot awaiting review',
+                'booking' => $booking,
+            ];
+        }
+
         return [
             'kpis' => [
                 'pending_no_gatepass' => $pendingNoGatepass,
@@ -131,8 +152,10 @@ class StaffOverviewQuery
                 'in_transit' => $inTransit,
                 'unpaid_invoices_count' => $unpaidInvoicesCount,
                 'unpaid_invoices_amount' => number_format($unpaidInvoicesAmount, 2, '.', ''),
+                'pending_payment_proofs' => $pendingPaymentProofs,
             ],
             'needs_gatepass' => $needsGatepass,
+            'pending_proofs' => $pendingProofs,
             'active_bookings' => $activeBookings,
             'attention_items' => $attentionItems,
         ];

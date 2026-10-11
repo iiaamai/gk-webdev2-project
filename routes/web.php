@@ -70,6 +70,10 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
     Route::get('documents/bookings/{booking}/pod/photos/{index}', [BookingDocumentController::class, 'podPhoto'])
         ->whereNumber('index')
         ->name('documents.bookings.pod.photo');
+    Route::get('documents/qr-ph', [BookingDocumentController::class, 'companyQr'])
+        ->name('documents.qr-ph');
+    Route::get('documents/bookings/{booking}/payment-proof', [BookingDocumentController::class, 'paymentProof'])
+        ->name('documents.bookings.payment-proof');
     Route::get('users/{user}/avatar', [ProfileController::class, 'avatar'])
         ->name('users.avatar');
     Route::put('profile', [ProfileController::class, 'update'])
@@ -87,6 +91,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.receipt');
             Route::post('bookings/{booking}/rating', [BookingRatingController::class, 'store'])
                 ->name('bookings.rating.store');
+            Route::post('bookings/{booking}/payment-proof', [CustomerBookingController::class, 'storePaymentProof'])
+                ->name('bookings.payment-proof.store');
         });
 
     Route::middleware('role:'.UserRole::Driver->value)
@@ -133,6 +139,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.cancel');
             Route::post('bookings/{booking}/invoice/mark-paid', [StaffBookingController::class, 'markInvoicePaid'])
                 ->name('bookings.invoice.mark-paid');
+            Route::post('bookings/{booking}/invoice/reject-proof', [StaffBookingController::class, 'rejectInvoicePaymentProof'])
+                ->name('bookings.invoice.reject-proof');
             Route::get('bookings/{booking}/receipt', [StaffBookingController::class, 'downloadReceipt'])
                 ->name('bookings.receipt');
 
@@ -176,6 +184,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.receipt');
             Route::post('bookings/{booking}/invoice/mark-paid', [AdminBookingController::class, 'markInvoicePaid'])
                 ->name('bookings.invoice.mark-paid');
+            Route::post('bookings/{booking}/invoice/reject-proof', [AdminBookingController::class, 'rejectInvoicePaymentProof'])
+                ->name('bookings.invoice.reject-proof');
             Route::post('bookings/{booking}/invoice/mark-unpaid', [AdminBookingController::class, 'markInvoiceUnpaid'])
                 ->name('bookings.invoice.mark-unpaid');
 

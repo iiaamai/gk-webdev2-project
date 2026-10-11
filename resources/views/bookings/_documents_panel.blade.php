@@ -28,10 +28,11 @@
 
 @if ($showPanel)
     @if ($wrapCard)
-        <x-ui.card @class([$cardClass]) x-data="{ open: @js($initialOpen) }">
+        <x-ui.card @class([$cardClass])>
     @else
-        <div x-data="{ open: @js($initialOpen) }">
+        <div>
     @endif
+        <div x-data='{ open: @json($initialOpen) }'>
 
         <x-ui.section-heading
             icon="file"
@@ -237,6 +238,7 @@
             @endif
         </div>
 
+        </div>
     @if ($wrapCard)
         </x-ui.card>
     @else

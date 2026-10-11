@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\UploadCompanyQrPh;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateSettingsRequest;
 use App\Models\Setting;
@@ -28,15 +29,21 @@ class SettingController extends Controller
             $settings[$key] = Setting::getValue($key, '');
         }
 
-        return view('admin.settings.edit', compact('settings'));
+        $qrPhPath = Setting::getValue('qr_ph_path');
+
+        return view('admin.settings.edit', compact('settings', 'qrPhPath'));
     }
 
-    public function update(UpdateSettingsRequest $request): RedirectResponse
+    public function update(UpdateSettingsRequest $request, UploadCompanyQrPh $uploadCompanyQrPh): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $request->safe()->except(['qr_ph']);
 
         foreach ($validated as $key => $value) {
             Setting::setValue($key, $value === null ? null : (string) $value);
+        }
+
+        if ($request->hasFile('qr_ph')) {
+            $uploadCompanyQrPh->execute($request->file('qr_ph'));
         }
 
         return redirect()

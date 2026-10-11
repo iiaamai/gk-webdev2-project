@@ -12,7 +12,7 @@
         subtitle="Operations snapshot for {{ $generatedAt->format('F j, Y') }} (Asia/Manila)."
     />
 
-    <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <a href="{{ route('admin.bookings.index', ['scope' => 'pending_no_gatepass']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
             <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
                 <p class="text-sm text-text-muted">Pending (no gatepass)</p>
@@ -42,6 +42,13 @@
                 <p class="text-sm text-text-muted">Unpaid invoices</p>
                 <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['unpaid_invoices_count'] }}</p>
                 <p class="mt-1 text-xs text-text-muted">₱{{ number_format((float) $kpis['unpaid_invoices_amount'], 2) }} total</p>
+            </x-ui.card>
+        </a>
+        <a href="{{ route('admin.bookings.index', ['scope' => 'pending_payment_proofs']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
+                <p class="text-sm text-text-muted">Payment proofs</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['pending_payment_proofs'] }}</p>
+                <p class="mt-1 text-xs text-text-muted">Awaiting review</p>
             </x-ui.card>
         </a>
         <a href="{{ route('admin.fleet.index', ['status' => 'available']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
@@ -157,7 +164,32 @@
         </x-ui.card>
     </div>
 
-    <div class="mb-6 grid gap-4 lg:grid-cols-2">
+    <div class="mb-6 grid gap-4 lg:grid-cols-3">
+        <x-ui.card>
+            <x-ui.section-heading
+                icon="receipt"
+                title="Pending payments"
+                description="Customer screenshots waiting for bank confirmation."
+            />
+            @if ($overview['pending_proofs']->isEmpty())
+                <p class="mt-4 text-sm text-text-muted">No payment screenshots waiting.</p>
+            @else
+                <ul class="mt-4 divide-y divide-border">
+                    @foreach ($overview['pending_proofs'] as $booking)
+                        <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="min-w-0">
+                                <p class="font-medium text-text">{{ $booking->booking_number }}</p>
+                                <p class="truncate text-sm text-text-muted">{{ $booking->customer->name }}</p>
+                            </div>
+                            <x-ui.button href="{{ route('admin.bookings.show', $booking) }}" class="!py-1.5 !text-xs">
+                                Review
+                            </x-ui.button>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </x-ui.card>
+
         <x-ui.card>
             <x-ui.section-heading icon="inbox" title="Needs attention" />
             @if (count($overview['attention_items']) === 0)

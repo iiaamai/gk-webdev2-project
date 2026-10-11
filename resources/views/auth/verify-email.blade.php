@@ -9,6 +9,8 @@
         Thanks for signing up. Please verify your email address to continue.
         @if (! config('gk.mail_enabled'))
             While mail is a placeholder, seeded and new accounts may already be marked verified.
+        @else
+            Check your inbox (or the mail log in local development) for the verification link.
         @endif
     </p>
 

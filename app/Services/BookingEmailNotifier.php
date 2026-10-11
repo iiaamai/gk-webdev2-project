@@ -9,6 +9,7 @@ use App\Mail\BookingStatusChangedMail;
 use App\Mail\GatepassUploadedMail;
 use App\Mail\InvoiceIssuedMail;
 use App\Mail\InvoicePaidMail;
+use App\Mail\PaymentProofRejectedMail;
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Models\User;
@@ -105,6 +106,20 @@ class BookingEmailNotifier
             }
 
             Mail::to($customer->email)->send(new InvoicePaidMail($invoice));
+        });
+    }
+
+    public function paymentProofRejected(Invoice $invoice): void
+    {
+        $this->send(function () use ($invoice): void {
+            $invoice->loadMissing('booking.customer');
+            $customer = $invoice->booking?->customer;
+
+            if ($customer === null) {
+                return;
+            }
+
+            Mail::to($customer->email)->send(new PaymentProofRejectedMail($invoice));
         });
     }
 

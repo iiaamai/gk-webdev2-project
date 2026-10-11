@@ -3,7 +3,7 @@
 
 Hello {{ $invoice->booking?->customer?->name ?? 'Customer' }},
 
-Your invoice for booking **{{ $invoice->booking?->booking_number }}** has been marked **paid**.
+Your invoice for booking **{{ $invoice->booking?->booking_number }}** has been marked **paid**. This confirms that {{ config('app.name') }} received your payment.
 
 - **Amount:** ₱{{ number_format((float) $invoice->amount, 2) }}
 @if ($invoice->paid_at)

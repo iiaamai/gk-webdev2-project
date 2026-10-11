@@ -3,8 +3,14 @@
     $canView = $invoice && (auth()->user()?->can('view', $invoice) ?? false);
     $canMarkPaid = $invoice && ! empty($markPaidAction ?? null) && (auth()->user()?->can('markAsPaid', $invoice) ?? false);
     $canMarkUnpaid = $invoice && ! empty($markUnpaidAction ?? null) && (auth()->user()?->can('markAsUnpaid', $invoice) ?? false);
+    $canSubmitProof = $invoice && ! empty($submitProofAction ?? null) && (auth()->user()?->can('submitPaymentProof', $invoice) ?? false);
+    $canRejectProof = $invoice && ! empty($rejectProofAction ?? null) && (auth()->user()?->can('rejectPaymentProof', $invoice) ?? false);
+    $canViewProof = $invoice && (auth()->user()?->can('viewPaymentProof', $invoice) ?? false);
+    $canViewQr = auth()->user()?->can('viewCompanyQr', \App\Models\Booking::class) ?? false;
+    $qrPhPath = \App\Models\Setting::getValue('qr_ph_path');
     $invoiceTone = $invoice?->status->badgeTone() ?? 'neutral';
     $redirectTo = $redirectTo ?? null;
+    $isUnpaid = $invoice?->status === \App\Enums\InvoiceStatus::Unpaid;
 @endphp
 
 @if ($invoice && $canView)
@@ -47,6 +53,126 @@
                 </div>
             @endif
         </dl>
+
+        @if ($isUnpaid)
+            <div class="space-y-3 border-t border-border pt-4">
+                <x-ui.section-heading
+                    icon="qr-code"
+                    title="Pay via QR Ph (InstaPay)"
+                    description="Scan this company QR in GCash, Maya, or a bank app, then enter ₱{{ number_format((float) $invoice->amount, 2) }}."
+                />
+                @if ($canViewQr && filled($qrPhPath))
+                    <div class="space-y-3" x-data="{ qrOpen: false }">
+                        <img
+                            src="{{ route('documents.qr-ph') }}"
+                            alt="GK Trucking QR Ph"
+                            class="mx-auto max-h-64 w-auto rounded-md border border-border bg-white p-2"
+                        >
+                        <div class="flex justify-center">
+                            <x-ui.button
+                                type="button"
+                                variant="secondary"
+                                class="w-full justify-center sm:w-auto"
+                                @click="qrOpen = true"
+                            >
+                                <x-ui.icon name="eye" size="size-4" />
+                                View larger QR
+                            </x-ui.button>
+                        </div>
+                        <div
+                            x-show="qrOpen"
+                            x-cloak
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Enlarged GK Trucking QR Ph"
+                            class="fixed inset-0 z-[60] flex h-dvh w-dvw items-center justify-center bg-neutral-950/80 p-4"
+                            @click="qrOpen = false"
+                            @keydown.escape.window="if (qrOpen) { qrOpen = false }"
+                        >
+                            <img
+                                src="{{ route('documents.qr-ph') }}"
+                                alt="Enlarged GK Trucking QR Ph"
+                                class="h-[calc(100dvh-2rem)] w-[calc(100dvw-2rem)] bg-white object-contain"
+                            >
+                        </div>
+                    </div>
+                @else
+                    <p class="text-sm text-text-muted">QR Ph is not uploaded yet. Ask an administrator to add it in Settings.</p>
+                @endif
+            </div>
+        @endif
+
+        @if ($canViewProof)
+            <div>
+                <p class="mb-2 text-sm text-text-muted">Submitted screenshot</p>
+                <img
+                    src="{{ route('documents.bookings.payment-proof', $booking) }}"
+                    alt="Payment screenshot for {{ $booking->booking_number }}"
+                    class="max-h-72 w-auto rounded-md border border-border"
+                >
+            </div>
+        @endif
+
+        @if ($canSubmitProof)
+            <form method="post" action="{{ $submitProofAction }}" enctype="multipart/form-data" class="space-y-4 border-t border-border pt-4">
+                @csrf
+                <x-ui.section-heading
+                    icon="file-up"
+                    title="Submit payment screenshot"
+                    description="Upload a screenshot after you pay. Office staff will mark the invoice paid when the amount arrives."
+                />
+                <div>
+                    <x-ui.label for="payment_proof">Screenshot</x-ui.label>
+                    <input
+                        id="payment_proof"
+                        type="file"
+                        name="proof"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        required
+                        class="block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-text-on-primary"
+                    >
+                    <x-ui.field-error name="proof" />
+                </div>
+                <x-ui.button type="submit" class="flex w-full justify-center sm:w-auto">
+                    <x-ui.icon name="upload" size="size-4" />
+                    Submit payment
+                </x-ui.button>
+            </form>
+        @endif
+
+        @if ($canRejectProof)
+            <div x-data="{ open: false }" class="space-y-4 border-t border-border pt-4">
+                <x-ui.section-heading
+                    icon="x"
+                    title="Payment did not reflect"
+                    description="Reject this screenshot if the amount is not in the company account. The customer can upload again."
+                />
+                <form x-ref="rejectProofForm" method="post" action="{{ $rejectProofAction }}" class="space-y-4">
+                    @csrf
+                    <div>
+                        <x-ui.label for="reject_proof_notes">Notes (optional)</x-ui.label>
+                        <x-ui.textarea id="reject_proof_notes" name="notes" rows="2">{{ old('notes') }}</x-ui.textarea>
+                        <x-ui.field-error name="notes" />
+                    </div>
+                    <x-ui.button
+                        type="button"
+                        variant="secondary"
+                        class="flex w-full justify-center sm:w-auto"
+                        @click="open = true"
+                    >
+                        Payment did not reflect
+                    </x-ui.button>
+                </form>
+                <x-ui.confirm-dialog
+                    title="Reject this payment screenshot?"
+                    description="The invoice stays unpaid. The customer will get an email and can upload a new screenshot."
+                    confirm-label="Reject screenshot"
+                    cancel-label="Cancel"
+                    confirm-variant="danger"
+                    form-ref="rejectProofForm"
+                />
+            </div>
+        @endif
 
         @if ($canMarkPaid)
             <div

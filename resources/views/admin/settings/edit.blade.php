@@ -30,7 +30,7 @@
         </div>
 
         <x-ui.card>
-                <form method="post" action="{{ route('admin.settings.update') }}" class="space-y-4">
+                <form method="post" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data" class="space-y-4">
                     @csrf
                     @method('PUT')
 
@@ -71,6 +71,32 @@
                         <x-ui.label for="map_zoom">Map zoom (optional)</x-ui.label>
                         <x-ui.input id="map_zoom" type="number" name="map_zoom" value="{{ old('map_zoom', $settings['map_zoom']) }}" min="1" max="22" />
                         <x-ui.field-error name="map_zoom" />
+                    </div>
+
+                    <x-ui.section-heading
+                        icon="qr-code"
+                        title="QR Ph (InstaPay)"
+                        description="Static merchant QR customers scan on unpaid invoices. Admin only."
+                    />
+
+                    @if (filled($qrPhPath))
+                        <img
+                            src="{{ route('documents.qr-ph') }}"
+                            alt="Current QR Ph"
+                            class="max-h-48 w-auto rounded-md border border-border bg-white p-2"
+                        >
+                    @endif
+
+                    <div>
+                        <x-ui.label for="qr_ph">{{ filled($qrPhPath) ? 'Replace QR image' : 'Upload QR image' }}</x-ui.label>
+                        <input
+                            id="qr_ph"
+                            type="file"
+                            name="qr_ph"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            class="block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-text-on-primary"
+                        >
+                        <x-ui.field-error name="qr_ph" />
                     </div>
 
                     <x-ui.button type="submit">

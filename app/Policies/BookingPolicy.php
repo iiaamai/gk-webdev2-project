@@ -10,6 +10,13 @@ use App\Models\User;
 
 class BookingPolicy
 {
+    public function viewCompanyQr(User $user): bool
+    {
+        return $user->isCustomer()
+            || $user->isStaff()
+            || $user->isSystemAdmin();
+    }
+
     public function viewAny(User $user): bool
     {
         return $user->isCustomer()

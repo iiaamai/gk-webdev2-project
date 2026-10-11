@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -49,6 +50,31 @@ class BookingDocumentController extends Controller
         return $this->streamInline(
             $pod->photo_paths[$index],
             $booking->booking_number.'-pod-photo-'.($index + 1),
+        );
+    }
+
+    public function companyQr(): StreamedResponse
+    {
+        $this->authorize('viewCompanyQr', Booking::class);
+
+        $path = Setting::getValue('qr_ph_path');
+
+        abort_unless(filled($path), 404);
+
+        return $this->streamInline($path, 'gk-qr-ph');
+    }
+
+    public function paymentProof(Booking $booking): StreamedResponse
+    {
+        $invoice = $booking->invoice;
+
+        abort_unless($invoice !== null, 404);
+
+        $this->authorize('viewPaymentProof', $invoice);
+
+        return $this->streamInline(
+            $invoice->payment_proof_path,
+            $booking->booking_number.'-payment-proof',
         );
     }
 
