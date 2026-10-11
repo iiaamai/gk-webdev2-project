@@ -12,6 +12,7 @@ use App\Models\Vehicle;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class FoundationSchemaTest extends TestCase
@@ -84,9 +85,13 @@ class FoundationSchemaTest extends TestCase
         $this->assertTrue(
             Booking::query()->where('status', BookingStatus::Pending)->whereNull('gatepass_path')->exists()
         );
-        $this->assertTrue(
-            Booking::query()->where('status', BookingStatus::Pending)->whereNotNull('gatepass_path')->exists()
-        );
+        $pendingWithGatepass = Booking::query()
+            ->where('status', BookingStatus::Pending)
+            ->whereNotNull('gatepass_path')
+            ->first();
+
+        $this->assertNotNull($pendingWithGatepass);
+        $this->assertTrue(Storage::disk('local')->exists($pendingWithGatepass->gatepass_path));
         $this->assertTrue(Booking::query()->where('status', BookingStatus::Completed)->exists());
     }
 

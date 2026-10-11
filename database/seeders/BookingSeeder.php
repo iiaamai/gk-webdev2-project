@@ -13,6 +13,9 @@ use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class BookingSeeder extends Seeder
 {
@@ -54,7 +57,7 @@ class BookingSeeder extends Seeder
                 'status' => BookingStatus::Pending,
                 'is_locked' => false,
                 'accepted_at' => null,
-                'gatepass_path' => 'bookings/demo/gk-0002-gatepass.jpg',
+                'gatepass_path' => $this->storeDemoGatepass("GK-{$year}-0002"),
                 'cargo_desc' => 'Retail pallets (pending with gatepass)',
                 'with_invoice' => InvoiceStatus::Unpaid,
             ],
@@ -66,7 +69,7 @@ class BookingSeeder extends Seeder
                 'status' => BookingStatus::Accepted,
                 'is_locked' => true,
                 'accepted_at' => now('Asia/Manila')->subHours(2),
-                'gatepass_path' => 'bookings/demo/gk-0003-gatepass.jpg',
+                'gatepass_path' => $this->storeDemoGatepass("GK-{$year}-0003"),
                 'cargo_desc' => 'Accepted demo delivery',
                 'lock_vehicle' => $truck,
                 'with_invoice' => InvoiceStatus::Unpaid,
@@ -79,7 +82,7 @@ class BookingSeeder extends Seeder
                 'status' => BookingStatus::InTransit,
                 'is_locked' => true,
                 'accepted_at' => now('Asia/Manila')->subDay(),
-                'gatepass_path' => 'bookings/demo/gk-0004-gatepass.jpg',
+                'gatepass_path' => $this->storeDemoGatepass("GK-{$year}-0004"),
                 'cargo_desc' => 'In-transit demo load',
                 'lock_vehicle' => $sixWheeler,
                 'with_invoice' => InvoiceStatus::Unpaid,
@@ -92,7 +95,7 @@ class BookingSeeder extends Seeder
                 'status' => BookingStatus::Completed,
                 'is_locked' => true,
                 'accepted_at' => now('Asia/Manila')->subDays(3),
-                'gatepass_path' => 'bookings/demo/gk-0005-gatepass.jpg',
+                'gatepass_path' => $this->storeDemoGatepass("GK-{$year}-0005"),
                 'cargo_desc' => 'Completed demo with EIR/POD',
                 'with_eir_pod' => true,
                 'with_invoice' => InvoiceStatus::Paid,
@@ -170,5 +173,19 @@ class BookingSeeder extends Seeder
                 );
             }
         }
+    }
+
+    private function storeDemoGatepass(string $bookingNumber): string
+    {
+        $fixture = database_path('seeders/fixtures/sample-gatepass.png');
+
+        if (! File::isReadable($fixture)) {
+            throw new RuntimeException('Missing gatepass seed fixture: '.$fixture);
+        }
+
+        $path = 'bookings/'.$bookingNumber.'/gatepass.png';
+        Storage::disk('local')->put($path, File::get($fixture));
+
+        return $path;
     }
 }
