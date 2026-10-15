@@ -46,6 +46,16 @@ class UserPolicy
         return $user->id !== $model->id;
     }
 
+    public function restore(User $user, User $model): bool
+    {
+        return $user->id !== $model->id;
+    }
+
+    public function forceDelete(User $user, User $model): bool
+    {
+        return $user->id !== $model->id;
+    }
+
     public function updateProfile(User $user, User $model): bool
     {
         return $user->id === $model->id;

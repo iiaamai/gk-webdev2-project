@@ -167,15 +167,29 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
             Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
 
+            Route::get('pricing/archived', [PricingController::class, 'archived'])->name('pricing.archived');
+            Route::post('pricing/archived/{archivedPricing}/restore', [PricingController::class, 'restore'])->name('pricing.restore');
+            Route::delete('pricing/archived/{archivedPricing}', [PricingController::class, 'forceDestroy'])->name('pricing.force-destroy');
             Route::resource('pricing', PricingController::class)->except(['show']);
+
+            Route::get('fleet/archived', [VehicleController::class, 'archived'])->name('fleet.archived');
+            Route::post('fleet/archived/{archivedVehicle}/restore', [VehicleController::class, 'restore'])->name('fleet.restore');
+            Route::delete('fleet/archived/{archivedVehicle}', [VehicleController::class, 'forceDestroy'])->name('fleet.force-destroy');
             Route::resource('fleet', VehicleController::class)
                 ->parameters(['fleet' => 'vehicle'])
                 ->except(['show']);
+
+            Route::get('users/archived', [UserController::class, 'archived'])->name('users.archived');
+            Route::post('users/archived/{archivedUser}/restore', [UserController::class, 'restore'])->name('users.restore');
+            Route::delete('users/archived/{archivedUser}', [UserController::class, 'forceDestroy'])->name('users.force-destroy');
             Route::resource('users', UserController::class);
 
             Route::get('drivers/map', [AdminDriverMapController::class, 'index'])->name('drivers.map');
             Route::get('drivers/locations', [AdminDriverMapController::class, 'locations'])->name('drivers.locations');
 
+            Route::get('bookings/archived', [AdminBookingController::class, 'archived'])->name('bookings.archived');
+            Route::post('bookings/archived/{archivedBooking}/restore', [AdminBookingController::class, 'restore'])->name('bookings.restore');
+            Route::delete('bookings/archived/{archivedBooking}', [AdminBookingController::class, 'forceDestroy'])->name('bookings.force-destroy');
             Route::resource('bookings', AdminBookingController::class);
             Route::get('bookings/{booking}/driver-location', [BookingDriverLocationController::class, 'show'])
                 ->name('bookings.driver-location');

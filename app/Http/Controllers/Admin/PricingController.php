@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePricingRequest;
 use App\Http\Requests\Admin\UpdatePricingRequest;
 use App\Models\Pricing;
+use App\Services\PermanentDeleteGuard;
 use App\Support\ListFilter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,5 +75,50 @@ class PricingController extends Controller
         return redirect()
             ->route('admin.pricing.index')
             ->with('status', 'Pricing row archived.');
+    }
+
+    public function archived(): View
+    {
+        $this->authorize('viewAny', Pricing::class);
+
+        $pricings = Pricing::onlyArchived()
+            ->orderByDesc('archived_at')
+            ->paginate(ListFilter::PER_PAGE);
+
+        return view('admin.pricing.archived', [
+            'pricings' => $pricings,
+        ]);
+    }
+
+    public function restore(Pricing $archivedPricing): RedirectResponse
+    {
+        $this->authorize('restore', $archivedPricing);
+
+        $archivedPricing->unarchive();
+
+        return redirect()
+            ->route('admin.pricing.archived')
+            ->with('status', 'Pricing row restored.');
+    }
+
+    public function forceDestroy(
+        Pricing $archivedPricing,
+        PermanentDeleteGuard $permanentDeleteGuard,
+    ): RedirectResponse {
+        $this->authorize('forceDelete', $archivedPricing);
+
+        $message = $permanentDeleteGuard->pricing($archivedPricing);
+
+        if ($message !== null) {
+            return redirect()
+                ->route('admin.pricing.archived')
+                ->withErrors(['archive' => $message]);
+        }
+
+        $archivedPricing->delete();
+
+        return redirect()
+            ->route('admin.pricing.archived')
+            ->with('status', 'Pricing row permanently deleted.');
     }
 }

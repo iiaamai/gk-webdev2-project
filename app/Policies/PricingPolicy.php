@@ -35,4 +35,14 @@ class PricingPolicy
     {
         return true;
     }
+
+    public function restore(User $user, Pricing $pricing): bool
+    {
+        return true;
+    }
+
+    public function forceDelete(User $user, Pricing $pricing): bool
+    {
+        return true;
+    }
 }

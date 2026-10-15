@@ -5,6 +5,10 @@
 @section('content')
     <x-ui.page-header title="Pricing list" subtitle="Vehicle types and payout amounts (PHP).">
         <x-slot:actions>
+            <x-ui.button href="{{ route('admin.pricing.archived') }}" variant="secondary">
+                <x-ui.icon name="archive" size="size-4" />
+                Archive
+            </x-ui.button>
             <x-ui.button href="{{ route('admin.pricing.create') }}">
                 <x-ui.icon name="plus" size="size-4" />
                 Add pricing row

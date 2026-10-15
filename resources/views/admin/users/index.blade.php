@@ -10,6 +10,10 @@
 
     <x-ui.page-header title="User management" subtitle="Customers, drivers, staff, and system admins.">
         <x-slot:actions>
+            <x-ui.button href="{{ route('admin.users.archived') }}" variant="secondary">
+                <x-ui.icon name="archive" size="size-4" />
+                Archive
+            </x-ui.button>
             <x-ui.button href="{{ route('admin.users.create') }}">
                 <x-ui.icon name="user-plus" size="size-4" />
                 Create user

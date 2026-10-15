@@ -10,6 +10,10 @@
 
     <x-ui.page-header title="Fleet" subtitle="Vehicles available for bookings.">
         <x-slot:actions>
+            <x-ui.button href="{{ route('admin.fleet.archived') }}" variant="secondary">
+                <x-ui.icon name="archive" size="size-4" />
+                Archive
+            </x-ui.button>
             <x-ui.button href="{{ route('admin.fleet.create') }}">
                 <x-ui.icon name="plus" size="size-4" />
                 Add vehicle

@@ -56,4 +56,14 @@ class VehiclePolicy
     {
         return $user->isSystemAdmin();
     }
+
+    public function restore(User $user, Vehicle $vehicle): bool
+    {
+        return $user->isSystemAdmin();
+    }
+
+    public function forceDelete(User $user, Vehicle $vehicle): bool
+    {
+        return $user->isSystemAdmin();
+    }
 }

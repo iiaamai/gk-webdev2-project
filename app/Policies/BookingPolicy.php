@@ -237,4 +237,14 @@ class BookingPolicy
     {
         return $user->isSystemAdmin();
     }
+
+    public function restore(User $user, Booking $booking): bool
+    {
+        return $user->isSystemAdmin();
+    }
+
+    public function forceDelete(User $user, Booking $booking): bool
+    {
+        return $user->isSystemAdmin();
+    }
 }

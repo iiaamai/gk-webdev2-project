@@ -30,6 +30,7 @@ use App\Models\User;
 use App\Services\BookingListQuery;
 use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
+use App\Services\PermanentDeleteGuard;
 use App\Support\ListFilter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -156,6 +157,51 @@ class BookingController extends Controller
         return redirect()
             ->route('admin.bookings.index')
             ->with('status', 'Booking archived.');
+    }
+
+    public function archived(): View
+    {
+        $this->authorize('viewAny', Booking::class);
+
+        $bookings = Booking::onlyArchived()
+            ->with(['customer' => fn ($query) => $query->withArchived()])
+            ->orderByDesc('archived_at')
+            ->paginate(ListFilter::PER_PAGE)
+            ->withQueryString();
+
+        return view('admin.bookings.archived', [
+            'bookings' => $bookings,
+        ]);
+    }
+
+    public function restore(Booking $archivedBooking): RedirectResponse
+    {
+        $this->authorize('restore', $archivedBooking);
+
+        $archivedBooking->unarchive();
+
+        return redirect()
+            ->route('admin.bookings.archived')
+            ->with('status', 'Booking restored.');
+    }
+
+    public function forceDestroy(Booking $archivedBooking, PermanentDeleteGuard $permanentDeleteGuard): RedirectResponse
+    {
+        $this->authorize('forceDelete', $archivedBooking);
+
+        $message = $permanentDeleteGuard->booking($archivedBooking);
+
+        if ($message !== null) {
+            return redirect()
+                ->route('admin.bookings.archived')
+                ->withErrors(['archive' => $message]);
+        }
+
+        $archivedBooking->delete();
+
+        return redirect()
+            ->route('admin.bookings.archived')
+            ->with('status', 'Booking permanently deleted.');
     }
 
     public function storeGatepass(

@@ -11,6 +11,7 @@ use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\ActivityLogger;
+use App\Services\PermanentDeleteGuard;
 use App\Support\ListFilter;
 use App\Support\MailIntegration;
 use Illuminate\Database\Eloquent\Collection;
@@ -208,6 +209,64 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index')
             ->with('status', 'User archived.');
+    }
+
+    public function archived(): View
+    {
+        $this->authorize('viewAny', User::class);
+
+        $users = User::onlyArchived()
+            ->orderByDesc('archived_at')
+            ->paginate(ListFilter::PER_PAGE);
+
+        return view('admin.users.archived', [
+            'users' => $users,
+        ]);
+    }
+
+    public function restore(User $archivedUser, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $this->authorize('restore', $archivedUser);
+
+        $archivedUser->unarchive();
+
+        $activityLogger->log(
+            action: 'user.restored',
+            subject: $archivedUser,
+            description: "User {$archivedUser->email} restored.",
+        );
+
+        return redirect()
+            ->route('admin.users.archived')
+            ->with('status', 'User restored.');
+    }
+
+    public function forceDestroy(
+        User $archivedUser,
+        PermanentDeleteGuard $permanentDeleteGuard,
+        ActivityLogger $activityLogger,
+    ): RedirectResponse {
+        $this->authorize('forceDelete', $archivedUser);
+
+        $message = $permanentDeleteGuard->user($archivedUser);
+
+        if ($message !== null) {
+            return redirect()
+                ->route('admin.users.archived')
+                ->withErrors(['archive' => $message]);
+        }
+
+        $email = $archivedUser->email;
+        $archivedUser->delete();
+
+        $activityLogger->log(
+            action: 'user.deleted',
+            description: "User {$email} permanently deleted.",
+        );
+
+        return redirect()
+            ->route('admin.users.archived')
+            ->with('status', 'User permanently deleted.');
     }
 
     /**

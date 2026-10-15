@@ -10,6 +10,10 @@
 
     <x-ui.page-header title="Bookings" subtitle="Create, review, and manage all trips.">
         <x-slot:actions>
+            <x-ui.button href="{{ route('admin.bookings.archived') }}" variant="secondary">
+                <x-ui.icon name="archive" size="size-4" />
+                Archive
+            </x-ui.button>
             <x-ui.button href="{{ route('admin.bookings.create') }}">
                 <x-ui.icon name="plus" size="size-4" />
                 Create booking

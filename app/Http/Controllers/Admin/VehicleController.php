@@ -11,6 +11,7 @@ use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\ActivityLogger;
+use App\Services\PermanentDeleteGuard;
 use App\Services\VehicleListQuery;
 use App\Support\ListFilter;
 use Illuminate\Database\Eloquent\Collection;
@@ -133,6 +134,65 @@ class VehicleController extends Controller
         return redirect()
             ->route('admin.fleet.index')
             ->with('status', 'Vehicle archived.');
+    }
+
+    public function archived(): View
+    {
+        $this->authorize('viewAny', Vehicle::class);
+
+        $vehicles = Vehicle::onlyArchived()
+            ->with(['driver' => fn ($query) => $query->withArchived(), 'pricing' => fn ($query) => $query->withArchived()])
+            ->orderByDesc('archived_at')
+            ->paginate(ListFilter::PER_PAGE);
+
+        return view('admin.fleet.archived', [
+            'vehicles' => $vehicles,
+        ]);
+    }
+
+    public function restore(Vehicle $archivedVehicle, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $this->authorize('restore', $archivedVehicle);
+
+        $archivedVehicle->unarchive();
+
+        $activityLogger->log(
+            action: 'fleet.restored',
+            subject: $archivedVehicle,
+            description: "Vehicle {$archivedVehicle->plate_number} restored.",
+        );
+
+        return redirect()
+            ->route('admin.fleet.archived')
+            ->with('status', 'Vehicle restored.');
+    }
+
+    public function forceDestroy(
+        Vehicle $archivedVehicle,
+        PermanentDeleteGuard $permanentDeleteGuard,
+        ActivityLogger $activityLogger,
+    ): RedirectResponse {
+        $this->authorize('forceDelete', $archivedVehicle);
+
+        $message = $permanentDeleteGuard->vehicle($archivedVehicle);
+
+        if ($message !== null) {
+            return redirect()
+                ->route('admin.fleet.archived')
+                ->withErrors(['archive' => $message]);
+        }
+
+        $plate = $archivedVehicle->plate_number;
+        $archivedVehicle->delete();
+
+        $activityLogger->log(
+            action: 'fleet.deleted',
+            description: "Vehicle {$plate} permanently deleted.",
+        );
+
+        return redirect()
+            ->route('admin.fleet.archived')
+            ->with('status', 'Vehicle permanently deleted.');
     }
 
     /**
