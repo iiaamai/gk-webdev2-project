@@ -37,6 +37,10 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+      - key: GK_MAPBOX_ENABLED
+        value: "true"
+      - key: MAPBOX_TOKEN
+        sync: false
 
 databases:
   - name: gk-postgres
