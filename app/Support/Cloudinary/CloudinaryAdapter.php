@@ -83,11 +83,15 @@ class CloudinaryAdapter implements FilesystemAdapter
                 throw UnableToReadFile::fromLocation($path, $resource->body());
             }
 
-            $url = $resource->json('secure_url') ?: $resource->json('url');
+            $version = $resource->json('version');
+            $format = $resource->json('format');
+            $format = is_string($format) && $format !== ''
+                ? ($format === 'jpeg' ? 'jpg' : $format)
+                : $this->format($path);
 
-            if (! is_string($url) || $url === '') {
-                $url = $this->signedDeliveryUrl($path);
-            }
+            $versionNumber = is_numeric($version) ? (int) $version : null;
+
+            $url = $this->signedDeliveryUrl($path, $versionNumber, $format);
 
             $download = $this->http()->get($url);
         } catch (UnableToReadFile $exception) {
@@ -271,15 +275,27 @@ class CloudinaryAdapter implements FilesystemAdapter
             .'/resources/image/authenticated/'.rawurlencode($this->publicId($path));
     }
 
-    private function signedDeliveryUrl(string $path): string
+    private function signedDeliveryUrl(string $path, ?int $version = null, ?string $format = null): string
     {
         $publicId = $this->publicId($path);
-        $format = $this->format($path);
-        $toSign = $publicId.$this->credentials->apiSecret;
-        $signature = rtrim(strtr(base64_encode(sha1($toSign, true)), '+/', '-_'), '=');
+        $format ??= $this->format($path);
+        $deliverySuffix = $publicId.($format !== '' ? '.'.$format : '');
+
+        $pathAfterSignature = $version !== null
+            ? 'v'.$version.'/'.$deliverySuffix
+            : $deliverySuffix;
+
+        $signature = $this->deliveryUrlSignature($pathAfterSignature);
 
         return 'https://res.cloudinary.com/'.$this->credentials->cloudName
-            .'/image/authenticated/s--'.$signature.'--/'.$publicId
-            .($format !== '' ? '.'.$format : '');
+            .'/image/authenticated/s--'.$signature.'--/'.$pathAfterSignature;
+    }
+
+    private function deliveryUrlSignature(string $toSign): string
+    {
+        $digest = sha1($toSign.$this->credentials->apiSecret, true);
+        $encoded = rtrim(strtr(base64_encode($digest), '+/', '-_'), '=');
+
+        return substr($encoded, 0, 8);
     }
 }

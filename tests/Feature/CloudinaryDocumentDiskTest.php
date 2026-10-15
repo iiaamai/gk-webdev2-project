@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Support\Cloudinary\CloudinaryAdapter;
 use App\Support\Cloudinary\CloudinaryCredentials;
 use App\Support\DocumentStorage;
 use Illuminate\Support\Facades\Http;
@@ -44,7 +45,8 @@ class CloudinaryDocumentDiskTest extends TestCase
 
             if (str_contains($url, '/resources/image/authenticated')) {
                 return Http::response([
-                    'secure_url' => 'https://res.cloudinary.com/demo-cloud/image/authenticated/gatepass.png',
+                    'version' => 1_753_862_893,
+                    'format' => 'png',
                 ], 200);
             }
 
@@ -70,6 +72,33 @@ class CloudinaryDocumentDiskTest extends TestCase
                 && str_contains($body, 'authenticated')
                 && str_contains($body, 'gk-trucking/bookings/GK-2026-0001/gatepass');
         });
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'res.cloudinary.com')
+                && str_contains($request->url(), '/image/authenticated/s--')
+                && str_contains($request->url(), 'gk-trucking/bookings/GK-2026-0001/gatepass.png');
+        });
+    }
+
+    public function test_delivery_url_signature_matches_cloudinary_documentation_example(): void
+    {
+        $adapter = new CloudinaryAdapter(
+            new CloudinaryCredentials(
+                cloudName: 'demo',
+                apiKey: 'key',
+                apiSecret: 'abcd',
+                folder: '',
+            ),
+        );
+
+        $reflection = new \ReflectionClass($adapter);
+        $method = $reflection->getMethod('deliveryUrlSignature');
+        $method->setAccessible(true);
+
+        $this->assertSame(
+            'iDy_JeBq',
+            $method->invoke($adapter, 'c_fill,w_300,h_250/e_grayscale/sample-authenticated.png'),
+        );
     }
 
     public function test_document_storage_uses_cloudinary_when_credentials_are_present(): void
