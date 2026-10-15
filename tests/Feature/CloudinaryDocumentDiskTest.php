@@ -47,6 +47,8 @@ class CloudinaryDocumentDiskTest extends TestCase
                 return Http::response([
                     'version' => 1_753_862_893,
                     'format' => 'png',
+                    'bytes' => 9,
+                    'created_at' => '2026-10-15T14:00:00Z',
                 ], 200);
             }
 
@@ -62,6 +64,7 @@ class CloudinaryDocumentDiskTest extends TestCase
 
         $this->assertTrue($disk->put($path, 'png-bytes'));
         $this->assertTrue($disk->exists($path));
+        $this->assertSame(9, $disk->size($path));
         $this->assertSame('png-bytes', $disk->get($path));
         $this->assertTrue($disk->delete($path));
 
@@ -126,5 +129,26 @@ class CloudinaryDocumentDiskTest extends TestCase
         $this->assertSame('demo-cloud', $credentials->cloudName);
         $this->assertSame('api-key', $credentials->apiKey);
         $this->assertSame('api-secret', $credentials->apiSecret);
+    }
+
+    public function test_cloudinary_disk_reports_file_size_from_admin_api(): void
+    {
+        config([
+            'filesystems.default' => 'cloudinary',
+            'filesystems.disks.cloudinary.url' => 'cloudinary://api-key:api-secret@demo-cloud',
+            'filesystems.disks.cloudinary.folder' => 'gk-trucking',
+        ]);
+
+        Http::fake([
+            'api.cloudinary.com/*' => Http::response([
+                'bytes' => 2048,
+                'created_at' => '2026-10-15T14:00:00Z',
+                'format' => 'jpg',
+                'version' => 1,
+            ], 200),
+        ]);
+
+        $this->assertSame(2048, Storage::disk('cloudinary')->size('settings/qr-ph.jpg'));
+        $this->assertGreaterThan(0, Storage::disk('cloudinary')->lastModified('settings/qr-ph.jpg'));
     }
 }

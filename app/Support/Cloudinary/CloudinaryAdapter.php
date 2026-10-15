@@ -75,16 +75,9 @@ class CloudinaryAdapter implements FilesystemAdapter
     public function read(string $path): string
     {
         try {
-            $resource = $this->http()
-                ->withBasicAuth($this->credentials->apiKey, $this->credentials->apiSecret)
-                ->get($this->adminResourceUrl($path));
-
-            if (! $resource->successful()) {
-                throw UnableToReadFile::fromLocation($path, $resource->body());
-            }
-
-            $version = $resource->json('version');
-            $format = $resource->json('format');
+            $resource = $this->adminResource($path);
+            $version = $resource['version'] ?? null;
+            $format = $resource['format'] ?? null;
             $format = is_string($format) && $format !== ''
                 ? ($format === 'jpeg' ? 'jpg' : $format)
                 : $this->format($path);
@@ -96,6 +89,8 @@ class CloudinaryAdapter implements FilesystemAdapter
             $download = $this->http()->get($url);
         } catch (UnableToReadFile $exception) {
             throw $exception;
+        } catch (UnableToRetrieveMetadata $exception) {
+            throw UnableToReadFile::fromLocation($path, $exception->getMessage(), $exception);
         } catch (Throwable $exception) {
             throw UnableToReadFile::fromLocation($path, $exception->getMessage(), $exception);
         }
@@ -179,12 +174,32 @@ class CloudinaryAdapter implements FilesystemAdapter
 
     public function lastModified(string $path): FileAttributes
     {
-        throw UnableToRetrieveMetadata::lastModified($path);
+        $resource = $this->adminResource($path);
+        $createdAt = $resource['created_at'] ?? null;
+
+        if (! is_string($createdAt) || $createdAt === '') {
+            throw UnableToRetrieveMetadata::lastModified($path);
+        }
+
+        $timestamp = strtotime($createdAt);
+
+        if ($timestamp === false) {
+            throw UnableToRetrieveMetadata::lastModified($path);
+        }
+
+        return new FileAttributes($path, lastModified: $timestamp);
     }
 
     public function fileSize(string $path): FileAttributes
     {
-        throw UnableToRetrieveMetadata::fileSize($path);
+        $resource = $this->adminResource($path);
+        $bytes = $resource['bytes'] ?? null;
+
+        if (! is_numeric($bytes)) {
+            throw UnableToRetrieveMetadata::fileSize($path);
+        }
+
+        return new FileAttributes($path, fileSize: (int) $bytes);
     }
 
     public function listContents(string $path, bool $deep): iterable
@@ -267,6 +282,32 @@ class CloudinaryAdapter implements FilesystemAdapter
     private function destroyUrl(): string
     {
         return 'https://api.cloudinary.com/v1_1/'.$this->credentials->cloudName.'/image/destroy';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function adminResource(string $path): array
+    {
+        try {
+            $response = $this->http()
+                ->withBasicAuth($this->credentials->apiKey, $this->credentials->apiSecret)
+                ->get($this->adminResourceUrl($path));
+        } catch (Throwable $exception) {
+            throw UnableToRetrieveMetadata::create($path, 'metadata', $exception->getMessage(), $exception);
+        }
+
+        if (! $response->successful()) {
+            throw UnableToRetrieveMetadata::create($path, 'metadata', $response->body());
+        }
+
+        $payload = $response->json();
+
+        if (! is_array($payload)) {
+            throw UnableToRetrieveMetadata::create($path, 'metadata', 'Invalid Cloudinary resource payload.');
+        }
+
+        return $payload;
     }
 
     private function adminResourceUrl(string $path): string
