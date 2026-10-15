@@ -5,9 +5,9 @@ namespace App\Actions;
 use App\Models\Booking;
 use App\Models\Pod;
 use App\Services\ActivityLogger;
+use App\Support\DocumentStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class UploadBookingPod
 {
@@ -28,7 +28,7 @@ class UploadBookingPod
             $existing = $booking->pod;
             if ($existing !== null) {
                 foreach ($existing->photo_paths as $oldPath) {
-                    Storage::disk('local')->delete($oldPath);
+                    DocumentStorage::disk()->delete($oldPath);
                 }
             }
 
@@ -36,7 +36,7 @@ class UploadBookingPod
             foreach (array_values($photos) as $index => $photo) {
                 $extension = strtolower($photo->getClientOriginalExtension());
                 $filename = 'photo-'.($index + 1).'.'.$extension;
-                Storage::disk('local')->putFileAs($directory, $photo, $filename);
+                DocumentStorage::disk()->putFileAs($directory, $photo, $filename);
                 $photoPaths[] = $directory.'/'.$filename;
             }
 

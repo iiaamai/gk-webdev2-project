@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\StartPendingRegistration;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterCustomerRequest;
-use App\Models\User;
-use App\Support\MailIntegration;
 use App\Support\RoleHome;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -20,18 +18,22 @@ class RegisterCustomerController extends Controller
         return view('auth.register-customer');
     }
 
-    public function store(RegisterCustomerRequest $request): RedirectResponse
-    {
-        $user = User::query()->create([
-            ...$request->safe()->only(['name', 'email', 'mobile', 'password']),
-            'role' => UserRole::Customer,
-            'email_verified_at' => MailIntegration::isEnabled() ? null : now(),
-        ]);
+    public function store(
+        RegisterCustomerRequest $request,
+        StartPendingRegistration $startPendingRegistration,
+    ): RedirectResponse {
+        $user = $startPendingRegistration->execute(
+            $request->safe()->only(['name', 'email', 'mobile', 'password']),
+            UserRole::Customer,
+        );
 
-        event(new Registered($user));
+        if ($user === null) {
+            return redirect()
+                ->route('register.check')
+                ->with('status', 'We sent a confirmation link to '.$request->string('email')->toString().'.');
+        }
 
         Auth::login($user);
-
         $request->session()->regenerate();
 
         return redirect()->to(RoleHome::path($user));

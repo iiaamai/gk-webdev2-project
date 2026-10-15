@@ -10,12 +10,14 @@ use App\Http\Controllers\Admin\PricingController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
+use App\Http\Controllers\Auth\ConfirmRegistrationController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterCustomerController;
 use App\Http\Controllers\Auth\RegisterDriverController;
+use App\Http\Controllers\Auth\RegistrationCheckEmailController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BookingDocumentController;
 use App\Http\Controllers\BookingDriverLocationController;
@@ -45,6 +47,13 @@ Route::middleware('guest')->group(function (): void {
 
     Route::get('register/driver', [RegisterDriverController::class, 'create'])->name('register.driver');
     Route::post('register/driver', [RegisterDriverController::class, 'store']);
+
+    Route::get('register/check-email', RegistrationCheckEmailController::class)
+        ->name('register.check');
+
+    Route::get('register/confirm/{pendingRegistration}', ConfirmRegistrationController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('register.confirm');
 });
 
 Route::middleware('auth')->group(function (): void {

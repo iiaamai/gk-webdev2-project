@@ -32,7 +32,9 @@ services:
       - key: QUEUE_CONNECTION
         value: database
       - key: FILESYSTEM_DISK
-        value: local
+        value: cloudinary
+      - key: CLOUDINARY_URL
+        sync: false
       - key: APP_KEY
         sync: false
       - key: APP_URL
@@ -40,6 +42,16 @@ services:
       - key: GK_MAPBOX_ENABLED
         value: "true"
       - key: MAPBOX_TOKEN
+        sync: false
+      - key: GK_MAIL_ENABLED
+        value: "true"
+      - key: MAIL_MAILER
+        value: resend
+      - key: MAIL_FROM_NAME
+        value: GK Trucking Services
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM_ADDRESS
         sync: false
 
 databases:

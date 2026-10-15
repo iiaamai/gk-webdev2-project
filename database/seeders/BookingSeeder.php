@@ -12,9 +12,9 @@ use App\Models\Pod;
 use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Support\DocumentStorage;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 class BookingSeeder extends Seeder
@@ -184,7 +184,7 @@ class BookingSeeder extends Seeder
         }
 
         $path = 'bookings/'.$bookingNumber.'/gatepass.png';
-        Storage::disk('local')->put($path, File::get($fixture));
+        DocumentStorage::disk()->put($path, File::get($fixture));
 
         return $path;
     }

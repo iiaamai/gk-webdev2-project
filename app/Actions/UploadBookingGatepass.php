@@ -5,9 +5,9 @@ namespace App\Actions;
 use App\Models\Booking;
 use App\Services\ActivityLogger;
 use App\Services\BookingEmailNotifier;
+use App\Support\DocumentStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class UploadBookingGatepass
@@ -34,10 +34,10 @@ class UploadBookingGatepass
             $path = $directory.'/'.$filename;
 
             if ($allowReplace && filled($booking->gatepass_path)) {
-                Storage::disk('local')->delete($booking->gatepass_path);
+                DocumentStorage::disk()->delete($booking->gatepass_path);
             }
 
-            Storage::disk('local')->putFileAs($directory, $file, $filename);
+            DocumentStorage::disk()->putFileAs($directory, $file, $filename);
 
             $booking->update(['gatepass_path' => $path]);
 

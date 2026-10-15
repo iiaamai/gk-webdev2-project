@@ -6,9 +6,9 @@ use App\Enums\InvoiceStatus;
 use App\Enums\PaymentProofStatus;
 use App\Models\Invoice;
 use App\Services\ActivityLogger;
+use App\Support\DocumentStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class SubmitInvoicePaymentProof
@@ -48,10 +48,10 @@ class SubmitInvoicePaymentProof
             $path = $directory.'/'.$filename;
 
             if (filled($invoice->payment_proof_path)) {
-                Storage::disk('local')->delete($invoice->payment_proof_path);
+                DocumentStorage::disk()->delete($invoice->payment_proof_path);
             }
 
-            Storage::disk('local')->putFileAs($directory, $file, $filename);
+            DocumentStorage::disk()->putFileAs($directory, $file, $filename);
 
             $invoice->update([
                 'payment_proof_path' => $path,

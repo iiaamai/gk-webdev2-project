@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\PendingRegistration;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -37,8 +38,15 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            $pending = PendingRegistration::query()
+                ->where('email', $this->string('email')->toString())
+                ->where('expires_at', '>', now())
+                ->exists();
+
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'email' => $pending
+                    ? 'Check your email to finish creating your account.'
+                    : __('auth.failed'),
             ]);
         }
 

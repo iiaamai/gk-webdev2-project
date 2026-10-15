@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Mail\CompleteRegistrationMail;
+use App\Models\PendingRegistration;
 use App\Models\User;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -13,9 +15,9 @@ class EmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_customer_must_verify_email_when_mail_is_enabled(): void
+    public function test_customer_must_confirm_email_before_user_is_created_when_mail_is_enabled(): void
     {
-        Notification::fake();
+        Mail::fake();
         config(['gk.mail_enabled' => true]);
 
         $this->post(route('register.customer'), [
@@ -24,23 +26,17 @@ class EmailVerificationTest extends TestCase
             'mobile' => '09171234567',
             'password' => 'password',
             'password_confirmation' => 'password',
-        ])->assertRedirect(route('customer.home'));
+        ])->assertRedirect(route('register.check'));
 
-        $user = User::query()->where('email', 'verify.customer@example.com')->first();
-
-        $this->assertNotNull($user);
-        $this->assertNull($user->email_verified_at);
-
-        Notification::assertSentTo($user, VerifyEmail::class);
-
-        $this->actingAs($user)
-            ->get(route('customer.home'))
-            ->assertRedirect(route('verification.notice'));
+        $this->assertGuest();
+        $this->assertNull(User::query()->where('email', 'verify.customer@example.com')->first());
+        $this->assertNotNull(PendingRegistration::query()->where('email', 'verify.customer@example.com')->first());
+        Mail::assertSent(CompleteRegistrationMail::class);
     }
 
-    public function test_driver_must_verify_email_when_mail_is_enabled(): void
+    public function test_driver_must_confirm_email_before_user_is_created_when_mail_is_enabled(): void
     {
-        Notification::fake();
+        Mail::fake();
         config(['gk.mail_enabled' => true]);
 
         $this->post(route('register.driver'), [
@@ -49,14 +45,28 @@ class EmailVerificationTest extends TestCase
             'mobile' => '09171234568',
             'password' => 'password',
             'password_confirmation' => 'password',
-        ])->assertRedirect(route('driver.home'));
+        ])->assertRedirect(route('register.check'));
 
-        $user = User::query()->where('email', 'verify.driver@example.com')->first();
+        $this->assertGuest();
+        $this->assertNull(User::query()->where('email', 'verify.driver@example.com')->first());
+        Mail::assertSent(CompleteRegistrationMail::class);
+    }
 
-        $this->assertNotNull($user);
-        $this->assertNull($user->email_verified_at);
+    public function test_login_tells_pending_signup_to_finish_from_email(): void
+    {
+        config(['gk.mail_enabled' => true]);
 
-        Notification::assertSentTo($user, VerifyEmail::class);
+        PendingRegistration::factory()->create([
+            'email' => 'pending@example.com',
+        ]);
+
+        $this->from(route('login'))
+            ->post(route('login'), [
+                'email' => 'pending@example.com',
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors(['email' => 'Check your email to finish creating your account.']);
     }
 
     public function test_admin_created_staff_is_verified_when_mail_is_enabled(): void

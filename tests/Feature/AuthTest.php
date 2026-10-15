@@ -3,8 +3,12 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Mail\CompleteRegistrationMail;
+use App\Models\PendingRegistration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -121,6 +125,69 @@ class AuthTest extends TestCase
         $this->assertSame(UserRole::Driver, $user->role);
         $this->assertNull($user->assignedVehicle);
         $this->assertNotNull($user->email_verified_at);
+    }
+
+    public function test_customer_stays_out_of_users_until_confirmation_link_when_mail_is_enabled(): void
+    {
+        Mail::fake();
+        config(['gk.mail_enabled' => true]);
+
+        $this->post(route('register.customer'), [
+            'name' => 'Verify Customer',
+            'email' => 'verify.customer@example.com',
+            'mobile' => '09171234569',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertRedirect(route('register.check'));
+
+        $this->assertGuest();
+        $this->assertNull(User::query()->where('email', 'verify.customer@example.com')->first());
+        $this->assertNotNull(PendingRegistration::query()->where('email', 'verify.customer@example.com')->first());
+        Mail::assertSent(CompleteRegistrationMail::class);
+    }
+
+    public function test_confirmation_link_creates_verified_customer_and_logs_them_in(): void
+    {
+        Mail::fake();
+        config(['gk.mail_enabled' => true]);
+
+        $this->post(route('register.customer'), [
+            'name' => 'Verify Customer',
+            'email' => 'verify.customer@example.com',
+            'mobile' => '09171234569',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $pending = PendingRegistration::query()->where('email', 'verify.customer@example.com')->first();
+        $this->assertNotNull($pending);
+
+        $this->get(URL::temporarySignedRoute(
+            'register.confirm',
+            $pending->expires_at,
+            ['pendingRegistration' => $pending->id],
+        ))->assertRedirect(route('customer.home'));
+
+        $user = User::query()->where('email', 'verify.customer@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertAuthenticatedAs($user);
+        $this->assertNull(PendingRegistration::query()->find($pending->id));
+    }
+
+    public function test_unverified_user_is_sent_to_verification_notice_instead_of_portal(): void
+    {
+        $customer = User::factory()->customer()->unverified()->create([
+            'password' => 'password',
+        ]);
+
+        $this->post(route('login'), [
+            'email' => $customer->email,
+            'password' => 'password',
+        ])->assertRedirect(route('customer.home'));
+
+        $this->get(route('customer.home'))
+            ->assertRedirect(route('verification.notice'));
     }
 
     public function test_role_middleware_blocks_cross_portal_access(): void

@@ -6,7 +6,7 @@
     <x-ui.page-header
         title="Edit {{ $booking->booking_number }}"
         subtitle="Gatepass, invoice, and trip details (when unlocked)."
-        class="sticky top-0 z-20 -mx-4 -mt-4 border-b border-border bg-surface/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:-mt-6 sm:px-6"
+        class="sticky top-0 z-20 -mx-4 -mt-4 border-b border-border bg-surface px-4 py-4 sm:-mx-6 sm:-mt-6 sm:px-6"
     >
         <x-slot:actions>
             <x-ui.button href="{{ route('staff.bookings.show', $booking) }}" variant="secondary">

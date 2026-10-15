@@ -5,9 +5,9 @@ namespace App\Actions;
 use App\Models\Booking;
 use App\Models\Eir;
 use App\Services\ActivityLogger;
+use App\Support\DocumentStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class UploadBookingEir
 {
@@ -27,10 +27,10 @@ class UploadBookingEir
 
             $existing = $booking->eir;
             if ($existing !== null && filled($existing->eir_path)) {
-                Storage::disk('local')->delete($existing->eir_path);
+                DocumentStorage::disk()->delete($existing->eir_path);
             }
 
-            Storage::disk('local')->putFileAs($directory, $file, $filename);
+            DocumentStorage::disk()->putFileAs($directory, $file, $filename);
 
             return Eir::query()->updateOrCreate(
                 ['booking_id' => $booking->id],

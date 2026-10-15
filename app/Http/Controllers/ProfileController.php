@@ -6,9 +6,9 @@ use App\Actions\UploadUserAvatar;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Support\DocumentStorage;
 use App\Support\RoleHome;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProfileController extends Controller
@@ -44,11 +44,11 @@ class ProfileController extends Controller
     {
         $this->authorize('viewAvatar', $user);
 
-        abort_unless(filled($user->avatar_path) && Storage::disk('local')->exists($user->avatar_path), 404);
+        abort_unless(filled($user->avatar_path) && DocumentStorage::disk()->exists($user->avatar_path), 404);
 
-        $mimeType = Storage::disk('local')->mimeType($user->avatar_path) ?: 'application/octet-stream';
+        $mimeType = DocumentStorage::disk()->mimeType($user->avatar_path) ?: 'application/octet-stream';
 
-        return Storage::disk('local')->response(
+        return DocumentStorage::disk()->response(
             $user->avatar_path,
             'avatar',
             ['Content-Type' => $mimeType],

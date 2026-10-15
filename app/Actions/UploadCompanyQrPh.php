@@ -4,8 +4,8 @@ namespace App\Actions;
 
 use App\Models\Setting;
 use App\Services\ActivityLogger;
+use App\Support\DocumentStorage;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
 class UploadCompanyQrPh
 {
@@ -23,10 +23,10 @@ class UploadCompanyQrPh
         $previous = Setting::getValue('qr_ph_path');
 
         if (filled($previous) && $previous !== $path) {
-            Storage::disk('local')->delete($previous);
+            DocumentStorage::disk()->delete($previous);
         }
 
-        Storage::disk('local')->putFileAs($directory, $file, $filename);
+        DocumentStorage::disk()->putFileAs($directory, $file, $filename);
         Setting::setValue('qr_ph_path', $path);
 
         $this->activityLogger->log(

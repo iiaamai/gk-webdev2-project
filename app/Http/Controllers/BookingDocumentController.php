@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Setting;
-use Illuminate\Support\Facades\Storage;
+use App\Support\DocumentStorage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BookingDocumentController extends Controller
@@ -80,11 +80,11 @@ class BookingDocumentController extends Controller
 
     private function streamInline(string $path, string $filename): StreamedResponse
     {
-        abort_unless(Storage::disk('local')->exists($path), 404);
+        abort_unless(DocumentStorage::disk()->exists($path), 404);
 
-        $mimeType = Storage::disk('local')->mimeType($path) ?: 'application/octet-stream';
+        $mimeType = DocumentStorage::disk()->mimeType($path) ?: 'application/octet-stream';
 
-        return Storage::disk('local')->response(
+        return DocumentStorage::disk()->response(
             $path,
             $filename,
             ['Content-Type' => $mimeType],

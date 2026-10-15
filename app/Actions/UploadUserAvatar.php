@@ -3,8 +3,8 @@
 namespace App\Actions;
 
 use App\Models\User;
+use App\Support\DocumentStorage;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
 class UploadUserAvatar
 {
@@ -16,10 +16,10 @@ class UploadUserAvatar
         $path = $directory.'/'.$filename;
 
         if (filled($user->avatar_path)) {
-            Storage::disk('local')->delete($user->avatar_path);
+            DocumentStorage::disk()->delete($user->avatar_path);
         }
 
-        Storage::disk('local')->putFileAs($directory, $file, $filename);
+        DocumentStorage::disk()->putFileAs($directory, $file, $filename);
 
         $user->forceFill(['avatar_path' => $path])->save();
 
