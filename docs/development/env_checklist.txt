@@ -17,9 +17,10 @@ Foundation / always
 
 Auth / mail verification (when building auth or email verify)
 - GK_MAIL_ENABLED=true
-- MAIL_MAILER=log (local) or resend (Render)
-- MAIL_FROM_ADDRESS / MAIL_FROM_NAME
-- RESEND_API_KEY (Render; from-address must be a verified Resend domain)
+- MAIL_MAILER=log (local) or smtp (Render / Brevo)
+- MAIL_SCHEME=smtps, MAIL_HOST=smtp-relay.brevo.com, MAIL_PORT=465 (typical Brevo)
+- MAIL_USERNAME / MAIL_PASSWORD (Brevo SMTP login and SMTP key)
+- MAIL_FROM_ADDRESS / MAIL_FROM_NAME (sender must be verified in Brevo)
 
 Map phase (post-MVP)
 - MAPBOX_TOKEN (or MAPBOX_ACCESS_TOKEN)

@@ -33,7 +33,15 @@ services:
         value: database
       - key: FILESYSTEM_DISK
         value: cloudinary
+      - key: CLOUDINARY_FOLDER
+        value: gk-trucking
       - key: CLOUDINARY_URL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
         sync: false
       - key: APP_KEY
         sync: false
@@ -46,11 +54,19 @@ services:
       - key: GK_MAIL_ENABLED
         value: "true"
       - key: MAIL_MAILER
-        value: resend
+        value: smtp
+      - key: MAIL_SCHEME
+        value: smtps
+      - key: MAIL_HOST
+        value: smtp-relay.brevo.com
+      - key: MAIL_PORT
+        value: "465"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
       - key: MAIL_FROM_NAME
         value: GK Trucking Services
-      - key: RESEND_API_KEY
-        sync: false
       - key: MAIL_FROM_ADDRESS
         sync: false
 
