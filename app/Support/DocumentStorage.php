@@ -10,13 +10,7 @@ final class DocumentStorage
 {
     public static function diskName(): string
     {
-        $disk = (string) config('filesystems.default', 'local');
-
-        if ($disk === 'cloudinary' && ! CloudinaryCredentials::isConfigured()) {
-            return 'local';
-        }
-
-        return $disk;
+        return CloudinaryCredentials::isConfigured() ? 'cloudinary' : 'local';
     }
 
     public static function disk(): Filesystem

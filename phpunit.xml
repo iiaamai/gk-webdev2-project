@@ -35,5 +35,9 @@
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="GK_MAIL_ENABLED" value="false"/>
         <env name="FILESYSTEM_DISK" value="local"/>
+        <env name="CLOUDINARY_URL" value="" force="true"/>
+        <env name="CLOUDINARY_CLOUD_NAME" value="" force="true"/>
+        <env name="CLOUDINARY_API_KEY" value="" force="true"/>
+        <env name="CLOUDINARY_API_SECRET" value="" force="true"/>
     </php>
 </phpunit>

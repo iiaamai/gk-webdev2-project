@@ -73,7 +73,7 @@
                 </div>
             </header>
 
-            <main class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 print:overflow-visible print:p-0">
+            <main class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6 print:overflow-visible print:p-0">
                 @yield('content')
             </main>
         </div>

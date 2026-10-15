@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Support\Cloudinary\CloudinaryCredentials;
 use App\Support\DocumentStorage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -74,10 +75,27 @@ class CloudinaryDocumentDiskTest extends TestCase
     public function test_document_storage_uses_cloudinary_when_credentials_are_present(): void
     {
         config([
-            'filesystems.default' => 'cloudinary',
+            'filesystems.default' => 'local',
             'filesystems.disks.cloudinary.url' => 'cloudinary://api-key:api-secret@demo-cloud',
         ]);
 
         $this->assertSame('cloudinary', DocumentStorage::diskName());
+    }
+
+    public function test_explicit_cloudinary_keys_override_a_malformed_url(): void
+    {
+        config([
+            'filesystems.disks.cloudinary.url' => 'cloudinary://WRONGKEY:url-secret@url-cloud',
+            'filesystems.disks.cloudinary.cloud_name' => 'demo-cloud',
+            'filesystems.disks.cloudinary.api_key' => 'api-key',
+            'filesystems.disks.cloudinary.api_secret' => 'api-secret',
+        ]);
+
+        $credentials = CloudinaryCredentials::fromConfig();
+
+        $this->assertNotNull($credentials);
+        $this->assertSame('demo-cloud', $credentials->cloudName);
+        $this->assertSame('api-key', $credentials->apiKey);
+        $this->assertSame('api-secret', $credentials->apiSecret);
     }
 }

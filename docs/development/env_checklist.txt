@@ -25,10 +25,11 @@ Map phase (post-MVP)
 - MAPBOX_TOKEN (or MAPBOX_ACCESS_TOKEN)
 
 Render / persistent uploads
-- FILESYSTEM_DISK=cloudinary
-- CLOUDINARY_URL (or CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET)
+- CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME (no extra characters in the key)
+- Or CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET (these override a bad URL)
 - Optional: CLOUDINARY_FOLDER=gk-trucking
-- Falls back to local disk when Cloudinary credentials are missing (XAMPP / tests)
+- Documents use Cloudinary whenever credentials parse; otherwise local disk
+- Cloudinary Media Library: filter Authenticated, not Public
 
 PayMongo (after MVP B, when online pay is added)
 - PAYMONGO_SECRET_KEY

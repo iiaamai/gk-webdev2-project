@@ -13,30 +13,38 @@ final readonly class CloudinaryCredentials
 
     public static function fromConfig(): ?self
     {
-        $url = config('filesystems.disks.cloudinary.url');
-        $cloudName = config('filesystems.disks.cloudinary.cloud_name');
-        $apiKey = config('filesystems.disks.cloudinary.api_key');
-        $apiSecret = config('filesystems.disks.cloudinary.api_secret');
-        $folder = (string) config('filesystems.disks.cloudinary.folder', 'gk-trucking');
+        $cloudName = self::configString('filesystems.disks.cloudinary.cloud_name');
+        $apiKey = self::configString('filesystems.disks.cloudinary.api_key');
+        $apiSecret = self::configString('filesystems.disks.cloudinary.api_secret');
+        $folder = self::configString('filesystems.disks.cloudinary.folder') ?? 'gk-trucking';
+        $url = self::configString('filesystems.disks.cloudinary.url');
 
-        if (is_string($url) && str_starts_with($url, 'cloudinary://')) {
+        if ($url !== null && str_starts_with($url, 'cloudinary://')) {
             $parsed = parse_url($url);
 
             if (is_array($parsed)) {
-                $cloudName = $parsed['host'] ?? $cloudName;
-                $apiKey = isset($parsed['user']) ? rawurldecode($parsed['user']) : $apiKey;
-                $apiSecret = isset($parsed['pass']) ? rawurldecode($parsed['pass']) : $apiSecret;
+                $cloudName = self::nonEmpty($parsed['host'] ?? null) ?? $cloudName;
+                $apiKey = isset($parsed['user'])
+                    ? (self::nonEmpty(rawurldecode($parsed['user'])) ?? $apiKey)
+                    : $apiKey;
+                $apiSecret = isset($parsed['pass'])
+                    ? (self::nonEmpty(rawurldecode($parsed['pass'])) ?? $apiSecret)
+                    : $apiSecret;
             }
         }
 
-        if (! filled($cloudName) || ! filled($apiKey) || ! filled($apiSecret)) {
+        $cloudName = self::configString('filesystems.disks.cloudinary.cloud_name') ?? $cloudName;
+        $apiKey = self::configString('filesystems.disks.cloudinary.api_key') ?? $apiKey;
+        $apiSecret = self::configString('filesystems.disks.cloudinary.api_secret') ?? $apiSecret;
+
+        if ($cloudName === null || $apiKey === null || $apiSecret === null) {
             return null;
         }
 
         return new self(
-            cloudName: (string) $cloudName,
-            apiKey: (string) $apiKey,
-            apiSecret: (string) $apiSecret,
+            cloudName: $cloudName,
+            apiKey: $apiKey,
+            apiSecret: $apiSecret,
             folder: trim($folder, '/'),
         );
     }
@@ -44,5 +52,21 @@ final readonly class CloudinaryCredentials
     public static function isConfigured(): bool
     {
         return self::fromConfig() !== null;
+    }
+
+    private static function configString(string $key): ?string
+    {
+        return self::nonEmpty(config($key));
+    }
+
+    private static function nonEmpty(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 }
