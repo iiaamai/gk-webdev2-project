@@ -8,6 +8,7 @@ PORT="${PORT:-10000}"
 sed -i "s/listen 8080;/listen ${PORT};/" /etc/nginx/conf.d/default.conf
 
 php artisan migrate --force
+php artisan db:seed --force
 
 php artisan config:cache
 php artisan route:cache
