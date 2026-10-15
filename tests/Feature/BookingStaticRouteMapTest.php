@@ -66,7 +66,7 @@ class BookingStaticRouteMapTest extends TestCase
 
         $this->assertTrue($result->eligible);
         $this->assertFalse($result->configured);
-        $this->assertNull($result->message);
+        $this->assertStringContainsString('Mapbox', (string) $result->message);
         Http::assertNothingSent();
     }
 
@@ -134,7 +134,7 @@ class BookingStaticRouteMapTest extends TestCase
             ->get(route('customer.bookings.show', $booking))
             ->assertOk()
             ->assertSee('Pickup and dropoff for this booking.', false)
-            ->assertSee('Pickup to dropoff route preview.', false);
+            ->assertSee('Route map requires Mapbox', false);
     }
 
     public function test_customer_booking_show_renders_zoom_limited_map_when_configured(): void

@@ -1,6 +1,5 @@
 @php
     $routeMap = $routeMap ?? null;
-    $editMapSlot = $editMapSlot ?? false;
     $mapSize = $mapSize ?? 'default';
 @endphp
 
@@ -28,13 +27,7 @@
         </div>
     </div>
 
-    @if ($editMapSlot)
-        @include('bookings._map_placeholder', [
-            'booking' => $booking,
-            'routeMap' => $routeMap,
-            'mapSize' => $mapSize,
-        ])
-    @elseif ($routeMap !== null)
+    @if ($routeMap !== null)
         @if ($routeMap->hasRoute())
             <div class="overflow-hidden rounded-md border border-dashed border-border-strong bg-primary-tone-1">
                 <div class="border-b border-border bg-surface-elevated px-4 py-2 text-sm text-text-muted">

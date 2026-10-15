@@ -23,6 +23,7 @@ class BookingStaticRouteMapService
             return new StaticRouteMapResult(
                 configured: false,
                 eligible: true,
+                message: 'Route map requires Mapbox (set MAPBOX_TOKEN and GK_MAPBOX_ENABLED on the server).',
             );
         }
 
