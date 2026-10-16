@@ -95,8 +95,8 @@ class AuthTest extends TestCase
             'name' => 'New Customer',
             'email' => 'new.customer@example.com',
             'mobile' => '09171234567',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ]);
 
         $response->assertRedirect(route('customer.home'));
@@ -114,8 +114,8 @@ class AuthTest extends TestCase
             'name' => 'New Driver',
             'email' => 'new.driver@example.com',
             'mobile' => '09171234568',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ]);
 
         $response->assertRedirect(route('driver.home'));
@@ -127,6 +127,22 @@ class AuthTest extends TestCase
         $this->assertNotNull($user->email_verified_at);
     }
 
+    public function test_customer_register_rejects_a_weak_password(): void
+    {
+        $this->from(route('register.customer'))
+            ->post(route('register.customer'), [
+                'name' => 'Weak Password',
+                'email' => 'weak.customer@example.com',
+                'mobile' => '09171234570',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])
+            ->assertRedirect(route('register.customer'))
+            ->assertSessionHasErrors('password');
+
+        $this->assertNull(User::query()->where('email', 'weak.customer@example.com')->first());
+    }
+
     public function test_customer_stays_out_of_users_until_confirmation_link_when_mail_is_enabled(): void
     {
         Mail::fake();
@@ -136,8 +152,8 @@ class AuthTest extends TestCase
             'name' => 'Verify Customer',
             'email' => 'verify.customer@example.com',
             'mobile' => '09171234569',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ])->assertRedirect(route('register.check'));
 
         $this->assertGuest();
@@ -155,8 +171,8 @@ class AuthTest extends TestCase
             'name' => 'Verify Customer',
             'email' => 'verify.customer@example.com',
             'mobile' => '09171234569',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ]);
 
         $pending = PendingRegistration::query()->where('email', 'verify.customer@example.com')->first();

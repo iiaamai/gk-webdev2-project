@@ -35,6 +35,10 @@
             Log in
         </x-ui.button>
     </form>
+
+    <p class="mt-4 text-center text-sm text-text-muted">
+        <a href="{{ route('password.forgot') }}" class="font-medium text-primary hover:text-primary-shade-1">Forgot password?</a>
+    </p>
 @endsection
 
 @section('footer')

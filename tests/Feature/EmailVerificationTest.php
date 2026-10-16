@@ -24,8 +24,8 @@ class EmailVerificationTest extends TestCase
             'name' => 'Verify Customer',
             'email' => 'verify.customer@example.com',
             'mobile' => '09171234567',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ])->assertRedirect(route('register.check'));
 
         $this->assertGuest();
@@ -43,8 +43,8 @@ class EmailVerificationTest extends TestCase
             'name' => 'Verify Driver',
             'email' => 'verify.driver@example.com',
             'mobile' => '09171234568',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ])->assertRedirect(route('register.check'));
 
         $this->assertGuest();

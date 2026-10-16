@@ -29,11 +29,7 @@
             <x-ui.field-error name="mobile" />
         </div>
 
-        <div>
-            <x-ui.label for="password">Password</x-ui.label>
-            <x-ui.input id="password" type="password" name="password" required autocomplete="new-password" />
-            <x-ui.field-error name="password" />
-        </div>
+        <x-ui.password-field />
 
         <div>
             <x-ui.label for="password_confirmation">Confirm password</x-ui.label>

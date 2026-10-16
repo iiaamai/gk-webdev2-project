@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\PasswordRules;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
 class RegisterCustomerRequest extends FormRequest
 {
@@ -21,7 +21,7 @@ class RegisterCustomerRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'mobile' => ['nullable', 'string', 'max:30'],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'password' => PasswordRules::required(),
         ];
     }
 }

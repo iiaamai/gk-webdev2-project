@@ -76,6 +76,12 @@
     --color-info: var(--color-primary-shade-2);
     --color-info-muted: var(--color-primary-tint-2);
     --color-info-subtle: var(--color-primary-tint-1);
+
+    /* Public marketing (GK Logistics brand board) — do not swap app primary yet */
+    --color-brand-navy: #122b4c;
+    --color-brand-crimson: #c8102e;
+    --color-brand-charcoal: #2c3e50;
+    --color-brand-white: #ffffff;
 }
 
 @layer base {

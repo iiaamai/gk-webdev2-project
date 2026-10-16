@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Auth\ConfirmRegistrationController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterCustomerController;
@@ -35,7 +36,7 @@ use App\Http\Controllers\Staff\VehicleController as StaffVehicleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('marketing.home');
 })->name('home');
 
 Route::middleware('guest')->group(function (): void {
@@ -54,6 +55,14 @@ Route::middleware('guest')->group(function (): void {
     Route::get('register/confirm/{pendingRegistration}', ConfirmRegistrationController::class)
         ->middleware(['signed', 'throttle:6,1'])
         ->name('register.confirm');
+
+    Route::get('forgot-password', [ForgotPasswordController::class, 'create'])->name('password.forgot');
+    Route::post('forgot-password', [ForgotPasswordController::class, 'lookup'])
+        ->middleware('throttle:6,1')
+        ->name('password.lookup');
+    Route::post('forgot-password/update', [ForgotPasswordController::class, 'update'])
+        ->middleware('throttle:6,1')
+        ->name('password.update');
 });
 
 Route::middleware('auth')->group(function (): void {
