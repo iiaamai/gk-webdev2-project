@@ -2,9 +2,11 @@
 
 namespace App\Actions;
 
+use App\Enums\InvoiceStatus;
 use App\Enums\VehicleStatus;
 use App\Models\Booking;
 use App\Models\Pricing;
+use App\Models\Setting;
 use App\Models\Vehicle;
 use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +39,7 @@ class UpdateBooking
         ]);
 
         $fresh = DB::transaction(function () use ($booking, $data): Booking {
+            $dropoffChanged = $this->dropoffChanged($booking, $data);
             $pricingId = (int) $data['pricing_id'];
 
             if ($pricingId !== (int) $booking->pricing_id) {
@@ -80,6 +83,10 @@ class UpdateBooking
                 $booking->update(['customer_id' => $data['customer_id']]);
             }
 
+            if ($dropoffChanged) {
+                $this->applyDropoffChangeFee($booking);
+            }
+
             return $booking->fresh();
         });
 
@@ -94,5 +101,44 @@ class UpdateBooking
         );
 
         return $fresh;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function dropoffChanged(Booking $booking, array $data): bool
+    {
+        if (trim((string) $booking->dropoff_address) !== trim((string) ($data['dropoff_address'] ?? ''))) {
+            return true;
+        }
+
+        return round((float) $booking->dropoff_lat, 6) !== round((float) ($data['dropoff_lat'] ?? 0), 6)
+            || round((float) $booking->dropoff_lng, 6) !== round((float) ($data['dropoff_lng'] ?? 0), 6);
+    }
+
+    private function applyDropoffChangeFee(Booking $booking): void
+    {
+        $fee = round((float) Setting::getValue('dropoff_change_fee', '0'), 2);
+
+        if ($fee <= 0) {
+            return;
+        }
+
+        $invoice = $booking->invoice;
+
+        if ($invoice === null) {
+            return;
+        }
+
+        $note = 'Drop-off change fee: ₱'.number_format($fee, 2);
+        $invoice->amount = round((float) $invoice->amount + $fee, 2);
+        $invoice->notes = trim(implode("\n", array_filter([$invoice->notes, $note])));
+
+        if ($invoice->status === InvoiceStatus::Paid) {
+            $invoice->status = InvoiceStatus::Unpaid;
+            $invoice->paid_at = null;
+        }
+
+        $invoice->save();
     }
 }

@@ -65,11 +65,7 @@ class BookingPolicy
 
     public function update(User $user, Booking $booking): bool
     {
-        if ($user->isSystemAdmin()) {
-            return true;
-        }
-
-        return $user->isStaff() && ! $booking->hasGatepass();
+        return $user->isSystemAdmin();
     }
 
     public function uploadGatepass(User $user, Booking $booking): bool

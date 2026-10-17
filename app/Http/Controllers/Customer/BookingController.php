@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Actions\CreateCustomerBooking;
 use App\Actions\SubmitInvoicePaymentProof;
 use App\Enums\BookingStatus;
+use App\Enums\VehicleStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\StoreBookingRequest;
 use App\Http\Requests\SubmitInvoicePaymentProofRequest;
@@ -53,7 +54,14 @@ class BookingController extends Controller
     {
         $this->authorize('create', Booking::class);
 
-        $pricings = Pricing::query()->orderBy('vehicle_type')->get();
+        $pricings = Pricing::query()
+            ->withCount([
+                'vehicles as available_vehicles_count' => function ($query): void {
+                    $query->where('status', VehicleStatus::Available);
+                },
+            ])
+            ->orderBy('vehicle_type')
+            ->get();
 
         return view('customer.bookings.create', compact('pricings'));
     }

@@ -68,6 +68,13 @@
                     </div>
 
                     <div>
+                        <x-ui.label for="dropoff_change_fee">Drop-off change fee (PHP)</x-ui.label>
+                        <x-ui.input id="dropoff_change_fee" type="number" step="0.01" min="0" name="dropoff_change_fee" value="{{ old('dropoff_change_fee', $settings['dropoff_change_fee'] ?? '0') }}" />
+                        <p class="mt-1 text-xs text-text-muted">Added to the invoice when an admin changes the drop-off. ₱0 means no extra charge.</p>
+                        <x-ui.field-error name="dropoff_change_fee" />
+                    </div>
+
+                    <div>
                         <x-ui.label for="map_zoom">Map zoom (optional)</x-ui.label>
                         <x-ui.input id="map_zoom" type="number" name="map_zoom" value="{{ old('map_zoom', $settings['map_zoom']) }}" min="1" max="22" />
                         <x-ui.field-error name="map_zoom" />

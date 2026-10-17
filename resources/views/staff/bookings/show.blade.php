@@ -37,9 +37,7 @@
     <div class="mb-6 grid gap-4 lg:grid-cols-2">
         <x-ui.card>
             @include('bookings._edit_summary', ['booking' => $booking, 'thin' => false])
-            @cannot('update', $booking)
-                <p class="mt-4 text-sm text-text-muted">Trip fields are locked after gatepass. Mark invoice paid here, or open Edit to manage gatepass.</p>
-            @endcannot
+            <p class="mt-4 text-sm text-text-muted">Pickup and drop-off are read-only. Open the workspace to manage the gatepass and invoice.</p>
         </x-ui.card>
 
         <x-ui.card>

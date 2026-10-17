@@ -16,6 +16,36 @@ class CustomerBookingTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_customer_booking_form_shows_available_unit_counts_and_disables_empty_types(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $available = Pricing::factory()->create([
+            'vehicle_type' => '4-wheeler truck',
+            'amount' => 9200,
+        ]);
+        $unavailable = Pricing::factory()->create([
+            'vehicle_type' => 'L300 van',
+            'amount' => 4500,
+        ]);
+        Vehicle::factory()->count(2)->create([
+            'pricing_id' => $available->id,
+            'status' => VehicleStatus::Available,
+        ]);
+        Vehicle::factory()->create([
+            'pricing_id' => $unavailable->id,
+            'status' => VehicleStatus::InUse,
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('customer.bookings.create'))
+            ->assertOk()
+            ->assertSee('4-wheeler truck')
+            ->assertSee('2 available')
+            ->assertSee('L300 van')
+            ->assertSee('None available')
+            ->assertSee('disabled', false);
+    }
+
     public function test_customer_can_create_booking_with_invoice_amount_and_booking_number(): void
     {
         $customer = User::factory()->customer()->create();

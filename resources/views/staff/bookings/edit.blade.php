@@ -5,7 +5,7 @@
 @section('content')
     <x-ui.page-header
         title="Edit {{ $booking->booking_number }}"
-        subtitle="Gatepass, invoice, and trip details (when unlocked)."
+        subtitle="Gatepass and invoice. Pickup and drop-off are read-only."
         class="sticky top-0 z-20 -mx-4 border-b border-border bg-surface px-4 py-4 sm:-mx-6 sm:px-6"
     >
         <x-slot:actions>
@@ -36,28 +36,12 @@
     </div>
 
     <div class="space-y-4">
-        @can('update', $booking)
-            <x-ui.card>
-                <x-ui.section-heading icon="package" title="Trip details" description="Update schedule, vehicle type, and addresses." />
-                <div class="mt-4">
-                    @include('bookings._fields', [
-                        'action' => route('staff.bookings.update', $booking),
-                        'method' => 'PUT',
-                        'booking' => $booking,
-                        'pricings' => $pricings,
-                        'showCustomer' => false,
-                        'submitLabel' => 'Save changes',
-                        'routeMap' => $routeMap,
-                    ])
-                </div>
-            </x-ui.card>
-        @else
-            <x-ui.card>
-                <x-ui.section-heading
-                    icon="package"
-                    title="Trip details"
-                    description="Read-only after gatepass upload."
-                />
+        <x-ui.card>
+            <x-ui.section-heading
+                icon="package"
+                title="Trip details"
+                description="Pickup, drop-off, schedule, and vehicle type are read-only."
+            />
                 <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                     <div>
                         <dt class="text-text-muted">Pickup</dt>
@@ -88,15 +72,14 @@
                         </div>
                     @endif
                 </dl>
-            </x-ui.card>
-        @endcan
+        </x-ui.card>
 
         @can('uploadGatepass', $booking)
             <x-ui.card>
                 <x-ui.section-heading
                     icon="file-up"
                     title="{{ $booking->hasGatepass() ? 'Replace gatepass' : 'Upload gatepass' }}"
-                    description="{{ $booking->hasGatepass() ? 'Replacing the gatepass keeps trip edits locked for staff.' : 'After the first upload, staff can no longer edit trip details.' }}"
+                    description="{{ $booking->hasGatepass() ? 'Replacing the gatepass keeps the current file.' : 'Upload the gatepass for this trip. Pickup and drop-off stay read-only.' }}"
                 />
                 <div
                     class="mt-4 space-y-4"

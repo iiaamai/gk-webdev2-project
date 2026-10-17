@@ -45,8 +45,17 @@
                     <x-ui.select id="pricing_id" name="pricing_id" required>
                         <option value="">Select type</option>
                         @foreach ($pricings as $pricing)
-                            <option value="{{ $pricing->id }}" @selected((string) old('pricing_id') === (string) $pricing->id)>
-                                {{ $pricing->vehicle_type }} — ₱{{ number_format((float) $pricing->amount, 2) }}
+                            @php
+                                $availableVehicles = (int) $pricing->available_vehicles_count;
+                            @endphp
+                            <option
+                                value="{{ $pricing->id }}"
+                                @disabled($availableVehicles === 0)
+                                @selected($availableVehicles > 0 && (string) old('pricing_id') === (string) $pricing->id)
+                                @class(['text-neutral-400' => $availableVehicles === 0])
+                            >
+                                {{ $pricing->vehicle_type }} — ₱{{ number_format((float) $pricing->amount, 2) }} —
+                                {{ $availableVehicles === 0 ? 'None available' : $availableVehicles.' available' }}
                             </option>
                         @endforeach
                     </x-ui.select>

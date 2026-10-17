@@ -22,11 +22,12 @@ class SettingController extends Controller
             'map_center_lat',
             'map_center_lng',
             'map_zoom',
+            'dropoff_change_fee',
         ];
 
         $settings = [];
         foreach ($keys as $key) {
-            $settings[$key] = Setting::getValue($key, '');
+            $settings[$key] = Setting::getValue($key, $key === 'dropoff_change_fee' ? '0' : '');
         }
 
         $qrPhPath = Setting::getValue('qr_ph_path');

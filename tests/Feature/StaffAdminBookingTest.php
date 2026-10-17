@@ -3,9 +3,12 @@
 namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
+use App\Enums\InvoiceStatus;
 use App\Enums\VehicleStatus;
 use App\Models\Booking;
+use App\Models\Invoice;
 use App\Models\Pricing;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,19 +51,33 @@ class StaffAdminBookingTest extends TestCase
             ->assertDontSee('Trip details');
     }
 
-    public function test_staff_can_update_booking_before_gatepass(): void
+    public function test_staff_booking_edit_shows_trip_details_as_read_only(): void
     {
         $staff = User::factory()->staff()->create();
-        Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
         $booking = Booking::factory()->create([
             'pickup_address' => 'Old pickup',
+            'dropoff_address' => 'Old dropoff',
         ]);
+
+        $this->actingAs($staff)
+            ->get(route('staff.bookings.edit', $booking))
+            ->assertOk()
+            ->assertSee('Pickup, drop-off, schedule, and vehicle type are read-only.')
+            ->assertSee('Old pickup')
+            ->assertSee('Old dropoff')
+            ->assertDontSee('name="pickup_address"', false)
+            ->assertDontSee('name="dropoff_address"', false);
 
         $this->actingAs($staff)
             ->put(route('staff.bookings.update', $booking), $this->bookingPayload($booking, [
                 'pickup_address' => 'New pickup',
+                'dropoff_address' => 'New dropoff',
             ]))
-            ->assertRedirect(route('staff.bookings.edit', $booking));
+            ->assertForbidden();
+
+        $booking->refresh();
+        $this->assertSame('Old pickup', $booking->pickup_address);
+        $this->assertSame('Old dropoff', $booking->dropoff_address);
     }
 
     public function test_staff_cannot_update_booking_after_gatepass(): void
@@ -215,6 +232,37 @@ class StaffAdminBookingTest extends TestCase
 
         $this->assertSame($driver->id, $booking->fresh()->driver_id);
         $this->assertSame('Updated pickup', $booking->fresh()->pickup_address);
+    }
+
+    public function test_admin_dropoff_change_adds_configured_fee_to_the_invoice(): void
+    {
+        Setting::setValue('dropoff_change_fee', '500');
+        $admin = User::factory()->systemAdmin()->create();
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'status' => VehicleStatus::Available,
+        ]);
+        $booking = Booking::factory()->create([
+            'pricing_id' => $pricing->id,
+            'dropoff_address' => 'Quezon City, Metro Manila',
+        ]);
+        $invoice = Invoice::factory()->create([
+            'booking_id' => $booking->id,
+            'amount' => 9200,
+            'status' => InvoiceStatus::Unpaid,
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.bookings.update', $booking), array_merge($this->bookingPayload($booking, []), [
+                'customer_id' => $booking->customer_id,
+                'dropoff_address' => 'Pasig City, Metro Manila',
+            ]))
+            ->assertRedirect(route('admin.bookings.edit', $booking));
+
+        $invoice->refresh();
+        $this->assertSame('9700.00', $invoice->amount);
+        $this->assertStringContainsString('Drop-off change fee', (string) $invoice->notes);
     }
 
     public function test_admin_can_replace_gatepass(): void

@@ -13,7 +13,6 @@ use App\Http\Requests\RejectInvoicePaymentProofRequest;
 use App\Http\Requests\Staff\UpdateBookingRequest;
 use App\Http\Requests\UploadGatepassRequest;
 use App\Models\Booking;
-use App\Models\Pricing;
 use App\Services\BookingListQuery;
 use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
@@ -57,11 +56,9 @@ class BookingController extends Controller
         $this->authorize('view', $booking);
 
         $booking->load(['customer', 'pricing', 'vehicle.pricing', 'eir', 'pod', 'invoice']);
-        $pricings = Pricing::query()->orderBy('vehicle_type')->get();
 
         return view('staff.bookings.edit', [
             'booking' => $booking,
-            'pricings' => $pricings,
             'routeMap' => $routeMapService->forBooking($booking),
         ]);
     }
