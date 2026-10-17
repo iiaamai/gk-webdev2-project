@@ -11,8 +11,8 @@
             ? 'bg-primary-subtle text-primary-emphasis'
             : 'text-text-muted hover:bg-surface-inset hover:text-text')
         : ($active
-            ? 'bg-neutral-800 text-sidebar-text-active'
-            : 'text-sidebar-text hover:bg-neutral-800/80 hover:text-sidebar-text-active');
+            ? 'bg-sidebar-accent text-sidebar-text-active'
+            : 'text-sidebar-text hover:bg-white/10 hover:text-sidebar-text-active');
 @endphp
 
 <a

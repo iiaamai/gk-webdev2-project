@@ -9,7 +9,7 @@
         'secondary' => 'bg-surface-elevated text-text border border-border hover:bg-surface-inset',
         'danger' => 'bg-danger text-white hover:bg-danger/90 border border-transparent',
         'ghost' => 'bg-transparent text-text-muted hover:bg-surface-inset border border-transparent',
-        'sidebar' => 'bg-transparent text-sidebar-text hover:bg-neutral-800 hover:text-sidebar-text-active border border-transparent',
+        'sidebar' => 'bg-transparent text-sidebar-text hover:bg-white/10 hover:text-sidebar-text-active border border-transparent',
         default => 'bg-primary text-text-on-primary hover:bg-primary-shade-1 border border-transparent',
     };
 @endphp

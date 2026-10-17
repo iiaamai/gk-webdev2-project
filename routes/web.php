@@ -28,6 +28,7 @@ use App\Http\Controllers\Customer\OverviewController as CustomerOverviewControll
 use App\Http\Controllers\Driver\DeliveryController as DriverDeliveryController;
 use App\Http\Controllers\Driver\LocationController as DriverLocationController;
 use App\Http\Controllers\Driver\OverviewController as DriverOverviewController;
+use App\Http\Controllers\Marketing\PricingController as MarketingPricingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Staff\BookingController as StaffBookingController;
 use App\Http\Controllers\Staff\DriverMapController as StaffDriverMapController;
@@ -35,9 +36,10 @@ use App\Http\Controllers\Staff\OverviewController as StaffOverviewController;
 use App\Http\Controllers\Staff\VehicleController as StaffVehicleController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('marketing.home');
-})->name('home');
+Route::view('/', 'marketing.home')->name('home');
+Route::view('/how-it-works', 'marketing.home')->name('marketing.how');
+Route::get('/pricing', MarketingPricingController::class)->name('marketing.pricing');
+Route::view('/faq', 'marketing.faq')->name('marketing.faq');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('login', [LoginController::class, 'create'])->name('login');

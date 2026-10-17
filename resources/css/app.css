@@ -5,8 +5,8 @@
 @source '../views/**/*.blade.php';
 
 /*
- * GK Trucking Services 2.0 — mock theme (pre-branding)
- * Primary anchor: #2596be — change this scale + semantic tokens to rebrand.
+ * GK Logistics brand board
+ * Navy #122B4C, crimson #C8102E, charcoal #2C3E50, white.
  * Docs: docs/development/development_notes.txt (UI / Theming)
  */
 
@@ -14,22 +14,22 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* Primary — base + tints (lighter), shades (darker), tones (muted/desaturated) */
-    --color-primary: #2596be;
+    /* Primary — navy + tints (lighter), shades (darker), tones (muted) */
+    --color-primary: #122b4c;
 
-    --color-primary-tint-1: #e9f5fa;
-    --color-primary-tint-2: #d4ebf5;
-    --color-primary-tint-3: #a9d7eb;
+    --color-primary-tint-1: #e8eef4;
+    --color-primary-tint-2: #d4dde8;
+    --color-primary-tint-3: #a8b8cc;
 
-    --color-primary-shade-1: #1e7898;
-    --color-primary-shade-2: #165a72;
-    --color-primary-shade-3: #0f3c4c;
+    --color-primary-shade-1: #0e2340;
+    --color-primary-shade-2: #0a1a30;
+    --color-primary-shade-3: #06101c;
 
-    --color-primary-tone-1: #eef3f6;
-    --color-primary-tone-2: #d5e0e8;
-    --color-primary-tone-3: #b8c9d4;
+    --color-primary-tone-1: #eef1f4;
+    --color-primary-tone-2: #d5dce3;
+    --color-primary-tone-3: #b3bec9;
 
-    /* Neutral — surfaces, borders, body text (cool gray) */
+    /* Neutral — surfaces, borders (cool gray) */
     --color-neutral-50: #f8fafc;
     --color-neutral-100: #f1f5f9;
     --color-neutral-200: #e2e8f0;
@@ -48,20 +48,20 @@
     --color-surface-inset: var(--color-neutral-100);
     --color-border: var(--color-neutral-200);
     --color-border-strong: var(--color-neutral-300);
-    --color-text: var(--color-neutral-900);
-    --color-text-muted: var(--color-neutral-600);
-    --color-text-subtle: var(--color-neutral-500);
+    --color-text: #2c3e50;
+    --color-text-muted: #5d6d7e;
+    --color-text-subtle: #7b8a99;
     --color-text-on-primary: #ffffff;
 
     --color-primary-muted: var(--color-primary-tint-2);
     --color-primary-subtle: var(--color-primary-tint-1);
     --color-primary-emphasis: var(--color-primary-shade-2);
 
-    --color-sidebar: var(--color-neutral-900);
-    --color-sidebar-border: var(--color-neutral-800);
-    --color-sidebar-text: var(--color-neutral-300);
+    --color-sidebar: #122b4c;
+    --color-sidebar-border: #1a3a5c;
+    --color-sidebar-text: #d4dde8;
     --color-sidebar-text-active: #ffffff;
-    --color-sidebar-accent: var(--color-primary);
+    --color-sidebar-accent: #c8102e;
 
     /* Status / feedback */
     --color-success: #047857;
@@ -77,7 +77,6 @@
     --color-info-muted: var(--color-primary-tint-2);
     --color-info-subtle: var(--color-primary-tint-1);
 
-    /* Public marketing (GK Logistics brand board) — do not swap app primary yet */
     --color-brand-navy: #122b4c;
     --color-brand-crimson: #c8102e;
     --color-brand-charcoal: #2c3e50;

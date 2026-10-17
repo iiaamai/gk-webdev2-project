@@ -13,9 +13,7 @@
     <header class="sticky top-0 z-30 border-b border-border bg-surface-elevated">
         <div class="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:px-6">
             <a href="@yield('home_route')" class="flex items-center gap-2 text-sm font-semibold text-text">
-                <span class="inline-flex size-8 items-center justify-center rounded-md bg-primary text-text-on-primary">
-                    <x-ui.icon name="truck" size="size-4" />
-                </span>
+                <x-brand.seal logo="2" surface="light" size="lg" alt="" />
                 <span>@yield('brand', 'GK Trucking')</span>
             </a>
 

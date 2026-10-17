@@ -2,7 +2,6 @@
 
 @section('title', 'Register customer')
 @section('auth_mode', 'showcase-first')
-@section('showcase_tagline', 'Book urban and regional truck deliveries')
 
 @section('content')
     <h1 class="text-xl font-semibold text-text">Register as customer</h1>

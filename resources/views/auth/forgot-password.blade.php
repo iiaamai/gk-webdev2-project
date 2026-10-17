@@ -2,7 +2,6 @@
 
 @section('title', 'Forgot password')
 @section('auth_mode', 'form-first')
-@section('showcase_tagline', 'Reset your customer or driver password')
 
 @section('content')
     <h1 class="text-xl font-semibold text-text">Forgot password</h1>

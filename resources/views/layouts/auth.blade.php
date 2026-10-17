@@ -9,7 +9,6 @@
 </head>
 @php
     $authMode = trim($__env->yieldContent('auth_mode', 'single'));
-    $showcaseTagline = trim($__env->yieldContent('showcase_tagline', 'Urban & regional truck logistics'));
 @endphp
 <body class="min-h-screen bg-surface text-text">
     @if ($authMode === 'single')
@@ -18,8 +17,8 @@
 
             <div class="relative mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10 sm:px-6">
                 <div class="mb-8 text-center">
-                    <div class="mx-auto mb-4 inline-flex size-12 items-center justify-center rounded-xl bg-primary text-text-on-primary shadow-sm">
-                        <x-ui.icon name="truck" size="size-6" />
+                    <div class="mx-auto mb-4">
+                        <x-brand.mark size="lg" surface="light" />
                     </div>
                     <p class="text-lg font-semibold tracking-tight text-text">GK Trucking Services</p>
                     <p class="mt-1 text-sm text-text-muted">@yield('subtitle', 'Sign in to continue')</p>
@@ -47,10 +46,10 @@
 
             <aside class="{{ $showcaseOrder }} border-b border-border bg-surface-elevated md:border-b-0 {{ $formFirst ? 'md:border-l' : 'md:border-r' }} border-border">
                 <div class="md:hidden">
-                    <x-ui.auth-showcase :tagline="$showcaseTagline" compact />
+                    <x-ui.auth-showcase compact />
                 </div>
                 <div class="hidden md:block">
-                    <x-ui.auth-showcase :tagline="$showcaseTagline" />
+                    <x-ui.auth-showcase />
                 </div>
             </aside>
 

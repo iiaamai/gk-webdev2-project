@@ -2,7 +2,6 @@
 
 @section('title', 'Register driver')
 @section('auth_mode', 'showcase-first')
-@section('showcase_tagline', 'Join the GK fleet and accept matching deliveries')
 
 @section('content')
     <h1 class="text-xl font-semibold text-text">Register as driver</h1>

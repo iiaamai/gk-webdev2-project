@@ -30,6 +30,7 @@ class StaffOverviewTest extends TestCase
         $this->actingAs($staff)
             ->get(route('staff.home'))
             ->assertOk()
+            ->assertSee(asset('images/gk-logo-2.png'), false)
             ->assertSee('Staff overview')
             ->assertSee('Live operations map', false)
             ->assertSee('Needs gatepass')

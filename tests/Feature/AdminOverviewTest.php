@@ -23,6 +23,7 @@ class AdminOverviewTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.home'))
             ->assertOk()
+            ->assertSee(asset('images/gk-logo-2.png'), false)
             ->assertSee('Admin overview')
             ->assertSee('Live operations map')
             ->assertSee('Earnings snapshot')

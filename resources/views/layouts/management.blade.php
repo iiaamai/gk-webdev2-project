@@ -29,8 +29,8 @@
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="flex h-14 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
-                <x-ui.icon name="truck" size="size-5" class="text-sidebar-accent" />
-                <span class="text-sm font-semibold text-sidebar-text-active">@yield('brand', 'GK Trucking')</span>
+                <x-brand.seal logo="2" surface="dark" size="lg" alt="" />
+                <span class="truncate text-sm font-semibold text-sidebar-text-active">@yield('brand', 'GK Trucking')</span>
             </div>
 
             <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
@@ -40,7 +40,7 @@
             <div class="shrink-0 border-t border-sidebar-border p-3 lg:hidden">
                 <button
                     type="button"
-                    class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-text hover:bg-neutral-800"
+                    class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-text hover:bg-white/10"
                     @click="sidebarOpen = false"
                 >
                     <x-ui.icon name="x" size="size-4" />

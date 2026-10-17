@@ -2,7 +2,6 @@
 
 @section('title', 'Login')
 @section('auth_mode', 'form-first')
-@section('showcase_tagline', 'Urban & regional truck logistics')
 
 @section('content')
     <h1 class="text-xl font-semibold text-text">Login</h1>

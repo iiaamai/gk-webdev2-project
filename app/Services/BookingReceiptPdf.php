@@ -76,7 +76,14 @@ class BookingReceiptPdf
         $content .= 'ET';
 
         if ($hasLogo) {
-            $content = "q\n48 0 0 48 50 730 cm\n/Im1 Do\nQ\n".$content;
+            $drawH = 48.0;
+            $drawW = $drawH * ($logo['width'] / max(1, $logo['height']));
+            if ($drawW > 160) {
+                $drawW = 160.0;
+                $drawH = $drawW * ($logo['height'] / max(1, $logo['width']));
+            }
+
+            $content = "q\n{$drawW} 0 0 {$drawH} 50 730 cm\n/Im1 Do\nQ\n".$content;
         }
 
         $objects = [];
@@ -125,7 +132,7 @@ class BookingReceiptPdf
      */
     private function logoJpeg(): ?array
     {
-        $path = public_path('images/logo-placeholder.png');
+        $path = public_path('images/gk-logo-1.png');
 
         if (! is_file($path) || ! function_exists('imagecreatefrompng')) {
             return null;

@@ -17,7 +17,10 @@ class AuthTest extends TestCase
 
     public function test_guest_can_view_login_page(): void
     {
-        $this->get(route('login'))->assertOk();
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee(asset('images/gk-brand.png'), false)
+            ->assertDontSee(asset('images/gk-logo-1.png'), false);
     }
 
     public function test_authenticated_user_visiting_login_is_redirected_to_role_home(): void

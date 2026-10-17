@@ -29,6 +29,7 @@ class CustomerOverviewTest extends TestCase
         $this->actingAs($customer)
             ->get(route('customer.home'))
             ->assertOk()
+            ->assertSee(asset('images/gk-logo-2.png'), false)
             ->assertSee('Customer overview')
             ->assertSee('Pending')
             ->assertSee('In progress')

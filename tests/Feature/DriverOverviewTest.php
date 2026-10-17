@@ -33,6 +33,7 @@ class DriverOverviewTest extends TestCase
         $this->actingAs($driver)
             ->get(route('driver.home'))
             ->assertOk()
+            ->assertSee(asset('images/gk-logo-2.png'), false)
             ->assertSee('Driver overview')
             ->assertSee('Available jobs')
             ->assertSee('ABC-1234')
