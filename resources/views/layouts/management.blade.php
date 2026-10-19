@@ -73,7 +73,11 @@
                 </div>
             </header>
 
-            <main class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6 print:overflow-visible print:p-0">
+            <main @class([
+                'min-h-0 flex-1 px-4 pb-4 sm:px-6 sm:pb-6 print:overflow-visible print:p-0',
+                'flex flex-col overflow-hidden' => View::hasSection('main-fill-height'),
+                'overflow-y-auto' => ! View::hasSection('main-fill-height'),
+            ])>
                 @yield('content')
             </main>
         </div>

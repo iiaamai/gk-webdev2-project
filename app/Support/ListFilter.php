@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class ListFilter
 {
-    public const int PER_PAGE = 25;
+    public const int PER_PAGE = 12;
 
     /**
      * @param  list<string>  $keys

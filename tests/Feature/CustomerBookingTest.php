@@ -88,6 +88,43 @@ class CustomerBookingTest extends TestCase
         $this->assertSame('43', Setting::getValue('booking_seq'));
     }
 
+    public function test_customer_create_skips_used_booking_numbers_when_sequence_lags(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $pricing = Pricing::factory()->create([
+            'vehicle_type' => '4-wheeler truck',
+            'amount' => 9200.00,
+        ]);
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'status' => VehicleStatus::Available,
+        ]);
+        $year = now('Asia/Manila')->year;
+        Booking::factory()->create([
+            'booking_number' => "GK-{$year}-0007",
+        ]);
+        Setting::setValue('booking_seq', '7');
+
+        $response = $this->actingAs($customer)->post(route('customer.bookings.store'), [
+            'pricing_id' => $pricing->id,
+            'booking_datetime' => now('Asia/Manila')->addDay()->format('Y-m-d H:i:s'),
+            'pickup_address' => 'Makati City',
+            'pickup_lat' => 14.5547,
+            'pickup_lng' => 121.0244,
+            'pickup_port_number' => 'PORT-01',
+            'pickup_container_number' => 'CONT-ABC123',
+            'dropoff_address' => 'Quezon City',
+            'dropoff_lat' => 14.6760,
+            'dropoff_lng' => 121.0437,
+        ]);
+
+        $booking = Booking::query()->where('customer_id', $customer->id)->first();
+        $this->assertNotNull($booking);
+        $this->assertSame("GK-{$year}-0008", $booking->booking_number);
+        $response->assertRedirect(route('customer.bookings.show', $booking));
+        $this->assertSame('9', Setting::getValue('booking_seq'));
+    }
+
     public function test_customer_create_requires_port_and_container_numbers(): void
     {
         $customer = User::factory()->customer()->create();

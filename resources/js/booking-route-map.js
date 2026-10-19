@@ -1,3 +1,4 @@
+import { fetchJson } from './http';
 import { addAboveRoads, addPinsOverLabels, ensurePinImages, mapPinColors, pinFeatureCollection } from './map-pins';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -128,16 +129,7 @@ function watchDriver(map, url, mapId) {
 
     const pull = async () => {
         try {
-            const response = await fetch(url, {
-                headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
-            });
-
-            if (!response.ok) {
-                return;
-            }
-
-            const data = await response.json();
+            const data = await fetchJson(url);
 
             if (data.lat == null || data.lng == null) {
                 if (status) {
@@ -166,7 +158,9 @@ function watchDriver(map, url, mapId) {
                     : `${label} location is live.`;
             }
         } catch {
-            // Keep the route map if a location poll fails.
+            if (status) {
+                status.textContent = 'Driver location could not be loaded. Retrying…';
+            }
         }
     };
 

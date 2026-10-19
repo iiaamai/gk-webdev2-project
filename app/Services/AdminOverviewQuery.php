@@ -9,6 +9,7 @@ use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Models\Vehicle;
+use App\Support\ListFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
@@ -83,7 +84,7 @@ class AdminOverviewQuery
             ->pendingPaymentProof()
             ->with(['booking.customer'])
             ->orderByDesc('payment_proof_submitted_at')
-            ->limit(10)
+            ->limit(ListFilter::PER_PAGE)
             ->get()
             ->map(fn (Invoice $invoice): ?Booking => $invoice->booking)
             ->filter()
@@ -109,7 +110,7 @@ class AdminOverviewQuery
             })
             ->orderByRaw("CASE status WHEN 'in_transit' THEN 0 WHEN 'accepted' THEN 1 ELSE 2 END")
             ->orderByDesc('updated_at')
-            ->limit(20)
+            ->limit(ListFilter::PER_PAGE)
             ->get();
 
         $attentionItems = [];
@@ -161,7 +162,7 @@ class AdminOverviewQuery
             ->with('user')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->limit(10)
+            ->limit(ListFilter::PER_PAGE)
             ->get();
 
         return [

@@ -1,3 +1,5 @@
+import { fetchJson } from './http';
+
 const root = document.querySelector('[data-driver-location]');
 
 if (root && navigator.geolocation) {
@@ -15,11 +17,9 @@ if (root && navigator.geolocation) {
 
         lastSent = now;
 
-        fetch(url, {
+        fetchJson(url, {
             method: 'POST',
-            credentials: 'same-origin',
             headers: {
-                Accept: 'application/json',
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': token ?? '',
             },
@@ -27,11 +27,15 @@ if (root && navigator.geolocation) {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude,
             }),
-        }).then((response) => {
-            if (note && response.ok) {
+        }).then(() => {
+            if (note) {
                 note.textContent = 'Sharing your location with dispatch.';
             }
-        }).catch(() => {});
+        }).catch(() => {
+            if (note) {
+                note.textContent = 'Location could not be sent. Retrying…';
+            }
+        });
     };
 
     navigator.geolocation.watchPosition(send, () => {

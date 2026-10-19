@@ -95,13 +95,39 @@ class DriverLocationTest extends TestCase
             ->actingAs($admin)
             ->get(route('admin.drivers.map'))
             ->assertOk()
-            ->assertSee('Driver map', false);
+            ->assertSee('Driver map', false)
+            ->assertSee('Search name, plate, or trip', false);
 
         $this->actingAs($admin)
             ->getJson(route('admin.drivers.locations'))
             ->assertOk()
             ->assertJsonPath('drivers.0.name', $driver->name)
             ->assertJsonPath('drivers.0.booking_number', null);
+    }
+
+    public function test_driver_map_locations_list_drivers_without_a_shared_location(): void
+    {
+        $staff = User::factory()->staff()->create();
+        User::factory()->driver()->create([
+            'name' => 'Located Driver',
+            'location_lat' => 14.58,
+            'location_lng' => 120.98,
+        ]);
+        User::factory()->driver()->create([
+            'name' => 'Unlocated Driver',
+            'location_lat' => null,
+            'location_lng' => null,
+        ]);
+
+        $this->actingAs($staff)
+            ->getJson(route('staff.drivers.locations'))
+            ->assertOk()
+            ->assertJsonCount(2, 'drivers')
+            ->assertJsonPath('drivers.0.name', 'Located Driver')
+            ->assertJsonPath('drivers.0.lat', 14.58)
+            ->assertJsonPath('drivers.1.name', 'Unlocated Driver')
+            ->assertJsonPath('drivers.1.lat', null)
+            ->assertJsonPath('drivers.1.lng', null);
     }
 
     public function test_staff_can_open_driver_map_and_customer_cannot(): void

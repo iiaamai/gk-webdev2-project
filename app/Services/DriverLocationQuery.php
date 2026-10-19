@@ -12,8 +12,8 @@ class DriverLocationQuery
      * @return list<array{
      *     id: int,
      *     name: string,
-     *     lat: float,
-     *     lng: float,
+     *     lat: float|null,
+     *     lng: float|null,
      *     updated_at: string|null,
      *     vehicle: string|null,
      *     booking_number: string|null
@@ -23,8 +23,6 @@ class DriverLocationQuery
     {
         return User::query()
             ->where('role', UserRole::Driver)
-            ->whereNotNull('location_lat')
-            ->whereNotNull('location_lng')
             ->with([
                 'assignedVehicle',
                 'driverBookings' => function ($query): void {
@@ -36,12 +34,13 @@ class DriverLocationQuery
             ->get()
             ->map(function (User $driver): array {
                 $active = $driver->driverBookings->first();
+                $hasLocation = $driver->location_lat !== null && $driver->location_lng !== null;
 
                 return [
                     'id' => $driver->id,
                     'name' => $driver->name,
-                    'lat' => (float) $driver->location_lat,
-                    'lng' => (float) $driver->location_lng,
+                    'lat' => $hasLocation ? (float) $driver->location_lat : null,
+                    'lng' => $hasLocation ? (float) $driver->location_lng : null,
                     'updated_at' => $driver->location_updated_at?->toIso8601String(),
                     'vehicle' => $driver->assignedVehicle?->plate_number,
                     'booking_number' => $active?->booking_number,

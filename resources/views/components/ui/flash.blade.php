@@ -1,6 +1,6 @@
 @php
     $hasStatus = filled(session('status'));
-    $hasErrors = $errors->any();
+    $hasErrors = isset($errors) && $errors->any();
 @endphp
 
 @if ($hasStatus || $hasErrors)

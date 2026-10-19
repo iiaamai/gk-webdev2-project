@@ -38,4 +38,24 @@ class AdminListFiltersTest extends TestCase
             ->assertOk()
             ->assertSee('No matches', false);
     }
+
+    public function test_admin_and_staff_booking_indexes_paginate_twelve_per_page(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        $staff = User::factory()->staff()->create();
+        Booking::factory()->count(13)->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.bookings.index'))
+            ->assertOk()
+            ->assertSee('Showing 1–12 of 13', false)
+            ->assertSee('Page 1 of 2', false)
+            ->assertSee('Next', false);
+
+        $this->actingAs($staff)
+            ->get(route('staff.bookings.index'))
+            ->assertOk()
+            ->assertSee('Showing 1–12 of 13', false)
+            ->assertSee('Page 1 of 2', false);
+    }
 }

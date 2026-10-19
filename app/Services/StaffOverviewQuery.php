@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Models\Booking;
 use App\Models\Invoice;
+use App\Support\ListFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
@@ -69,7 +70,7 @@ class StaffOverviewQuery
             ->pendingPaymentProof()
             ->with(['booking.customer'])
             ->orderByDesc('payment_proof_submitted_at')
-            ->limit(10)
+            ->limit(ListFilter::PER_PAGE)
             ->get()
             ->map(fn (Invoice $invoice): ?Booking => $invoice->booking)
             ->filter()
@@ -82,7 +83,7 @@ class StaffOverviewQuery
                 $query->whereNull('gatepass_path')->orWhere('gatepass_path', '');
             })
             ->orderBy('created_at')
-            ->limit(10)
+            ->limit(ListFilter::PER_PAGE)
             ->get();
 
         $activeBookings = Booking::query()
@@ -97,7 +98,7 @@ class StaffOverviewQuery
             })
             ->orderByRaw("CASE status WHEN 'in_transit' THEN 0 WHEN 'accepted' THEN 1 ELSE 2 END")
             ->orderByDesc('updated_at')
-            ->limit(15)
+            ->limit(ListFilter::PER_PAGE)
             ->get();
 
         $attentionItems = [];
