@@ -12,6 +12,26 @@ class AdminListFiltersTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_bookings_index_shows_driver_column(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        $driver = User::factory()->driver()->create(['name' => 'Admin Table Mira']);
+        $assigned = Booking::factory()->create([
+            'status' => BookingStatus::Pending,
+            'driver_id' => $driver->id,
+        ]);
+        $unassigned = Booking::factory()->create(['status' => BookingStatus::Pending]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.bookings.index'))
+            ->assertOk()
+            ->assertSee('Driver')
+            ->assertSee($assigned->booking_number)
+            ->assertSee('Admin Table Mira')
+            ->assertSee($unassigned->booking_number)
+            ->assertSee('Unassigned');
+    }
+
     public function test_admin_bookings_index_filters_by_status_and_search(): void
     {
         $admin = User::factory()->systemAdmin()->create();

@@ -16,7 +16,7 @@
     <header class="sticky top-0 z-40 border-b border-white/10 bg-brand-navy">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
             <a href="{{ route('home') }}" class="flex items-center gap-2 text-brand-white">
-                <x-brand.seal logo="1" surface="dark" size="sm" alt="" />
+                <x-brand.seal logo="1" surface="dark" size="lg" alt="" />
                 <span class="text-sm font-semibold tracking-tight sm:text-base">GK Logistics</span>
             </a>
 
@@ -52,9 +52,12 @@
     </main>
 
     <footer class="bg-brand-navy text-white/80">
-        <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <x-brand.lockup surface="dark" size="md" />
-            <p class="text-sm">© GK Logistics</p>
+        <div class="mx-auto grid max-w-6xl gap-4 px-4 py-8 sm:grid-cols-3 sm:items-center sm:px-6">
+            <div class="flex justify-center sm:justify-start">
+                <x-brand.lockup surface="dark" size="sm" />
+            </div>
+            <p class="text-center text-sm">© {{ now('Asia/Manila')->year }} GK Trucking Services. All rights reserved.</p>
+            <div class="hidden sm:block" aria-hidden="true"></div>
         </div>
     </footer>
 </body>

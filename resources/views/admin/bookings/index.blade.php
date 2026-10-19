@@ -52,6 +52,7 @@
                     <th class="px-4 py-3 font-medium">Number</th>
                     <th class="px-4 py-3 font-medium">Customer</th>
                     <th class="px-4 py-3 font-medium">Status</th>
+                    <th class="px-4 py-3 font-medium">Driver</th>
                     <th class="px-4 py-3 font-medium">Vehicle type</th>
                     <th class="px-4 py-3 font-medium">Gatepass</th>
                     <th class="px-4 py-3 font-medium"><span class="sr-only">Actions</span></th>
@@ -67,6 +68,7 @@
                     <td class="px-4 py-3">
                         <x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge>
                     </td>
+                    <td class="px-4 py-3">{{ $booking->driver?->name ?? 'Unassigned' }}</td>
                     <td class="px-4 py-3">{{ $booking->vehicle_type }}</td>
                     <td class="px-4 py-3">
                         <x-ui.badge :tone="$booking->hasGatepass() ? 'success' : 'neutral'">

@@ -34,7 +34,11 @@ class AdminOverviewTest extends TestCase
     public function test_admin_overview_map_booking_query_selects_active_trip(): void
     {
         $admin = User::factory()->systemAdmin()->create();
-        $inTransit = Booking::factory()->create(['status' => BookingStatus::InTransit]);
+        $driver = User::factory()->driver()->create(['name' => 'Map Driver Ana']);
+        $inTransit = Booking::factory()->create([
+            'status' => BookingStatus::InTransit,
+            'driver_id' => $driver->id,
+        ]);
         $pending = Booking::factory()->create([
             'status' => BookingStatus::Pending,
             'gatepass_path' => 'bookings/test/gatepass.jpg',
@@ -45,7 +49,13 @@ class AdminOverviewTest extends TestCase
             ->assertOk()
             ->assertSee($pending->booking_number)
             ->assertSee($inTransit->booking_number)
+            ->assertSeeInOrder(['Driver:', 'Unassigned'])
             ->assertSee('View booking', false)
             ->assertSee(route('admin.bookings.show', $pending), false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.home', ['map_booking' => $inTransit->id]))
+            ->assertOk()
+            ->assertSeeInOrder(['Driver:', 'Map Driver Ana']);
     }
 }

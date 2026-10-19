@@ -21,7 +21,7 @@ class BookingListQuery
         $monthEnd = now('Asia/Manila')->copy()->endOfMonth();
 
         return Booking::query()
-            ->with(['customer', 'pricing', 'vehicle.pricing', 'invoice'])
+            ->with(['customer', 'driver', 'pricing', 'vehicle.pricing', 'invoice'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($inner) use ($search): void {
                     $inner->where('booking_number', 'like', '%'.$search.'%')

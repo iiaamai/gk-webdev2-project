@@ -40,10 +40,40 @@ class StaffOverviewTest extends TestCase
             ->assertDontSee('Recent activity', false);
     }
 
+    public function test_staff_overview_map_shows_assigned_driver_or_unassigned(): void
+    {
+        $staff = User::factory()->staff()->create();
+        $driver = User::factory()->driver()->create(['name' => 'Staff Map Rico']);
+        $assigned = Booking::factory()->create([
+            'status' => BookingStatus::InTransit,
+            'driver_id' => $driver->id,
+        ]);
+        $unassigned = Booking::factory()->create([
+            'status' => BookingStatus::Pending,
+            'gatepass_path' => 'bookings/test/gatepass.jpg',
+        ]);
+
+        $this->actingAs($staff)
+            ->get(route('staff.home', ['map_booking' => $unassigned->id]))
+            ->assertOk()
+            ->assertSeeInOrder(['Driver:', 'Unassigned']);
+
+        $this->actingAs($staff)
+            ->get(route('staff.home', ['map_booking' => $assigned->id]))
+            ->assertOk()
+            ->assertSeeInOrder(['Driver:', 'Staff Map Rico']);
+    }
+
     public function test_staff_bookings_index_uses_polished_table(): void
     {
         $staff = User::factory()->staff()->create();
-        $booking = Booking::factory()->create([
+        $driver = User::factory()->driver()->create(['name' => 'Table Driver Ken']);
+        $assigned = Booking::factory()->create([
+            'status' => BookingStatus::Pending,
+            'gatepass_path' => null,
+            'driver_id' => $driver->id,
+        ]);
+        $unassigned = Booking::factory()->create([
             'status' => BookingStatus::Pending,
             'gatepass_path' => null,
         ]);
@@ -52,10 +82,14 @@ class StaffOverviewTest extends TestCase
             ->get(route('staff.bookings.index'))
             ->assertOk()
             ->assertSee('Bookings')
-            ->assertSee($booking->booking_number)
+            ->assertSee('Driver')
+            ->assertSee($assigned->booking_number)
+            ->assertSee('Table Driver Ken')
+            ->assertSee($unassigned->booking_number)
+            ->assertSee('Unassigned')
             ->assertSee('View', false)
-            ->assertSee(route('staff.bookings.show', $booking), false)
-            ->assertSee(route('staff.bookings.edit', $booking), false);
+            ->assertSee(route('staff.bookings.show', $assigned), false)
+            ->assertSee(route('staff.bookings.edit', $assigned), false);
     }
 
     public function test_staff_booking_show_offers_gatepass_upload_when_missing(): void

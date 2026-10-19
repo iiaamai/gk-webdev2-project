@@ -83,7 +83,7 @@
                         <x-ui.select id="map_booking" name="map_booking" class="mt-1" onchange="this.form.submit()">
                             @foreach ($overview['active_bookings'] as $booking)
                                 <option value="{{ $booking->id }}" @selected($selectedMapBookingId === $booking->id)>
-                                    {{ $booking->booking_number }} · {{ $booking->status->label() }}
+                                    {{ $booking->booking_number }} · {{ $booking->status->label() }} · {{ $booking->driver?->name ?? 'Unassigned' }}
                                 </option>
                             @endforeach
                         </x-ui.select>
@@ -102,13 +102,16 @@
 
                 @if ($mapBooking)
                     <div class="mt-4 flex min-h-0 flex-1 flex-col">
-                        <p class="mb-3 text-sm text-text-muted">
+                        <p class="mb-1 text-sm text-text-muted">
                             <span class="font-medium text-text">{{ Str::limit($mapBooking->pickup_address, 48) }}</span>
                             →
                             <span class="font-medium text-text">{{ Str::limit($mapBooking->dropoff_address, 48) }}</span>
                             @if ($routeMap?->distanceKm !== null && $routeMap?->durationMinutes !== null)
                                 <span class="text-text-subtle"> · {{ $routeMap->distanceKm }} km · {{ $routeMap->durationMinutes }} min</span>
                             @endif
+                        </p>
+                        <p class="mb-3 text-sm text-text">
+                            Driver: <span class="font-medium">{{ $mapBooking->driver?->name ?? 'Unassigned' }}</span>
                         </p>
                         @include('bookings._map_placeholder', [
                             'booking' => $mapBooking,
