@@ -16,7 +16,7 @@
     <header class="sticky top-0 z-40 border-b border-white/10 bg-brand-navy">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
             <a href="{{ route('home') }}" class="flex items-center gap-2 text-brand-white">
-                <x-brand.seal logo="1" surface="dark" size="lg" alt="" />
+                <x-brand.seal logo="1" surface="dark" size="lg" inset="comfortable" alt="" />
                 <span class="text-sm font-semibold tracking-tight sm:text-base">GK Logistics</span>
             </a>
 

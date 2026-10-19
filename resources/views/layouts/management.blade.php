@@ -29,7 +29,7 @@
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="flex h-14 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
-                <x-brand.seal logo="2" surface="dark" size="lg" alt="" />
+                <x-brand.seal logo="2" surface="dark" size="lg" inset="comfortable" alt="" />
                 <span class="truncate text-sm font-semibold text-sidebar-text-active">@yield('brand', 'GK Trucking')</span>
             </div>
 
