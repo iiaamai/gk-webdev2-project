@@ -92,6 +92,33 @@ class StaffOverviewTest extends TestCase
             ->assertSee(route('staff.bookings.edit', $assigned), false);
     }
 
+    public function test_staff_overview_and_bookings_index_tolerate_archived_customers(): void
+    {
+        Http::fake();
+
+        $staff = User::factory()->staff()->create();
+        $customer = User::factory()->customer()->create(['name' => 'Soon Archived Staff']);
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => BookingStatus::InTransit,
+        ]);
+        $customer->archive();
+
+        $this->actingAs($staff)
+            ->get(route('staff.home'))
+            ->assertOk()
+            ->assertSee($booking->booking_number)
+            ->assertSee('Archived customer')
+            ->assertDontSee('Soon Archived Staff');
+
+        $this->actingAs($staff)
+            ->get(route('staff.bookings.index'))
+            ->assertOk()
+            ->assertSee($booking->booking_number)
+            ->assertSee('Archived customer')
+            ->assertDontSee('Soon Archived Staff');
+    }
+
     public function test_staff_booking_show_offers_gatepass_upload_when_missing(): void
     {
         $staff = User::factory()->staff()->create();

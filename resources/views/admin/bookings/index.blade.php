@@ -64,7 +64,7 @@
                 @endphp
                 <tr>
                     <td class="px-4 py-3 font-medium">{{ $booking->booking_number }}</td>
-                    <td class="px-4 py-3">{{ $booking->customer->name }}</td>
+                    <td class="px-4 py-3">{{ $booking->customer?->name ?? 'Archived customer' }}</td>
                     <td class="px-4 py-3">
                         <x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge>
                     </td>

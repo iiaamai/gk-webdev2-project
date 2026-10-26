@@ -124,7 +124,7 @@
                         <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div class="min-w-0">
                                 <p class="font-medium text-text">{{ $booking->booking_number }}</p>
-                                <p class="truncate text-sm text-text-muted">{{ $booking->customer->name }}</p>
+                                <p class="truncate text-sm text-text-muted">{{ $booking->customer?->name ?? 'Archived customer' }}</p>
                                 <p class="truncate text-xs text-text-subtle">
                                     {{ Str::limit($booking->pickup_address, 36) }} → {{ Str::limit($booking->dropoff_address, 36) }}
                                 </p>
@@ -153,7 +153,7 @@
                         <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div class="min-w-0">
                                 <p class="font-medium text-text">{{ $booking->booking_number }}</p>
-                                <p class="truncate text-sm text-text-muted">{{ $booking->customer->name }}</p>
+                                <p class="truncate text-sm text-text-muted">{{ $booking->customer?->name ?? 'Archived customer' }}</p>
                             </div>
                             <x-ui.button href="{{ route('staff.bookings.show', $booking) }}" class="!py-1.5 !text-xs">
                                 Review
@@ -174,7 +174,7 @@
                         <li class="flex flex-col gap-1 rounded-md border border-border bg-surface-inset px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p class="text-sm font-medium text-text">{{ $item['label'] }}</p>
-                                <p class="text-xs text-text-muted">{{ $item['booking']->booking_number }} · {{ $item['booking']->customer->name }}</p>
+                                <p class="text-xs text-text-muted">{{ $item['booking']->booking_number }} · {{ $item['booking']->customer?->name ?? 'Archived customer' }}</p>
                             </div>
                             <x-ui.button href="{{ route('staff.bookings.edit', $item['booking']) }}" variant="ghost" class="!py-1.5 !text-xs">
                                 Open
@@ -207,7 +207,7 @@
                                     {{ $booking->booking_number }}
                                 </a>
                             </p>
-                            <p class="truncate text-sm text-text-muted">{{ $booking->customer->name }}</p>
+                            <p class="truncate text-sm text-text-muted">{{ $booking->customer?->name ?? 'Archived customer' }}</p>
                             <p class="truncate text-xs text-text-subtle">
                                 {{ Str::limit($booking->pickup_address, 40) }} → {{ Str::limit($booking->dropoff_address, 40) }}
                             </p>

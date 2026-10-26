@@ -58,4 +58,29 @@ class AdminOverviewTest extends TestCase
             ->assertOk()
             ->assertSeeInOrder(['Driver:', 'Map Driver Ana']);
     }
+
+    public function test_admin_overview_and_bookings_index_tolerate_archived_customers(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        $customer = User::factory()->customer()->create(['name' => 'Soon Archived']);
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => BookingStatus::InTransit,
+        ]);
+        $customer->archive();
+
+        $this->actingAs($admin)
+            ->get(route('admin.home'))
+            ->assertOk()
+            ->assertSee($booking->booking_number)
+            ->assertSee('Archived customer')
+            ->assertDontSee('Soon Archived');
+
+        $this->actingAs($admin)
+            ->get(route('admin.bookings.index'))
+            ->assertOk()
+            ->assertSee($booking->booking_number)
+            ->assertSee('Archived customer')
+            ->assertDontSee('Soon Archived');
+    }
 }
