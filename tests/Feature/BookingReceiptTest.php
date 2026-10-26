@@ -94,4 +94,20 @@ class BookingReceiptTest extends TestCase
             ->get(route('driver.deliveries.receipt', $cancelled))
             ->assertForbidden();
     }
+
+    public function test_receipt_pdf_downloads_when_customer_is_archived(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        $customer = User::factory()->customer()->create();
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => BookingStatus::Completed,
+        ]);
+        $customer->archive();
+
+        $this->actingAs($admin)
+            ->get(route('admin.bookings.receipt', $booking))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
 }

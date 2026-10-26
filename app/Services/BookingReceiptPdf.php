@@ -26,8 +26,8 @@ class BookingReceiptPdf
             'Booking: '.$booking->booking_number,
             'Status: '.$booking->status->label(),
             '',
-            'Customer: '.$booking->customer->name,
-            'Email: '.$booking->customer->email,
+            'Customer: '.($booking->customer?->name ?? 'Archived customer'),
+            'Email: '.($booking->customer?->email ?? '—'),
             '',
             'Vehicle type: '.$booking->vehicle_type,
             'Driver: '.($booking->driver?->name ?? 'Unassigned'),
@@ -151,7 +151,7 @@ class BookingReceiptPdf
         imagecopy($canvas, $image, 0, 0, 0, 0, $width, $height);
 
         ob_start();
-        imagejpeg($canvas, null, 90);
+        imagejpeg($canvas, quality: 90);
         $data = ob_get_clean();
 
         imagedestroy($image);
