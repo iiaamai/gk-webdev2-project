@@ -11,6 +11,7 @@ use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -211,6 +212,10 @@ class DriverDeliveryTest extends TestCase
             ->assertSee('Available jobs')
             ->assertSee('GK-TEST-CARD')
             ->assertSee('Accept', false)
+            ->assertSee('Navigate to pickup')
+            ->assertSee('Navigate to dropoff')
+            ->assertSee('nav=pickup')
+            ->assertSee('nav=dropoff')
             ->assertDontSee('Finish your current delivery to accept new jobs', false);
     }
 
@@ -241,7 +246,66 @@ class DriverDeliveryTest extends TestCase
             ->assertSee('Save POD', false)
             ->assertSee("x-data='{ open: \"eir\" }'", false)
             ->assertSee('Destination &amp; route', false)
-            ->assertSee('Update status', false);
+            ->assertSee('Navigate to pickup')
+            ->assertSee('Navigate to dropoff')
+            ->assertSee('Opens a full-screen map', false)
+            ->assertSee('they are not emailed on each reroute', false)
+            ->assertSee('Update status', false)
+            ->assertDontSee('Recenter');
+    }
+
+    public function test_delivery_show_opens_fullscreen_navigation_for_nav_query(): void
+    {
+        config([
+            'gk.mapbox_enabled' => true,
+            'gk.mapbox_token' => 'pk.test-token',
+        ]);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'api.mapbox.com/directions/*' => Http::response([
+                'routes' => [
+                    [
+                        'geometry' => [
+                            'type' => 'LineString',
+                            'coordinates' => [
+                                [121.0244, 14.5547],
+                                [121.0437, 14.6760],
+                            ],
+                        ],
+                        'distance' => 15340,
+                        'duration' => 1620,
+                    ],
+                ],
+            ]),
+        ]);
+
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $driver = User::factory()->driver()->create();
+        Vehicle::factory()->create([
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
+            'status' => VehicleStatus::InUse,
+        ]);
+        $booking = Booking::factory()->withGatepass()->create([
+            'pricing_id' => $pricing->id,
+            'driver_id' => $driver->id,
+            'status' => BookingStatus::InTransit,
+            'is_locked' => true,
+        ]);
+
+        $this->actingAs($driver)
+            ->get(route('driver.deliveries.show', [$booking, 'nav' => 'pickup']))
+            ->assertOk()
+            ->assertSee('Exit')
+            ->assertSee('Recenter')
+            ->assertSee('"liveNav":true', false)
+            ->assertSee('"fullscreen":true', false)
+            ->assertSee('"navDestination":"pickup"', false)
+            ->assertDontSee('Delivery workspace')
+            ->assertDontSee('Documents', false);
+
+        Http::assertSentCount(1);
     }
 
     public function test_document_routes_stream_inline_for_preview(): void

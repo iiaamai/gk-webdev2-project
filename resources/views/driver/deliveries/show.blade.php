@@ -76,7 +76,11 @@
     </x-ui.card>
 
     <x-ui.card class="mb-6">
-        @include('bookings._route_map', ['booking' => $booking, 'routeMap' => $routeMap])
+        @include('bookings._route_map', [
+            'booking' => $booking,
+            'routeMap' => $routeMap,
+            'showNavActions' => true,
+        ])
     </x-ui.card>
 
     @include('driver.deliveries._documents', ['booking' => $booking])

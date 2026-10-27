@@ -1,8 +1,16 @@
 @php
     $mapSize = $mapSize ?? 'default';
     $canvasId = 'route-map-'.substr(uniqid(), -8);
-    $heightClass = $mapSize === 'overview' ? 'h-[32rem]' : 'h-80';
-    $height = $mapSize === 'overview' ? '32rem' : '20rem';
+    $heightClass = match ($mapSize) {
+        'overview' => 'h-[32rem]',
+        'fullscreen' => 'h-dvh',
+        default => 'h-80',
+    };
+    $height = match ($mapSize) {
+        'overview' => '32rem',
+        'fullscreen' => '100dvh',
+        default => '20rem',
+    };
     $style = (string) config('gk.mapbox_style', 'mapbox/streets-v12');
 
     if (! str_starts_with($style, 'mapbox://')) {
@@ -20,6 +28,10 @@
         'pickup' => [(float) $routeMap->pickupLng, (float) $routeMap->pickupLat],
         'dropoff' => [(float) $routeMap->dropoffLng, (float) $routeMap->dropoffLat],
         'driverPollUrl' => isset($booking) ? \App\Support\DriverLocationLinks::forBooking($booking, auth()->user()) : null,
+        'liveNav' => (bool) ($liveNav ?? false),
+        'fullscreen' => $mapSize === 'fullscreen',
+        'navDestination' => in_array($navDestination ?? null, ['pickup', 'dropoff'], true) ? $navDestination : null,
+        'offRouteMeters' => 80,
     ];
 @endphp
 

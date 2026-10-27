@@ -85,7 +85,7 @@ Driver modules
   - Available: bookings that match the driver's vehicle type and already have a gatepass
   - Active: at most one active delivery
   - Active delivery details: update status; upload/update EIR; on the completed status, capture POD photos
-  - Details: Mapbox static optimal route to the destination
+  - Details: Mapbox route preview; full-screen Navigate to pickup / dropoff (heading-up GPS, remaining km/min, Exit, Recenter; silent reroute — customer and dispatch see live location, no extra emails)
 - Profile
 - Gatepass is uploaded by Staff or System Admin before the job appears. System Admin can also CRUD gatepass/EIR/POD.
 

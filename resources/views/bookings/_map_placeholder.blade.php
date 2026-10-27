@@ -2,7 +2,11 @@
     $routeMap = $routeMap ?? null;
     $mapSize = $mapSize ?? 'default';
     $placeholderCaption = $placeholderCaption ?? 'Pickup to dropoff route preview.';
-    $placeholderMinClass = $mapSize === 'overview' ? 'min-h-[32rem]' : 'min-h-48';
+    $placeholderMinClass = match ($mapSize) {
+        'overview' => 'min-h-[32rem]',
+        'fullscreen' => 'min-h-dvh',
+        default => 'min-h-48',
+    };
     $emptyCaption = filled($routeMap?->message)
         ? $routeMap->message
         : $placeholderCaption;

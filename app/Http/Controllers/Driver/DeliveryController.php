@@ -41,15 +41,25 @@ class DeliveryController extends Controller
         return view('driver.deliveries.index', compact('available', 'active', 'driver'));
     }
 
-    public function show(Booking $booking, BookingStaticRouteMapService $routeMapService): View
+    public function show(Request $request, Booking $booking, BookingStaticRouteMapService $routeMapService): View
     {
         $this->authorize('view', $booking);
 
         $booking->load(['eir', 'pod', 'pricing', 'vehicle.pricing', 'customer']);
+        $routeMap = $routeMapService->forBooking($booking);
+        $navDestination = $this->navigationDestination($request, $booking);
+
+        if ($navDestination !== null) {
+            return view('driver.deliveries.navigate', [
+                'booking' => $booking,
+                'routeMap' => $routeMap,
+                'navDestination' => $navDestination,
+            ]);
+        }
 
         return view('driver.deliveries.show', [
             'booking' => $booking,
-            'routeMap' => $routeMapService->forBooking($booking),
+            'routeMap' => $routeMap,
         ]);
     }
 
@@ -115,5 +125,20 @@ class DeliveryController extends Controller
         $this->authorize('downloadReceipt', $booking);
 
         return $bookingReceiptPdf->download($booking);
+    }
+
+    private function navigationDestination(Request $request, Booking $booking): ?string
+    {
+        $nav = $request->query('nav');
+
+        if ($nav === 'pickup' && $booking->pickup_lat !== null && $booking->pickup_lng !== null) {
+            return 'pickup';
+        }
+
+        if ($nav === 'dropoff' && $booking->dropoff_lat !== null && $booking->dropoff_lng !== null) {
+            return 'dropoff';
+        }
+
+        return null;
     }
 }

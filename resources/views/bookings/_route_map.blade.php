@@ -1,6 +1,8 @@
 @php
     $routeMap = $routeMap ?? null;
     $mapSize = $mapSize ?? 'default';
+    $liveNav = $liveNav ?? false;
+    $showNavActions = $showNavActions ?? $liveNav;
 @endphp
 
 <div class="space-y-4">
@@ -27,6 +29,15 @@
         </div>
     </div>
 
+    @if ($showNavActions)
+        <div class="space-y-2">
+            <x-driver.nav-actions :booking="$booking" />
+            <p class="text-sm text-text-muted">
+                Opens a full-screen map. Customer and dispatch see your GPS; they are not emailed on each reroute.
+            </p>
+        </div>
+    @endif
+
     @if ($routeMap !== null)
         @if ($routeMap->hasRoute())
             <div class="overflow-hidden rounded-md border border-dashed border-border-strong bg-primary-tone-1">
@@ -41,6 +52,7 @@
                     'booking' => $booking,
                     'routeMap' => $routeMap,
                     'mapSize' => $mapSize,
+                    'liveNav' => $liveNav,
                 ])
             </div>
         @else

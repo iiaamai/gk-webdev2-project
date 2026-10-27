@@ -43,13 +43,16 @@
         </div>
     </dl>
 
-    <div class="mt-4">
-        <x-ui.button
-            href="{{ route('driver.deliveries.show', $booking) }}"
-            :variant="$viewOnly ? 'ghost' : 'secondary'"
-            class="!py-1.5 !text-xs"
-        >
-            {{ $ctaLabel }}
-        </x-ui.button>
+    <div class="mt-4 flex flex-col gap-2">
+        <x-driver.nav-actions :booking="$booking" compact />
+        <div>
+            <x-ui.button
+                href="{{ route('driver.deliveries.show', $booking) }}"
+                :variant="$viewOnly ? 'ghost' : 'secondary'"
+                class="!py-1.5 !text-xs"
+            >
+                {{ $ctaLabel }}
+            </x-ui.button>
+        </div>
     </div>
 </x-ui.card>
