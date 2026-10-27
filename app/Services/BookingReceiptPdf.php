@@ -132,40 +132,56 @@ class BookingReceiptPdf
      */
     private function logoJpeg(): ?array
     {
-        $path = public_path('images/gk-logo-1.png');
+        try {
+            $path = public_path('images/gk-logo-1.png');
 
-        if (! is_file($path) || ! function_exists('imagecreatefrompng')) {
+            if (! is_file($path) || ! function_exists('imagecreatefrompng') || ! function_exists('imagejpeg')) {
+                return null;
+            }
+
+            $image = @imagecreatefrompng($path);
+            if ($image === false) {
+                return null;
+            }
+
+            $width = imagesx($image);
+            $height = imagesy($image);
+            $canvas = imagecreatetruecolor($width, $height);
+            if ($canvas === false) {
+                return null;
+            }
+
+            $white = imagecolorallocate($canvas, 255, 255, 255);
+            imagefilledrectangle($canvas, 0, 0, $width, $height, $white);
+            imagecopy($canvas, $image, 0, 0, 0, 0, $width, $height);
+
+            $temp = tempnam(sys_get_temp_dir(), 'gk-logo-');
+            if ($temp === false) {
+                return null;
+            }
+
+            try {
+                if (! imagejpeg($canvas, $temp, 90)) {
+                    return null;
+                }
+
+                $data = file_get_contents($temp);
+            } finally {
+                @unlink($temp);
+            }
+
+            if ($data === false || $data === '') {
+                return null;
+            }
+
+            return [
+                'data' => $data,
+                'width' => $width,
+                'height' => $height,
+            ];
+        } catch (\Throwable) {
             return null;
         }
-
-        $image = @imagecreatefrompng($path);
-        if ($image === false) {
-            return null;
-        }
-
-        $width = imagesx($image);
-        $height = imagesy($image);
-        $canvas = imagecreatetruecolor($width, $height);
-        $white = imagecolorallocate($canvas, 255, 255, 255);
-        imagefilledrectangle($canvas, 0, 0, $width, $height, $white);
-        imagecopy($canvas, $image, 0, 0, 0, 0, $width, $height);
-
-        ob_start();
-        imagejpeg($canvas, quality: 90);
-        $data = ob_get_clean();
-
-        imagedestroy($image);
-        imagedestroy($canvas);
-
-        if ($data === false || $data === '') {
-            return null;
-        }
-
-        return [
-            'data' => $data,
-            'width' => $width,
-            'height' => $height,
-        ];
     }
 
     private function escape(string $text): string
