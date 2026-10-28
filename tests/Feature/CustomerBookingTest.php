@@ -52,6 +52,7 @@ class CustomerBookingTest extends TestCase
         $pricing = Pricing::factory()->create([
             'vehicle_type' => '4-wheeler truck',
             'amount' => 9200.00,
+            'capacity_kg' => 3000,
         ]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
@@ -70,9 +71,11 @@ class CustomerBookingTest extends TestCase
             'dropoff_address' => 'Quezon City',
             'dropoff_lat' => 14.6760,
             'dropoff_lng' => 121.0437,
+            'cargo_kg' => 500,
             'cargo_desc' => 'Test cargo',
         ]);
 
+        $response->assertSessionHasNoErrors();
         $booking = Booking::query()->where('customer_id', $customer->id)->first();
         $this->assertNotNull($booking);
         $response->assertRedirect(route('customer.bookings.show', $booking));
@@ -94,6 +97,7 @@ class CustomerBookingTest extends TestCase
         $pricing = Pricing::factory()->create([
             'vehicle_type' => '4-wheeler truck',
             'amount' => 9200.00,
+            'capacity_kg' => 3000,
         ]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
@@ -116,6 +120,7 @@ class CustomerBookingTest extends TestCase
             'dropoff_address' => 'Quezon City',
             'dropoff_lat' => 14.6760,
             'dropoff_lng' => 121.0437,
+            'cargo_kg' => 500,
         ]);
 
         $booking = Booking::query()->where('customer_id', $customer->id)->first();
@@ -147,7 +152,7 @@ class CustomerBookingTest extends TestCase
                 'dropoff_lng' => 121.0437,
             ])
             ->assertRedirect(route('customer.bookings.create'))
-            ->assertSessionHasErrors(['pickup_port_number', 'pickup_container_number']);
+            ->assertSessionHasErrors(['pickup_port_number', 'pickup_container_number', 'cargo_kg']);
 
         $this->assertSame(0, Booking::query()->count());
     }
@@ -173,6 +178,7 @@ class CustomerBookingTest extends TestCase
                 'dropoff_address' => 'B',
                 'dropoff_lat' => 14.6,
                 'dropoff_lng' => 121.1,
+                'cargo_kg' => 500,
             ])
             ->assertRedirect(route('customer.bookings.create'))
             ->assertSessionHasErrors('pricing_id');

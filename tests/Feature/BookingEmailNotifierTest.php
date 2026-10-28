@@ -31,7 +31,7 @@ class BookingEmailNotifierTest extends TestCase
         config(['gk.mail_enabled' => false]);
 
         $customer = User::factory()->customer()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000, 'capacity_kg' => 3000]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
@@ -48,6 +48,7 @@ class BookingEmailNotifierTest extends TestCase
             'dropoff_address' => 'B',
             'dropoff_lat' => 14.6,
             'dropoff_lng' => 121.1,
+            'cargo_kg' => 500,
         ]);
 
         Mail::assertNothingSent();
@@ -59,7 +60,7 @@ class BookingEmailNotifierTest extends TestCase
         config(['gk.mail_enabled' => true]);
 
         $customer = User::factory()->customer()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000, 'capacity_kg' => 3000]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
@@ -76,6 +77,7 @@ class BookingEmailNotifierTest extends TestCase
             'dropoff_address' => 'B',
             'dropoff_lat' => 14.6,
             'dropoff_lng' => 121.1,
+            'cargo_kg' => 500,
         ]);
 
         Mail::assertSent(BookingCreatedMail::class, fn (BookingCreatedMail $mail) => $mail->hasTo($customer->email));

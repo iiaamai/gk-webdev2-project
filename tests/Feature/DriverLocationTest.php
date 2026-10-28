@@ -81,6 +81,24 @@ class DriverLocationTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_customer_cannot_poll_driver_on_completed_booking(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $driver = User::factory()->driver()->create([
+            'location_lat' => 14.6,
+            'location_lng' => 121.0,
+        ]);
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'driver_id' => $driver->id,
+            'status' => BookingStatus::Completed,
+        ]);
+
+        $this->actingAs($customer)
+            ->getJson(route('customer.bookings.driver-location', $booking))
+            ->assertForbidden();
+    }
+
     public function test_admin_driver_map_includes_a_driver_without_a_booking(): void
     {
         $admin = User::factory()->systemAdmin()->create();

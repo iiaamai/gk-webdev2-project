@@ -53,11 +53,30 @@ class CreateCustomerBooking
             ]);
         }
 
+        $cargoKg = null;
+        $requireCargoWeight = ! isset($data['status']);
+
+        if ($requireCargoWeight) {
+            $cargoKg = (int) ($data['cargo_kg'] ?? 0);
+
+            if ($cargoKg < 1) {
+                throw ValidationException::withMessages([
+                    'cargo_kg' => 'Enter the cargo weight in kilograms.',
+                ]);
+            }
+
+            if ($cargoKg > $pricing->capacity_kg) {
+                throw ValidationException::withMessages([
+                    'cargo_kg' => 'Cargo weight exceeds the capacity for the selected vehicle type. Choose a larger type.',
+                ]);
+            }
+        }
+
         $status = isset($data['status'])
             ? BookingStatus::from((string) $data['status'])
             : BookingStatus::Pending;
 
-        $booking = DB::transaction(function () use ($customer, $data, $pricing, $status): Booking {
+        $booking = DB::transaction(function () use ($customer, $data, $pricing, $status, $cargoKg): Booking {
             $booking = Booking::query()->create([
                 'booking_number' => $this->bookingNumberGenerator->next(),
                 'customer_id' => $customer->id,
@@ -74,6 +93,7 @@ class CreateCustomerBooking
                 'dropoff_lat' => $data['dropoff_lat'],
                 'dropoff_lng' => $data['dropoff_lng'],
                 'cargo_desc' => $data['cargo_desc'] ?? null,
+                'cargo_kg' => $cargoKg,
                 'additional_requirements' => $data['additional_requirements'] ?? null,
                 'status' => $status,
                 'is_locked' => false,

@@ -97,7 +97,7 @@ class BookingController extends Controller
     {
         $this->authorize('cancel', $booking);
 
-        $cancelBooking->execute($booking);
+        $cancelBooking->execute($booking, request()->user());
 
         return redirect()
             ->route('staff.bookings.show', $booking)

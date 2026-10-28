@@ -1,0 +1,96 @@
+GK Trucking Services 2.0 — Backlog improvements plan
+====================================================
+Status: design only — do not implement until explicitly requested (/implement).
+Agreed: clarify session (late cancel, cargo capacity, post-delivery location).
+
+Scope
+-----
+Three product improvements. Not part of the first prototype commit unless implemented later.
+
+Current behavior (baseline)
+---------------------------
+Cancellation
+- No cancellation fee anywhere.
+- Staff: cancel only while status is pending and no gatepass uploaded.
+- System Admin: cancel anytime except completed.
+- Customers cannot self-cancel (office handles cancellation).
+
+Pricing / load
+- One booking = one vehicle type from the Pricing list; amount copied to invoice when created.
+- Pricing rows include capacity_kg per vehicle type; bookings store cargo_desc (text) only — no cargo weight field.
+- No automatic price change for overload or multiple trips.
+
+Driver location
+- Drivers POST lat/lng while the driver portal is open (driver-location.js).
+- Customer may poll driver location only while booking status is accepted or in_transit.
+- Staff and Admin may poll driver location on a booking without that status restriction today.
+- Admin/Staff fleet map shows all drivers’ last known coordinates, including drivers with no active trip.
+
+----------------------------------------------------------------------
+1. Late-cancel surcharge (after driver accept)
+----------------------------------------------------------------------
+Rule
+- Cancel with no surcharge: any time before a driver accepts the booking.
+- After accept: if System Admin cancels, charge a late-cancel fee of 25% of the vehicle-type fare
+  (from Pricing for the booking’s pricing_id / vehicle type at cancel time).
+- Staff cancel rules unchanged: pending, before gatepass only, still no fee.
+
+Invoice / billing
+- On admin cancel after accept: ensure an invoice reflects the 25% fee (create or adjust invoice.amount),
+  status unpaid until office marks paid (same Pay Later / QR Ph flow as today).
+- Before accept: no fee — void or do not create a surcharge invoice (existing cancel behavior).
+
+Open decisions (fill in before implement)
+- Whether cancelled-after-accept still releases vehicle and unlocks booking the same as today.
+- Copy shown on invoice/receipt for “cancellation fee (25%)”.
+
+----------------------------------------------------------------------
+2. Cargo weight vs capacity (one delivery, one list price)
+----------------------------------------------------------------------
+Rule
+- Customer booking form: add required cargo weight (kg).
+- Compare entered kg to capacity_kg on the selected Pricing / vehicle type.
+- If cargo kg > capacity_kg: block form submit until the customer selects a type whose capacity_kg is enough.
+- Still one trip, one list price for the chosen type — no extra-trip multiplier, no manual surcharge field in v1.
+
+Optional follow-ups (out of scope unless added later)
+- Staff/Admin booking create/edit with the same validation.
+- Warn-only or staff override of capacity (explicitly rejected in clarify — block only).
+
+----------------------------------------------------------------------
+3. Hide driver whereabouts after delivery (completed booking)
+----------------------------------------------------------------------
+Rule
+- For bookings with status completed: no live driver pin / location poll on that booking for any role
+  (customer, staff, admin on booking detail maps).
+- Last stored driver coordinates on the user record may remain for dispatch fleet map use.
+- Driver portal may continue sharing GPS while open (no change required unless product asks to stop on complete).
+
+Implementation hints (when building)
+- Tighten BookingPolicy::viewDriverLocation (and any map poll URLs) to deny when status is completed.
+- Ensure booking-scoped maps and JSON endpoints return unavailable / no pin after complete.
+- Fleet-wide driver map behavior unchanged unless separately scoped.
+
+----------------------------------------------------------------------
+Out of scope (this plan)
+----------------------------------------------------------------------
+- Customer self-cancel.
+- Cancellation windows based on hours before booking_datetime.
+- Extra trucks/runs, split bookings, or manual load surcharges on invoice.
+- Clearing driver GPS on trip complete.
+- Hiding idle drivers on the fleet map.
+
+----------------------------------------------------------------------
+Suggested implementation order
+----------------------------------------------------------------------
+1. Location hide on completed booking (smallest, policy + tests).
+2. Cargo kg + capacity block on customer create (migration, form, validation, tests).
+3. Late-cancel 25% invoice on admin cancel after accept (CancelBooking action, invoice logic, tests, UI copy).
+
+Related docs (repo)
+-------------------
+- docs/development/lifecycle.txt — cancel and status rules
+- docs/development/models/pricing.txt — capacity_kg, amounts
+- docs/development/models/booking.txt — booking_datetime, pricing_id
+- app/Policies/BookingPolicy.php — viewDriverLocation, cancel
+- tests/Feature/DriverLocationTest.php — location ACL patterns

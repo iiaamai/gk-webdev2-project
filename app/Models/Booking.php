@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'dropoff_lat',
     'dropoff_lng',
     'cargo_desc',
+    'cargo_kg',
     'additional_requirements',
     'status',
     'is_locked',

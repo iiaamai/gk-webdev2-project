@@ -49,13 +49,16 @@ class BookingPolicy
             return false;
         }
 
+        if (! in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true)) {
+            return false;
+        }
+
         if ($user->isSystemAdmin() || $user->isStaff()) {
             return true;
         }
 
         return $user->isCustomer()
-            && $booking->customer_id === $user->id
-            && in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true);
+            && $booking->customer_id === $user->id;
     }
 
     public function create(User $user): bool

@@ -39,6 +39,7 @@ class BookingFactory extends Factory
             'dropoff_lat' => 14.6760,
             'dropoff_lng' => 121.0437,
             'cargo_desc' => fake()->sentence(),
+            'cargo_kg' => 500,
             'additional_requirements' => null,
             'status' => BookingStatus::Pending,
             'is_locked' => false,

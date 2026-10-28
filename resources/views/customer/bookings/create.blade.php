@@ -55,6 +55,7 @@
                                 @class(['text-neutral-400' => $availableVehicles === 0])
                             >
                                 {{ $pricing->vehicle_type }} — ₱{{ number_format((float) $pricing->amount, 2) }} —
+                                {{ number_format((int) $pricing->capacity_kg) }} kg max —
                                 {{ $availableVehicles === 0 ? 'None available' : $availableVehicles.' available' }}
                             </option>
                         @endforeach
@@ -249,8 +250,22 @@
         @endif
 
         <x-ui.card>
-            <x-ui.section-heading icon="package" title="Cargo details" description="Optional notes for the trip." />
+            <x-ui.section-heading icon="package" title="Cargo details" description="Enter cargo weight and any notes for the trip." />
             <div class="mt-4 space-y-4">
+                <div>
+                    <x-ui.label for="cargo_kg">Cargo weight (kg)</x-ui.label>
+                    <x-ui.input
+                        id="cargo_kg"
+                        type="number"
+                        name="cargo_kg"
+                        value="{{ old('cargo_kg') }}"
+                        min="1"
+                        step="1"
+                        required
+                    />
+                    <p class="mt-1 text-xs text-text-muted">Must fit within the capacity of the vehicle type you select.</p>
+                    <x-ui.field-error name="cargo_kg" />
+                </div>
                 <div>
                     <x-ui.label for="cargo_desc">Cargo description</x-ui.label>
                     <x-ui.textarea id="cargo_desc" name="cargo_desc" rows="3">{{ old('cargo_desc') }}</x-ui.textarea>
