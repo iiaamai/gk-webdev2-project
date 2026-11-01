@@ -16,14 +16,32 @@ class EirPodTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_driver_cannot_upload_eir_before_transit_completed(): void
+    {
+        Storage::fake('local');
+
+        $driver = User::factory()->driver()->timedIn()->create();
+        $booking = Booking::factory()->withGatepass()->create([
+            'driver_id' => $driver->id,
+            'status' => BookingStatus::InTransit,
+            'is_locked' => true,
+        ]);
+
+        $this->actingAs($driver)
+            ->post(route('driver.deliveries.eir.store', $booking), [
+                'eir' => UploadedFile::fake()->image('eir.jpg'),
+            ])
+            ->assertForbidden();
+    }
+
     public function test_driver_can_upload_eir_and_pod_on_active_delivery(): void
     {
         Storage::fake('local');
 
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $booking = Booking::factory()->withGatepass()->create([
             'driver_id' => $driver->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitCompleted,
             'is_locked' => true,
         ]);
 
@@ -52,9 +70,9 @@ class EirPodTest extends TestCase
 
     public function test_driver_cannot_upload_eir_when_not_assigned(): void
     {
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $booking = Booking::factory()->withGatepass()->create([
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitCompleted,
         ]);
 
         $this->actingAs($driver)
@@ -68,12 +86,12 @@ class EirPodTest extends TestCase
     {
         Storage::fake('local');
 
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $vehicle = Vehicle::factory()->create(['status' => VehicleStatus::InUse]);
         $booking = Booking::factory()->withGatepass()->create([
             'driver_id' => $driver->id,
             'vehicle_id' => $vehicle->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitCompleted,
             'is_locked' => true,
         ]);
 
@@ -101,11 +119,11 @@ class EirPodTest extends TestCase
     {
         Storage::fake('local');
         $customer = User::factory()->customer()->create();
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $booking = Booking::factory()->withGatepass()->create([
             'customer_id' => $customer->id,
             'driver_id' => $driver->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitCompleted,
             'is_locked' => true,
         ]);
 
@@ -134,13 +152,13 @@ class EirPodTest extends TestCase
         Storage::fake('local');
 
         $customer = User::factory()->customer()->create();
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $vehicle = Vehicle::factory()->create(['status' => VehicleStatus::InUse]);
         $booking = Booking::factory()->withGatepass()->create([
             'customer_id' => $customer->id,
             'driver_id' => $driver->id,
             'vehicle_id' => $vehicle->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitCompleted,
             'is_locked' => true,
         ]);
 

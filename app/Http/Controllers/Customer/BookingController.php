@@ -36,8 +36,7 @@ class BookingController extends Controller
             ->where('customer_id', $customerId)
             ->whereIn('status', [
                 BookingStatus::Pending,
-                BookingStatus::Accepted,
-                BookingStatus::InTransit,
+                ...BookingStatus::activeDeliveryStatuses(),
             ])
             ->with(['pricing', 'vehicle.pricing', 'invoice'])
             ->orderByDesc('created_at')

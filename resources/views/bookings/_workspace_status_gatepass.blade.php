@@ -31,7 +31,10 @@
                     @method('PATCH')
                     <div>
                         <x-ui.label for="status">Status</x-ui.label>
-                        <x-ui.select id="status" name="status" required>
+                        <p class="mt-1 text-xs text-text-muted">
+                            Happy path: pending → gatepass → accepted → transit to pickup → arrived at pickup → haul in progress → transit completed → completed.
+                        </p>
+                        <x-ui.select id="status" name="status" required class="mt-2">
                             @foreach ($statuses as $status)
                                 <option value="{{ $status->value }}" @selected($booking->status === $status)>{{ $status->label() }}</option>
                             @endforeach

@@ -23,7 +23,7 @@ class DriverDeliveryTest extends TestCase
     {
         $truckPricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
         $vanPricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $truckPricing->id,
             'driver_id' => $driver->id,
@@ -55,7 +55,7 @@ class DriverDeliveryTest extends TestCase
     public function test_driver_can_accept_job_and_locks_vehicle(): void
     {
         $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $vehicle = Vehicle::factory()->create([
             'plate_number' => 'ABC-1234',
             'pricing_id' => $pricing->id,
@@ -84,7 +84,7 @@ class DriverDeliveryTest extends TestCase
     public function test_driver_cannot_accept_second_job_while_active(): void
     {
         $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
@@ -114,9 +114,9 @@ class DriverDeliveryTest extends TestCase
         $this->assertSame($driver->id, $active->fresh()->driver_id);
     }
 
-    public function test_driver_can_mark_delivery_in_transit(): void
+    public function test_driver_can_mark_transit_to_pickup(): void
     {
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $booking = Booking::factory()->withGatepass()->create([
             'driver_id' => $driver->id,
             'status' => BookingStatus::Accepted,
@@ -125,19 +125,19 @@ class DriverDeliveryTest extends TestCase
 
         $this->actingAs($driver)
             ->patch(route('driver.deliveries.status.update', $booking), [
-                'status' => BookingStatus::InTransit->value,
+                'status' => BookingStatus::TransitToPickup->value,
             ])
             ->assertRedirect(route('driver.deliveries.show', $booking));
 
-        $this->assertSame(BookingStatus::InTransit, $booking->fresh()->status);
+        $this->assertSame(BookingStatus::TransitToPickup, $booking->fresh()->status);
     }
 
     public function test_driver_cannot_complete_without_eir_and_pod(): void
     {
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $booking = Booking::factory()->withGatepass()->create([
             'driver_id' => $driver->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitCompleted,
             'is_locked' => true,
         ]);
 
@@ -149,17 +149,38 @@ class DriverDeliveryTest extends TestCase
             ->assertRedirect(route('driver.deliveries.show', $booking))
             ->assertSessionHasErrors('status');
 
+        $this->assertSame(BookingStatus::TransitCompleted, $booking->fresh()->status);
+    }
+
+    public function test_driver_cannot_complete_from_haul_without_transit_completed(): void
+    {
+        $driver = User::factory()->driver()->timedIn()->create();
+        $booking = Booking::factory()->withGatepass()->create([
+            'driver_id' => $driver->id,
+            'status' => BookingStatus::InTransit,
+            'arrived_at_pickup_at' => now(),
+            'is_locked' => true,
+        ]);
+        Eir::factory()->create(['booking_id' => $booking->id]);
+        Pod::factory()->create(['booking_id' => $booking->id]);
+
+        $this->actingAs($driver)
+            ->patch(route('driver.deliveries.status.update', $booking), [
+                'status' => BookingStatus::Completed->value,
+            ])
+            ->assertForbidden();
+
         $this->assertSame(BookingStatus::InTransit, $booking->fresh()->status);
     }
 
     public function test_driver_can_complete_when_eir_and_pod_exist(): void
     {
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $vehicle = Vehicle::factory()->create(['status' => VehicleStatus::InUse]);
         $booking = Booking::factory()->withGatepass()->create([
             'driver_id' => $driver->id,
             'vehicle_id' => $vehicle->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitCompleted,
             'is_locked' => true,
         ]);
         Eir::factory()->create(['booking_id' => $booking->id]);
@@ -193,7 +214,7 @@ class DriverDeliveryTest extends TestCase
     public function test_deliveries_index_renders_job_cards(): void
     {
         $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
@@ -222,7 +243,7 @@ class DriverDeliveryTest extends TestCase
     public function test_delivery_show_renders_documents_and_route_cards(): void
     {
         $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
@@ -231,7 +252,7 @@ class DriverDeliveryTest extends TestCase
         $booking = Booking::factory()->withGatepass()->create([
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitToPickup,
             'is_locked' => true,
         ]);
 
@@ -242,15 +263,15 @@ class DriverDeliveryTest extends TestCase
             ->assertSee('Gatepass', false)
             ->assertSee('EIR', false)
             ->assertSee('POD', false)
-            ->assertSee('Save EIR', false)
-            ->assertSee('Save POD', false)
+            ->assertDontSee('Save EIR', false)
+            ->assertDontSee('Save POD', false)
             ->assertSee("x-data='{ open: \"eir\" }'", false)
             ->assertSee('Destination &amp; route', false)
             ->assertSee('Navigate to pickup')
             ->assertSee('Navigate to dropoff')
             ->assertSee('Opens a full-screen map', false)
             ->assertSee('they are not emailed on each reroute', false)
-            ->assertSee('Update status', false)
+            ->assertDontSee('Update status', false)
             ->assertDontSee('Recenter');
     }
 
@@ -281,7 +302,7 @@ class DriverDeliveryTest extends TestCase
         ]);
 
         $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
@@ -290,7 +311,7 @@ class DriverDeliveryTest extends TestCase
         $booking = Booking::factory()->withGatepass()->create([
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitToPickup,
             'is_locked' => true,
         ]);
 
@@ -311,7 +332,7 @@ class DriverDeliveryTest extends TestCase
     public function test_document_routes_stream_inline_for_preview(): void
     {
         Storage::fake('local');
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $booking = Booking::factory()->withGatepass()->create([
             'booking_number' => 'GK-TEST-INLINE',
             'gatepass_path' => 'bookings/GK-TEST-INLINE/gatepass.jpg',
@@ -333,7 +354,7 @@ class DriverDeliveryTest extends TestCase
     public function test_available_jobs_are_view_only_when_driver_has_active_delivery(): void
     {
         $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
@@ -365,7 +386,7 @@ class DriverDeliveryTest extends TestCase
     public function test_available_jobs_are_ordered_oldest_first(): void
     {
         $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,

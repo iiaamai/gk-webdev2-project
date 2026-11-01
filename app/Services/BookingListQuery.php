@@ -16,6 +16,7 @@ class BookingListQuery
         $search = ListFilter::searchTerm($request);
         $status = BookingStatus::tryFrom((string) $request->query('status', ''));
         $scope = (string) $request->query('scope', '');
+        $phase = (string) $request->query('phase', '');
 
         $monthStart = now('Asia/Manila')->copy()->startOfMonth();
         $monthEnd = now('Asia/Manila')->copy()->endOfMonth();
@@ -31,7 +32,9 @@ class BookingListQuery
                         });
                 });
             })
-            ->when($status !== null && $scope === '', fn ($query) => $query->where('status', $status))
+            ->when($phase === 'to_pickup', fn ($query) => $query->where('status', BookingStatus::TransitToPickup))
+            ->when($phase === 'on_trip', fn ($query) => $query->whereIn('status', BookingStatus::onTripStatuses()))
+            ->when($status !== null && $scope === '' && $phase === '', fn ($query) => $query->where('status', $status))
             ->when($scope === 'pending_no_gatepass', function ($query): void {
                 $query->where('status', BookingStatus::Pending)
                     ->where(function ($inner): void {

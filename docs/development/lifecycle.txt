@@ -1,7 +1,7 @@
 GK Trucking Services 2.0 — Booking lifecycle
 
 Statuses
-pending | accepted | in_transit | completed | cancelled
+pending | accepted | transit_to_pickup | arrived_at_pickup | in_transit | transit_completed | completed | cancelled
 
 Normal path
 1. Customer or Admin creates booking → pending
@@ -9,34 +9,27 @@ Normal path
    - Invoice may be created unpaid
 2. Staff or Admin uploads gatepass (first time)
    - Still pending; now visible to matching drivers
-   - Email matching drivers (when email phase is built)
 3. Driver accepts → accepted
    - is_locked = true; driver_id + vehicle_id set
    - Vehicle status → in_use
-   - Max one active delivery per driver (accepted or in_transit)
-4. Driver → in_transit
-5. Driver → arrived at pickup (timestamp; unlocks customer round-trip / vehicle-type actions)
-6. Optional: customer submits one round-trip request → office approve/reject → customer confirm if count changed → driver accept → invoice = approved_round_trips × fare
-7. Driver uploads EIR; on complete also POD (photos)
-8. Driver → completed only if EIR AND POD both exist AND multi-trip gates satisfied (if a request was submitted)
+   - Max one active delivery per driver (accepted through transit_completed)
+4. Driver → transit_to_pickup (en route to pickup)
+5. Driver → arrived_at_pickup (+ arrived_at_pickup_at; unlocks customer round-trip / vehicle-type actions)
+6. Optional at pickup: multi-trip request flow (columns, not statuses); reject → cancelled
+7. Driver → in_transit (haul in progress — pickup leg done, cargo / round trips underway)
+8. Driver → transit_completed (blocked while multi-trip request unresolved, if submitted)
+9. Driver uploads EIR and POD (driver uploads only when status is transit_completed)
+10. Driver → completed from transit_completed when EIR AND POD exist
    - Vehicle → available (if it was in_use)
 
 Cancel
 - Staff: may cancel only BEFORE gatepass is uploaded
 - Admin: may cancel anytime (including after gatepass)
-- On cancel with assigned vehicle: release vehicle to available; unlock as needed
+- Staff reject multi-trip → cancelled
 
-After gatepass is uploaded
-- Staff cannot change status (including cancel)
-- Staff cannot replace gatepass
-- Admin can change status and replace gatepass
-
-Admin
-- Full CRUD on bookings and related docs
-- Status overrides must keep vehicle lock/state consistent
-
-Dropped
-- Driver clearance workflow (not in product)
+Driver documents
+- EIR/POD upload (driver): transit_completed only
+- Mark completed: transit_completed → completed with EIR + POD
 
 Map
 - Static Mapbox route on details only after accept (pickup/dropoff lat-lng)

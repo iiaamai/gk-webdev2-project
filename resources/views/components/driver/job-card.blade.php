@@ -2,10 +2,14 @@
     'booking',
     'ctaLabel' => 'View',
     'viewOnly' => false,
+    'showNextStepHint' => false,
 ])
 
 @php
+    use App\Support\DriverDeliveryNextStep;
+
     $statusTone = $booking->status->badgeTone();
+    $nextStepHint = $showNextStepHint ? DriverDeliveryNextStep::hint($booking) : null;
 @endphp
 
 <x-ui.card {{ $attributes->class([
@@ -42,6 +46,10 @@
             </div>
         </div>
     </dl>
+
+    @if ($nextStepHint)
+        <p class="mt-3 text-sm text-text-muted">{{ $nextStepHint }}</p>
+    @endif
 
     <div class="mt-4 flex flex-col gap-2">
         <x-driver.nav-actions :booking="$booking" compact />

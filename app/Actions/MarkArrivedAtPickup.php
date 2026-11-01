@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\User;
 use App\Services\ActivityLogger;
@@ -25,12 +26,15 @@ class MarkArrivedAtPickup
 
         if (! BookingMultiTrip::canMarkArrivedAtPickup($booking)) {
             throw ValidationException::withMessages([
-                'booking' => 'Arrived at pickup is only available while the delivery is in transit.',
+                'booking' => 'Arrived at pickup is only available while en route to pickup.',
             ]);
         }
 
         $booking = DB::transaction(function () use ($booking): Booking {
-            $booking->update(['arrived_at_pickup_at' => now('Asia/Manila')]);
+            $booking->update([
+                'arrived_at_pickup_at' => now('Asia/Manila'),
+                'status' => BookingStatus::ArrivedAtPickup,
+            ]);
 
             return $booking->fresh();
         });

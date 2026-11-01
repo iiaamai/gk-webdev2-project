@@ -53,7 +53,7 @@ class ApproveMultiTripRoundTrips
             $pricing = $booking->pricing;
             if ($pricing !== null && $booking->invoice !== null) {
                 $booking->invoice->update([
-                    'amount' => BookingMultiTrip::invoiceAmountForRoundTrips($pricing, $officeRoundTrips),
+                    'amount' => BookingMultiTrip::invoiceAmountAfterMultiTripApprove($booking, $pricing, $officeRoundTrips),
                     'status' => InvoiceStatus::Unpaid,
                     'paid_at' => null,
                 ]);

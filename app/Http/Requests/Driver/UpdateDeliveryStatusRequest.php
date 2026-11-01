@@ -27,6 +27,7 @@ class UpdateDeliveryStatusRequest extends FormRequest
                 'required',
                 Rule::enum(BookingStatus::class),
                 Rule::in([
+                    BookingStatus::TransitToPickup->value,
                     BookingStatus::InTransit->value,
                     BookingStatus::Completed->value,
                 ]),

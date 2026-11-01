@@ -101,22 +101,96 @@ class BookingMultiTrip
 
     public static function canMarkArrivedAtPickup(Booking $booking): bool
     {
-        return $booking->status === BookingStatus::InTransit
+        return $booking->status === BookingStatus::TransitToPickup
             && ! self::hasArrivedAtPickup($booking);
+    }
+
+    public static function canStartHaulInTransit(Booking $booking): bool
+    {
+        return $booking->status === BookingStatus::ArrivedAtPickup
+            && self::hasArrivedAtPickup($booking);
     }
 
     public static function canRequestMultiTrip(Booking $booking): bool
     {
         return self::hasArrivedAtPickup($booking)
             && ! self::hasSubmittedMultiTripRequest($booking)
-            && in_array($booking->status, [BookingStatus::InTransit], true);
+            && $booking->status === BookingStatus::ArrivedAtPickup;
     }
 
     public static function canChangeVehicleType(Booking $booking): bool
     {
         return self::hasArrivedAtPickup($booking)
             && $booking->vehicle_type_changed_at === null
-            && $booking->status === BookingStatus::InTransit;
+            && $booking->status === BookingStatus::ArrivedAtPickup;
+    }
+
+    public static function canMarkTransitCompleted(Booking $booking): bool
+    {
+        return $booking->status === BookingStatus::InTransit
+            && ! self::multiTripBlocksCompletion($booking)
+            && self::allRoundTripLapsCompleted($booking);
+    }
+
+    public static function requiresLapTracking(Booking $booking): bool
+    {
+        return self::effectiveRoundTrips($booking) > 1;
+    }
+
+    public static function showLapProgress(Booking $booking): bool
+    {
+        return $booking->status === BookingStatus::InTransit
+            && self::requiresLapTracking($booking)
+            && ! self::multiTripBlocksCompletion($booking);
+    }
+
+    public static function lapsCompleted(Booking $booking): int
+    {
+        return max(0, (int) $booking->multi_trip_laps_completed);
+    }
+
+    public static function effectiveRoundTripsTotal(Booking $booking): int
+    {
+        return max(1, self::effectiveRoundTrips($booking));
+    }
+
+    public static function allRoundTripLapsCompleted(Booking $booking): bool
+    {
+        if (! self::requiresLapTracking($booking)) {
+            return true;
+        }
+
+        return self::lapsCompleted($booking) >= self::effectiveRoundTripsTotal($booking);
+    }
+
+    public static function canMarkRoundTripLap(Booking $booking): bool
+    {
+        if (! self::showLapProgress($booking)) {
+            return false;
+        }
+
+        return self::lapsCompleted($booking) < self::effectiveRoundTripsTotal($booking);
+    }
+
+    public static function nextLapNumber(Booking $booking): int
+    {
+        return min(
+            self::effectiveRoundTripsTotal($booking),
+            self::lapsCompleted($booking) + 1
+        );
+    }
+
+    public static function invoiceAmountAfterMultiTripApprove(Booking $booking, Pricing $pricing, int $officeRoundTrips): float
+    {
+        $tripsAmount = self::invoiceAmountForRoundTrips($pricing, $officeRoundTrips);
+        $fee = 0.0;
+
+        if ($booking->vehicle_type_changed_at !== null && $booking->invoice !== null) {
+            $singleTrip = self::invoiceAmountForRoundTrips($pricing, 1);
+            $fee = max(0, round((float) $booking->invoice->amount - $singleTrip, 2));
+        }
+
+        return round($tripsAmount + $fee, 2);
     }
 
     public static function effectiveRoundTrips(Booking $booking): int

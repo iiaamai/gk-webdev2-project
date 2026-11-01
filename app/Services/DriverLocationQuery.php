@@ -26,7 +26,7 @@ class DriverLocationQuery
             ->with([
                 'assignedVehicle',
                 'driverBookings' => function ($query): void {
-                    $query->whereIn('status', [BookingStatus::Accepted, BookingStatus::InTransit])
+                    $query->whereIn('status', BookingStatus::activeDeliveryStatuses())
                         ->latest('accepted_at');
                 },
             ])

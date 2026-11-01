@@ -27,7 +27,7 @@
             <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
                 <p class="text-sm text-text-muted">In progress</p>
                 <p class="mt-1 text-2xl font-semibold text-text">{{ $overview['active_count'] }}</p>
-                <p class="mt-1 text-xs text-text-muted">Accepted or in transit.</p>
+                <p class="mt-1 text-xs text-text-muted">From driver accept through trip completion.</p>
             </x-ui.card>
         </a>
         <a href="{{ route('customer.bookings.index') }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">

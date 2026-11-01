@@ -41,7 +41,7 @@
             </div>
         @else
             <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                <x-driver.job-card :booking="$overview['active_booking']" cta-label="Open" />
+                <x-driver.job-card :booking="$overview['active_booking']" cta-label="Open" show-next-step-hint />
             </div>
         @endif
     </section>

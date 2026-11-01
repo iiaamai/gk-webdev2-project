@@ -24,7 +24,8 @@ class BookingStatusChangedMail extends Mailable
     {
         $label = match ($this->status) {
             BookingStatus::Accepted => 'accepted',
-            BookingStatus::InTransit => 'in transit',
+            BookingStatus::TransitToPickup => 'transit to pickup',
+            BookingStatus::InTransit => 'haul in progress',
             BookingStatus::Completed => 'completed',
             BookingStatus::Cancelled => 'cancelled',
             default => $this->status->value,

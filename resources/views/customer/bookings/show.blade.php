@@ -7,8 +7,7 @@
         $statusTone = $booking->status->badgeTone();
         $showDriverContact = $booking->driver_id
             && in_array($booking->status, [
-                \App\Enums\BookingStatus::Accepted,
-                \App\Enums\BookingStatus::InTransit,
+                ...\App\Enums\BookingStatus::activeDeliveryStatuses(),
                 \App\Enums\BookingStatus::Completed,
             ], true);
         $driver = $booking->driver;
@@ -53,7 +52,11 @@
         <span class="text-sm font-medium text-text">₱{{ number_format((float) $booking->payout, 2) }}</span>
     </div>
 
+    @include('bookings._status_callout', ['booking' => $booking])
+
     @include('bookings._trip_stepper', ['booking' => $booking])
+
+    @include('bookings._round_trip_laps', ['booking' => $booking])
 
     @include('bookings._pickup_capacity', ['booking' => $booking, 'pricings' => $pricings ?? null])
 

@@ -48,7 +48,7 @@ class TimeOutDriver
     {
         return Booking::query()
             ->where('driver_id', $driver->id)
-            ->whereIn('status', [BookingStatus::Accepted, BookingStatus::InTransit])
+            ->whereIn('status', BookingStatus::activeDeliveryStatuses())
             ->exists();
     }
 }

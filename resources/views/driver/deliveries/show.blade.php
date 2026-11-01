@@ -5,7 +5,6 @@
 @section('content')
     @php
         $statusTone = $booking->status->badgeTone();
-        $canComplete = $booking->eir !== null && $booking->pod !== null;
         $customer = $booking->customer;
     @endphp
 
@@ -24,6 +23,8 @@
     </div>
 
     @include('bookings._trip_stepper', ['booking' => $booking])
+
+    @include('bookings._round_trip_laps', ['booking' => $booking])
 
     <x-ui.card class="mb-6">
         <x-ui.section-heading icon="map-pin" title="Trip details" />
@@ -87,84 +88,7 @@
 
     @include('bookings._pickup_capacity', ['booking' => $booking])
 
-    <div class="mb-6 space-y-4">
-        @can('accept', $booking)
-            <x-ui.card>
-                <x-ui.section-heading icon="package" title="Accept delivery" />
-                <div class="mt-4" x-data="{ open: false }">
-                    <form x-ref="acceptForm" method="post" action="{{ route('driver.deliveries.accept', $booking) }}">
-                        @csrf
-                        <x-ui.button type="button" @click="open = true">
-                            Accept delivery
-                        </x-ui.button>
-                    </form>
-                    <x-ui.confirm-dialog
-                        title="Accept this delivery?"
-                        description="You can only have one active delivery. The vehicle will be locked to this trip."
-                        confirm-label="Accept delivery"
-                        cancel-label="Cancel"
-                        form-ref="acceptForm"
-                    />
-                </div>
-            </x-ui.card>
-        @endcan
-
-        @can('updateDeliveryStatus', $booking)
-            <x-ui.card>
-                <x-ui.section-heading icon="activity" title="Update status" />
-                <div class="mt-4 flex flex-wrap gap-3">
-                    @if ($booking->status === \App\Enums\BookingStatus::Accepted)
-                        <div x-data="{ open: false }">
-                            <form x-ref="inTransitForm" method="post" action="{{ route('driver.deliveries.status.update', $booking) }}">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="status" value="in_transit">
-                                <x-ui.button type="button" @click="open = true">Mark in transit</x-ui.button>
-                            </form>
-                            <x-ui.confirm-dialog
-                                title="Mark this delivery in transit?"
-                                description="The trip will move from accepted to in transit."
-                                confirm-label="Mark in transit"
-                                cancel-label="Cancel"
-                                form-ref="inTransitForm"
-                            />
-                        </div>
-                    @endif
-
-                    @if ($booking->status === \App\Enums\BookingStatus::InTransit)
-                        <div x-data="{ open: false }">
-                            <form x-ref="completeForm" method="post" action="{{ route('driver.deliveries.status.update', $booking) }}">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="status" value="completed">
-                                @if ($canComplete)
-                                    <x-ui.button type="button" @click="open = true">
-                                        Mark completed
-                                    </x-ui.button>
-                                @else
-                                    <x-ui.button type="button" disabled>
-                                        Mark completed
-                                    </x-ui.button>
-                                @endif
-                            </form>
-                            @if ($canComplete)
-                                <x-ui.confirm-dialog
-                                    title="Mark this delivery completed?"
-                                    description="The trip will finish and the vehicle will be released."
-                                    confirm-label="Mark completed"
-                                    cancel-label="Cancel"
-                                    form-ref="completeForm"
-                                />
-                            @endif
-                        </div>
-                        @unless ($canComplete)
-                            <p class="basis-full text-sm text-warning">Upload EIR and POD above before completing.</p>
-                        @endunless
-                    @endif
-                </div>
-            </x-ui.card>
-        @endcan
-    </div>
+    @include('driver.deliveries._next_step', ['booking' => $booking])
 
     @can('downloadReceipt', $booking)
         <p class="mb-4 text-sm">

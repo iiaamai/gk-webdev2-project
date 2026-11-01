@@ -6,7 +6,11 @@
 
     $wrongTruckPercent = Setting::getValue('wrong_truck_fee_percent', '10');
     $pricings = $pricings ?? Pricing::query()->orderBy('vehicle_type')->get();
-    $showPickupCapacityCard = $booking->status === BookingStatus::InTransit
+    $showPickupCapacityCard = in_array($booking->status, [
+        BookingStatus::TransitToPickup,
+        BookingStatus::ArrivedAtPickup,
+        BookingStatus::InTransit,
+    ], true)
         && (BookingMultiTrip::hasArrivedAtPickup($booking)
             || auth()->user()?->can('markArrivedAtPickup', $booking)
             || auth()->user()?->can('requestMultiTrip', $booking)
@@ -18,12 +22,9 @@
 
 @if ($showPickupCapacityCard)
     <x-ui.card class="mb-6">
-        @can('markArrivedAtPickup', $booking)
-            <form method="post" action="{{ route('driver.deliveries.arrived-at-pickup', $booking) }}" class="mb-4">
-                @csrf
-                <x-ui.button type="submit">Arrived at pickup</x-ui.button>
-            </form>
-        @endcan
+        @if ($booking->status === BookingStatus::TransitToPickup && auth()->user()?->isDriver())
+            <p class="mb-4 text-sm text-text-muted">En route to pickup — confirm arrival in Next step when you reach the site.</p>
+        @endif
 
         @if (BookingMultiTrip::hasArrivedAtPickup($booking))
         <x-ui.section-heading
@@ -148,7 +149,7 @@
         @endif
 
         @if (BookingMultiTrip::multiTripBlocksCompletion($booking) && auth()->user()?->isDriver())
-            <p class="mt-4 text-sm text-warning">Resolve the round-trip request before marking this delivery completed.</p>
+            <p class="mt-4 text-sm text-warning">Resolve the round-trip request before marking transit completed.</p>
         @endif
     </x-ui.card>
 @endif

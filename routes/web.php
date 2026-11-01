@@ -149,6 +149,10 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('deliveries.pod.store');
             Route::post('deliveries/{booking}/arrived-at-pickup', [DriverDeliveryController::class, 'arrivedAtPickup'])
                 ->name('deliveries.arrived-at-pickup');
+            Route::post('deliveries/{booking}/transit-completed', [DriverDeliveryController::class, 'transitCompleted'])
+                ->name('deliveries.transit-completed');
+            Route::post('deliveries/{booking}/round-trip-lap', [DriverDeliveryController::class, 'markRoundTripLapComplete'])
+                ->name('deliveries.round-trip-lap.complete');
             Route::post('deliveries/{booking}/multi-trip/accept', [DriverDeliveryController::class, 'acceptMultiTrip'])
                 ->name('deliveries.multi-trip.accept');
             Route::get('deliveries/{booking}/receipt', [DriverDeliveryController::class, 'downloadReceipt'])

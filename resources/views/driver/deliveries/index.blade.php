@@ -19,7 +19,7 @@
         @else
             <div class="mt-4 grid gap-4 sm:grid-cols-2">
                 @foreach ($active as $booking)
-                    <x-driver.job-card :booking="$booking" cta-label="Open" />
+                    <x-driver.job-card :booking="$booking" cta-label="Open" show-next-step-hint />
                 @endforeach
             </div>
         @endif

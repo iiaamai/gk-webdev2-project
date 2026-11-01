@@ -28,7 +28,7 @@ class CustomerOverviewQuery
 
         $pendingCount = (clone $base)->where('status', BookingStatus::Pending)->count();
         $activeCount = (clone $base)
-            ->whereIn('status', [BookingStatus::Accepted, BookingStatus::InTransit])
+            ->whereIn('status', BookingStatus::activeDeliveryStatuses())
             ->count();
         $completedCount = (clone $base)->where('status', BookingStatus::Completed)->count();
 
@@ -36,8 +36,7 @@ class CustomerOverviewQuery
             ->where('customer_id', $customer->id)
             ->whereIn('status', [
                 BookingStatus::Pending,
-                BookingStatus::Accepted,
-                BookingStatus::InTransit,
+                ...BookingStatus::activeDeliveryStatuses(),
             ])
             ->with(['pricing', 'driver', 'invoice'])
             ->orderByDesc('created_at')

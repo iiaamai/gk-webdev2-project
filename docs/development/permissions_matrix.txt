@@ -24,8 +24,12 @@ Upload gatepass (first time)        No         No         Yes                Yes
 Replace gatepass                    No         No         Yes                Yes
 Archive / soft-delete booking       No         No         No                 Yes
 Accept job                          No         Yes        No                 Yes
-Update delivery in_transit/complete No         Yes        Via Admin path     Yes
-Upload EIR / POD                    No         Yes        No                 Yes
+Update delivery status (driver)       No         Yes        Via Admin path     Yes
+Mark transit to pickup              No         Assigned   No                 No
+Start haul (in_transit)             No         Assigned   No                 No
+Mark transit completed                No         Assigned   No                 No
+Upload EIR / POD (driver)             No         Transit done†† No             Yes
+Upload EIR / POD (admin)              No         No         No                 Yes
 View gatepass                       No         Assigned   Yes                Yes
 View EIR                            Own**      Assigned   Yes                Yes
 View POD                            Own**      Assigned   Yes                Yes
@@ -43,13 +47,14 @@ Change vehicle type once at pickup  Own****    No         No                 No
 Approve / reject round-trip request No         No         Yes                Yes
 Accept approved round-trip count    No         Assigned   No                 No
 
-* Driver: accepted → in_transit → arrived at pickup → … → completed (own active delivery only).
-** When status allows (EIR: in_transit/completed; POD: completed).
+* Driver: accepted → transit_to_pickup → arrived_at_pickup → in_transit (haul) → transit_completed → completed.
+** When status allows (EIR: from haul or later; POD: completed).
+†† Driver uploads EIR and POD only when status is transit_completed.
 *** Only after a driver has accepted; nothing on map before accept.
 † Driver/Staff receipt download only when status is completed (not cancelled).
 ‡ System Admin downloads a simple PDF receipt (logo placeholder + trip/invoice fields) at any status.
 § Driver portal routes require office Time-In; session ends on next request after Time-Out.
-**** After driver marks arrived at pickup on an in-transit booking; one round-trip submission and one vehicle-type change per booking.
+**** After arrived_at_pickup; one round-trip submission and one vehicle-type change per booking.
 Customer never sees gatepass.
 
 See also: lifecycle.txt, document_acl.txt

@@ -21,7 +21,8 @@ class StaffOverviewQuery
      *     kpis: array{
      *         pending_no_gatepass: int,
      *         ready_for_drivers: int,
-     *         in_transit: int,
+     *         to_pickup: int,
+     *         on_trip: int,
      *         unpaid_invoices_count: int,
      *         unpaid_invoices_amount: string,
      *         pending_payment_proofs: int
@@ -52,8 +53,12 @@ class StaffOverviewQuery
             ->where('is_locked', false)
             ->count();
 
-        $inTransit = Booking::query()
-            ->where('status', BookingStatus::InTransit)
+        $toPickup = Booking::query()
+            ->where('status', BookingStatus::TransitToPickup)
+            ->count();
+
+        $onTrip = Booking::query()
+            ->whereIn('status', BookingStatus::onTripStatuses())
             ->count();
 
         $unpaidInvoicesCount = Invoice::query()
@@ -89,7 +94,7 @@ class StaffOverviewQuery
         $activeBookings = Booking::query()
             ->with(['customer', 'driver'])
             ->where(function ($query): void {
-                $query->whereIn('status', [BookingStatus::Accepted, BookingStatus::InTransit])
+                $query->whereIn('status', BookingStatus::activeDeliveryStatuses())
                     ->orWhere(function ($inner): void {
                         $inner->where('status', BookingStatus::Pending)
                             ->whereNotNull('gatepass_path')
@@ -150,7 +155,8 @@ class StaffOverviewQuery
             'kpis' => [
                 'pending_no_gatepass' => $pendingNoGatepass,
                 'ready_for_drivers' => $readyForDrivers,
-                'in_transit' => $inTransit,
+                'to_pickup' => $toPickup,
+                'on_trip' => $onTrip,
                 'unpaid_invoices_count' => $unpaidInvoicesCount,
                 'unpaid_invoices_amount' => number_format($unpaidInvoicesAmount, 2, '.', ''),
                 'pending_payment_proofs' => $pendingPaymentProofs,
@@ -175,12 +181,19 @@ class StaffOverviewQuery
             }
         }
 
-        $inTransit = $activeBookings->first(
-            fn (Booking $booking): bool => $booking->status === BookingStatus::InTransit,
-        );
+        foreach ([
+            BookingStatus::TransitCompleted,
+            BookingStatus::InTransit,
+            BookingStatus::ArrivedAtPickup,
+            BookingStatus::TransitToPickup,
+        ] as $status) {
+            $match = $activeBookings->first(
+                fn (Booking $booking): bool => $booking->status === $status,
+            );
 
-        if ($inTransit !== null) {
-            return $inTransit;
+            if ($match !== null) {
+                return $match;
+            }
         }
 
         $accepted = $activeBookings->first(

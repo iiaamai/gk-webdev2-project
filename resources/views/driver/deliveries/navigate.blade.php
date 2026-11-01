@@ -4,7 +4,13 @@
 
 @section('content')
     @php
+        use App\Enums\BookingStatus;
+
         $destinationLabel = $navDestination === 'pickup' ? 'Pickup' : 'Dropoff';
+        $phaseSubtitle = match ($booking->status) {
+            BookingStatus::Accepted, BookingStatus::TransitToPickup => 'Navigating to pickup',
+            default => 'Navigating to dropoff',
+        };
         $destinationAddress = $navDestination === 'pickup'
             ? $booking->pickup_address
             : $booking->dropoff_address;
@@ -30,6 +36,7 @@
         <div class="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <div class="pointer-events-auto rounded-md border border-border bg-surface-elevated/95 p-4 shadow-lg">
                 <p class="text-sm font-medium uppercase tracking-wide text-text-subtle">{{ $destinationLabel }}</p>
+                <p class="mt-0.5 text-xs text-text-muted">{{ $phaseSubtitle }}</p>
                 <p class="mt-1 text-base font-semibold text-text">{{ $destinationAddress }}</p>
                 <p class="mt-2 text-lg font-semibold text-text" data-nav-eta>— km · — min</p>
                 <p class="mt-1 text-sm text-text-muted" data-driver-nav-status>Allow location to start following the route.</p>

@@ -79,7 +79,7 @@ class BookingSeeder extends Seeder
                 'pricing_id' => $pricingByType['6-wheeler truck'],
                 'vehicle_id' => $sixWheeler->id,
                 'driver_id' => $driverTwo->id,
-                'status' => BookingStatus::InTransit,
+                'status' => BookingStatus::TransitToPickup,
                 'is_locked' => true,
                 'accepted_at' => now('Asia/Manila')->subDay(),
                 'gatepass_path' => $this->storeDemoGatepass("GK-{$year}-0004"),

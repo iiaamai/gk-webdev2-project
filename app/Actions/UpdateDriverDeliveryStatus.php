@@ -37,22 +37,39 @@ class UpdateDriverDeliveryStatus
         $booking = DB::transaction(function () use ($booking, $status): Booking {
             $booking = Booking::query()->whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
-            if ($status === BookingStatus::InTransit) {
+            if ($status === BookingStatus::TransitToPickup) {
                 if ($booking->status !== BookingStatus::Accepted) {
                     throw ValidationException::withMessages([
-                        'status' => 'Only accepted deliveries can be marked in transit.',
+                        'status' => 'Only accepted deliveries can be marked transit to pickup.',
                     ]);
                 }
 
-                $booking->update(['status' => BookingStatus::InTransit]);
+                $booking->update(['status' => BookingStatus::TransitToPickup]);
+
+                return $booking->fresh();
+            }
+
+            if ($status === BookingStatus::InTransit) {
+                if ($booking->status !== BookingStatus::ArrivedAtPickup) {
+                    throw ValidationException::withMessages([
+                        'status' => 'Start the haul only after arriving at pickup.',
+                    ]);
+                }
+
+                $updates = ['status' => BookingStatus::InTransit];
+                if (BookingMultiTrip::requiresLapTracking($booking) && ! BookingMultiTrip::multiTripBlocksCompletion($booking)) {
+                    $updates['multi_trip_laps_completed'] = 0;
+                }
+
+                $booking->update($updates);
 
                 return $booking->fresh();
             }
 
             if ($status === BookingStatus::Completed) {
-                if ($booking->status !== BookingStatus::InTransit) {
+                if ($booking->status !== BookingStatus::TransitCompleted) {
                     throw ValidationException::withMessages([
-                        'status' => 'Only in-transit deliveries can be completed.',
+                        'status' => 'Mark transit completed before finishing this delivery.',
                     ]);
                 }
 

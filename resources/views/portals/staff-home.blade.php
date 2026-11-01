@@ -12,7 +12,7 @@
         subtitle="Gatepass queue and active trips for {{ $generatedAt->format('F j, Y') }} (Asia/Manila)."
     />
 
-    <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
         <a href="{{ route('staff.bookings.index', ['scope' => 'pending_no_gatepass']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
             <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
                 <p class="text-sm text-text-muted">Pending (no gatepass)</p>
@@ -25,10 +25,16 @@
                 <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['ready_for_drivers'] }}</p>
             </x-ui.card>
         </a>
-        <a href="{{ route('staff.bookings.index', ['status' => 'in_transit']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+        <a href="{{ route('staff.bookings.index', ['phase' => 'to_pickup']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
             <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
-                <p class="text-sm text-text-muted">In transit</p>
-                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['in_transit'] }}</p>
+                <p class="text-sm text-text-muted">To pickup</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['to_pickup'] }}</p>
+            </x-ui.card>
+        </a>
+        <a href="{{ route('staff.bookings.index', ['phase' => 'on_trip']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
+                <p class="text-sm text-text-muted">On trip</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $kpis['on_trip'] }}</p>
             </x-ui.card>
         </a>
         <a href="{{ route('staff.bookings.index', ['scope' => 'unpaid']) }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
@@ -190,7 +196,7 @@
         <x-ui.section-heading
             icon="clipboard-list"
             title="Active bookings"
-            description="In transit, accepted, or pending with gatepass."
+            description="To pickup, on trip, accepted, or pending with gatepass."
         />
         @if ($overview['active_bookings']->isEmpty())
             <p class="mt-4 text-sm text-text-muted">No active trips right now.</p>

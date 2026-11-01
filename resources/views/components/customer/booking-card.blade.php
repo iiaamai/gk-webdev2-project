@@ -3,7 +3,10 @@
 ])
 
 @php
+    use App\Support\BookingStatusCallout;
+
     $statusTone = $booking->status->badgeTone();
+    $callout = BookingStatusCallout::forCustomer($booking);
 @endphp
 
 <x-ui.card {{ $attributes->class(['flex h-full flex-col']) }}>
@@ -38,6 +41,10 @@
             </div>
         @endif
     </dl>
+
+    @if ($callout)
+        <p class="mt-3 text-sm text-text-muted">{{ Str::limit($callout['message'], 120) }}</p>
+    @endif
 
     <div class="mt-4">
         <x-ui.button href="{{ route('customer.bookings.show', $booking) }}" variant="secondary" class="!py-1.5 !text-xs">

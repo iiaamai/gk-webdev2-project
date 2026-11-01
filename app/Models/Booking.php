@@ -43,6 +43,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'multi_trip_office_status',
     'multi_trip_customer_confirmed_at',
     'multi_trip_driver_accepted_at',
+    'multi_trip_laps_completed',
     'vehicle_type_changed_at',
 ])]
 class Booking extends Model
@@ -77,6 +78,7 @@ class Booking extends Model
             'multi_trip_office_status' => MultiTripOfficeStatus::class,
             'multi_trip_customer_confirmed_at' => 'datetime',
             'multi_trip_driver_accepted_at' => 'datetime',
+            'multi_trip_laps_completed' => 'integer',
             'vehicle_type_changed_at' => 'datetime',
             'archived_at' => 'datetime',
         ];
@@ -90,16 +92,19 @@ class Booking extends Model
     protected function vehicleType(): Attribute
     {
         return Attribute::get(function (): string {
+            $this->loadMissing(['pricing', 'vehicle.pricing']);
+
+            if ($this->vehicle_type_changed_at !== null) {
+                return (string) ($this->pricing?->vehicle_type ?? '—');
+            }
+
             if ($this->vehicle_id !== null) {
-                $this->loadMissing('vehicle.pricing');
                 $fromVehicle = $this->vehicle?->pricing?->vehicle_type;
 
                 if (filled($fromVehicle)) {
                     return (string) $fromVehicle;
                 }
             }
-
-            $this->loadMissing('pricing');
 
             return (string) ($this->pricing?->vehicle_type ?? '—');
         });
@@ -223,6 +228,6 @@ class Booking extends Model
     {
         return $query
             ->where('driver_id', $driver->id)
-            ->whereIn('status', [BookingStatus::Accepted, BookingStatus::InTransit]);
+            ->whereIn('status', BookingStatus::activeDeliveryStatuses());
     }
 }

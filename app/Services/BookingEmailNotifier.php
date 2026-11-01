@@ -55,6 +55,7 @@ class BookingEmailNotifier
     {
         if (! in_array($status, [
             BookingStatus::Accepted,
+            BookingStatus::TransitToPickup,
             BookingStatus::InTransit,
             BookingStatus::Completed,
             BookingStatus::Cancelled,

@@ -50,7 +50,7 @@ class BookingPolicy
             return false;
         }
 
-        if (! in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true)) {
+        if (! in_array($booking->status, BookingStatus::activeDeliveryStatuses(), true)) {
             return false;
         }
 
@@ -148,15 +148,19 @@ class BookingPolicy
 
         return ! Booking::query()
             ->where('driver_id', $user->id)
-            ->whereIn('status', [BookingStatus::Accepted, BookingStatus::InTransit])
+            ->whereIn('status', BookingStatus::activeDeliveryStatuses())
             ->exists();
     }
 
     public function updateDeliveryStatus(User $user, Booking $booking): bool
     {
-        return $user->isDriver()
-            && $booking->driver_id === $user->id
-            && in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true);
+        if (! $user->isDriver() || $booking->driver_id !== $user->id) {
+            return false;
+        }
+
+        return $booking->status === BookingStatus::Accepted
+            || $booking->status === BookingStatus::ArrivedAtPickup
+            || $booking->status === BookingStatus::TransitCompleted;
     }
 
     public function viewEir(User $user, Booking $booking): bool
@@ -167,7 +171,13 @@ class BookingPolicy
 
         if ($user->isCustomer()) {
             return $booking->customer_id === $user->id
-                && in_array($booking->status, [BookingStatus::InTransit, BookingStatus::Completed], true);
+                && in_array($booking->status, [
+                    BookingStatus::TransitToPickup,
+                    BookingStatus::InTransit,
+                    BookingStatus::ArrivedAtPickup,
+                    BookingStatus::TransitCompleted,
+                    BookingStatus::Completed,
+                ], true);
         }
 
         if ($user->isDriver()) {
@@ -203,7 +213,7 @@ class BookingPolicy
 
         return $user->isDriver()
             && $booking->driver_id === $user->id
-            && in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true);
+            && $booking->status === BookingStatus::TransitCompleted;
     }
 
     public function uploadPod(User $user, Booking $booking): bool
@@ -214,7 +224,7 @@ class BookingPolicy
 
         return $user->isDriver()
             && $booking->driver_id === $user->id
-            && in_array($booking->status, [BookingStatus::Accepted, BookingStatus::InTransit], true);
+            && $booking->status === BookingStatus::TransitCompleted;
     }
 
     public function cancel(User $user, Booking $booking): bool
@@ -256,6 +266,20 @@ class BookingPolicy
     public function forceDelete(User $user, Booking $booking): bool
     {
         return $user->isSystemAdmin();
+    }
+
+    public function markTransitCompleted(User $user, Booking $booking): bool
+    {
+        return $user->isDriver()
+            && $booking->driver_id === $user->id
+            && BookingMultiTrip::canMarkTransitCompleted($booking);
+    }
+
+    public function markRoundTripLapComplete(User $user, Booking $booking): bool
+    {
+        return $user->isDriver()
+            && $booking->driver_id === $user->id
+            && BookingMultiTrip::canMarkRoundTripLap($booking);
     }
 
     public function markArrivedAtPickup(User $user, Booking $booking): bool

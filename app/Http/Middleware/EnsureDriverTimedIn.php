@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Support\DriverAttendance;
+use App\Support\RoleHome;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,8 +18,12 @@ class EnsureDriverTimedIn
     {
         $user = $request->user();
 
-        if ($user === null || ! $user->isDriver()) {
+        if ($user === null) {
             return $next($request);
+        }
+
+        if (! $user->isDriver()) {
+            return redirect()->to(RoleHome::path($user));
         }
 
         if (DriverAttendance::isTimedIn($user)) {

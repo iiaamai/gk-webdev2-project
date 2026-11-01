@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Driver;
 use App\Actions\AcceptDriverBooking;
 use App\Actions\AcceptMultiTripRoundTrips;
 use App\Actions\MarkArrivedAtPickup;
+use App\Actions\MarkRoundTripLapComplete;
+use App\Actions\MarkTransitCompleted;
 use App\Actions\UpdateDriverDeliveryStatus;
 use App\Actions\UploadBookingEir;
 use App\Actions\UploadBookingPod;
@@ -132,6 +134,34 @@ class DeliveryController extends Controller
         return redirect()
             ->route('driver.deliveries.show', $booking)
             ->with('status', 'Marked arrived at pickup.');
+    }
+
+    public function transitCompleted(
+        Booking $booking,
+        MarkTransitCompleted $markTransitCompleted,
+        Request $request,
+    ): RedirectResponse {
+        $this->authorize('markTransitCompleted', $booking);
+
+        $markTransitCompleted->execute($request->user(), $booking);
+
+        return redirect()
+            ->route('driver.deliveries.show', $booking)
+            ->with('status', 'Marked transit completed.');
+    }
+
+    public function markRoundTripLapComplete(
+        Booking $booking,
+        MarkRoundTripLapComplete $markRoundTripLapComplete,
+        Request $request,
+    ): RedirectResponse {
+        $this->authorize('markRoundTripLapComplete', $booking);
+
+        $markRoundTripLapComplete->execute($request->user(), $booking);
+
+        return redirect()
+            ->route('driver.deliveries.show', $booking)
+            ->with('status', 'Round trip marked complete.');
     }
 
     public function acceptMultiTrip(

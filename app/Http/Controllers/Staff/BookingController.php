@@ -32,7 +32,7 @@ class BookingController extends Controller
         $this->authorize('viewAny', Booking::class);
 
         $bookings = $bookingListQuery->paginate($request);
-        $filtersActive = ListFilter::isActive($request, ['q', 'status', 'scope']);
+        $filtersActive = ListFilter::isActive($request, ['q', 'status', 'scope', 'phase']);
 
         return view('staff.bookings.index', [
             'bookings' => $bookings,

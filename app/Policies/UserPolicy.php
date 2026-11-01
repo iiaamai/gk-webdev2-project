@@ -86,8 +86,7 @@ class UserPolicy
                 ->where('customer_id', $user->id)
                 ->where('driver_id', $model->id)
                 ->whereIn('status', [
-                    BookingStatus::Accepted,
-                    BookingStatus::InTransit,
+                    ...BookingStatus::activeDeliveryStatuses(),
                     BookingStatus::Completed,
                 ])
                 ->exists();

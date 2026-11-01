@@ -29,7 +29,7 @@ class MultiTripPickupTest extends TestCase
             'customer_id' => $customer->id,
             'driver_id' => $driver->id,
             'pricing_id' => $pricing->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitToPickup,
             'cargo_kg' => 1500,
         ]);
         Invoice::factory()->create([
@@ -43,6 +43,7 @@ class MultiTripPickupTest extends TestCase
 
         $booking->refresh();
         $this->assertNotNull($booking->arrived_at_pickup_at);
+        $this->assertSame(BookingStatus::ArrivedAtPickup, $booking->status);
 
         $this->actingAs($customer)
             ->post(route('customer.bookings.multi-trip.request', $booking), ['round_trips' => 3])
@@ -79,7 +80,7 @@ class MultiTripPickupTest extends TestCase
         $booking = Booking::factory()->create([
             'customer_id' => $customer->id,
             'driver_id' => $driver->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::ArrivedAtPickup,
             'arrived_at_pickup_at' => now(),
             'multi_trip_requested_rounds' => 2,
             'multi_trip_office_status' => MultiTripOfficeStatus::Pending,
@@ -107,7 +108,7 @@ class MultiTripPickupTest extends TestCase
 
         $booking = Booking::factory()->create([
             'driver_id' => $driver->id,
-            'status' => BookingStatus::InTransit,
+            'status' => BookingStatus::TransitCompleted,
             'arrived_at_pickup_at' => now(),
             'multi_trip_requested_rounds' => 2,
             'multi_trip_office_status' => MultiTripOfficeStatus::Pending,
@@ -116,5 +117,38 @@ class MultiTripPickupTest extends TestCase
         $this->actingAs($driver)
             ->patch(route('driver.deliveries.status.update', $booking), ['status' => 'completed'])
             ->assertSessionHasErrors('status');
+    }
+
+    public function test_wrong_truck_fee_preserved_when_office_approves_multi_trip(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $staff = User::factory()->staff()->create();
+        $driver = User::factory()->driver()->create();
+        app(TimeInDriver::class)->execute($driver, $staff);
+
+        $large = Pricing::factory()->create(['amount' => 9200]);
+
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'driver_id' => $driver->id,
+            'pricing_id' => $large->id,
+            'status' => BookingStatus::ArrivedAtPickup,
+            'arrived_at_pickup_at' => now(),
+            'vehicle_type_changed_at' => now(),
+            'multi_trip_requested_rounds' => 2,
+            'multi_trip_office_status' => MultiTripOfficeStatus::Pending,
+        ]);
+
+        Invoice::factory()->create([
+            'booking_id' => $booking->id,
+            'amount' => 9650,
+        ]);
+
+        $this->actingAs($staff)
+            ->post(route('staff.bookings.multi-trip.approve', $booking), ['round_trips' => 4])
+            ->assertRedirect();
+
+        $booking->refresh();
+        $this->assertSame('37250.00', (string) $booking->invoice?->amount);
     }
 }

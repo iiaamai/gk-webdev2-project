@@ -28,6 +28,8 @@
 
     @include('bookings._trip_stepper', ['booking' => $booking])
 
+    @include('bookings._round_trip_laps', ['booking' => $booking])
+
     @include('bookings._pickup_capacity', ['booking' => $booking, 'officeRoutePrefix' => 'admin'])
 
     <div class="mb-6 grid gap-4 lg:grid-cols-2">
