@@ -174,11 +174,7 @@
             required
         />
         <p class="mt-1 text-xs text-text-muted">
-            Heavy cargo may require multiple trips at the list fare for the selected vehicle type.
-        </p>
-        <p x-show="tripCount() > 1" x-cloak class="mt-1 text-xs font-medium text-text">
-            Estimated <span x-text="tripCount()"></span> trips —
-            invoice about ₱<span x-text="tripTotal() !== null ? tripTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''"></span>
+            Initial invoice is one list fare. Multiple round trips are requested after arrival at pickup.
         </p>
         <x-ui.field-error name="cargo_kg" />
     </div>

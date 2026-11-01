@@ -75,6 +75,13 @@
                     </div>
 
                     <div>
+                        <x-ui.label for="wrong_truck_fee_percent">Wrong truck type change fee (% of list fare)</x-ui.label>
+                        <x-ui.input id="wrong_truck_fee_percent" type="number" step="0.01" min="0" max="100" name="wrong_truck_fee_percent" value="{{ old('wrong_truck_fee_percent', $settings['wrong_truck_fee_percent'] ?? '10') }}" />
+                        <p class="mt-1 text-xs text-text-muted">Added when a customer changes vehicle type once after arrival at pickup.</p>
+                        <x-ui.field-error name="wrong_truck_fee_percent" />
+                    </div>
+
+                    <div>
                         <x-ui.label for="map_zoom">Map zoom (optional)</x-ui.label>
                         <x-ui.input id="map_zoom" type="number" name="map_zoom" value="{{ old('map_zoom', $settings['map_zoom']) }}" min="1" max="22" />
                         <x-ui.field-error name="map_zoom" />

@@ -6,6 +6,14 @@ use App\Models\Pricing;
 
 class BookingTripPricing
 {
+    /**
+     * Invoice at booking create: always one list fare (multi-trip priced after pickup approval).
+     */
+    public static function invoiceAmount(Pricing $pricing, int $cargoKg): float
+    {
+        return BookingMultiTrip::baseInvoiceAmount($pricing);
+    }
+
     public static function tripCount(int $cargoKg, int $capacityKg): int
     {
         if ($capacityKg < 1) {
@@ -13,12 +21,5 @@ class BookingTripPricing
         }
 
         return max(1, (int) ceil($cargoKg / $capacityKg));
-    }
-
-    public static function invoiceAmount(Pricing $pricing, int $cargoKg): float
-    {
-        $trips = self::tripCount($cargoKg, (int) $pricing->capacity_kg);
-
-        return round($trips * (float) $pricing->amount, 2);
     }
 }

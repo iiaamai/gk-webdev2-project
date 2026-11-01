@@ -85,6 +85,8 @@
 
     @include('driver.deliveries._documents', ['booking' => $booking])
 
+    @include('bookings._pickup_capacity', ['booking' => $booking])
+
     <div class="mb-6 space-y-4">
         @can('accept', $booking)
             <x-ui.card>

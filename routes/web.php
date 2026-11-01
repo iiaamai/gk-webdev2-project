@@ -118,6 +118,12 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.payment-proof.store');
             Route::post('bookings/{booking}/cancel', [CustomerBookingController::class, 'cancel'])
                 ->name('bookings.cancel');
+            Route::post('bookings/{booking}/multi-trip', [CustomerBookingController::class, 'requestMultiTrip'])
+                ->name('bookings.multi-trip.request');
+            Route::post('bookings/{booking}/multi-trip/confirm', [CustomerBookingController::class, 'confirmMultiTrip'])
+                ->name('bookings.multi-trip.confirm');
+            Route::post('bookings/{booking}/vehicle-type', [CustomerBookingController::class, 'changeVehicleType'])
+                ->name('bookings.vehicle-type.change');
         });
 
     Route::middleware('role:'.UserRole::Driver->value)
@@ -141,6 +147,10 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('deliveries.eir.store');
             Route::post('deliveries/{booking}/pod', [DriverDeliveryController::class, 'storePod'])
                 ->name('deliveries.pod.store');
+            Route::post('deliveries/{booking}/arrived-at-pickup', [DriverDeliveryController::class, 'arrivedAtPickup'])
+                ->name('deliveries.arrived-at-pickup');
+            Route::post('deliveries/{booking}/multi-trip/accept', [DriverDeliveryController::class, 'acceptMultiTrip'])
+                ->name('deliveries.multi-trip.accept');
             Route::get('deliveries/{booking}/receipt', [DriverDeliveryController::class, 'downloadReceipt'])
                 ->name('deliveries.receipt');
         });
@@ -172,6 +182,10 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.invoice.reject-proof');
             Route::get('bookings/{booking}/receipt', [StaffBookingController::class, 'downloadReceipt'])
                 ->name('bookings.receipt');
+            Route::post('bookings/{booking}/multi-trip/approve', [StaffBookingController::class, 'approveMultiTrip'])
+                ->name('bookings.multi-trip.approve');
+            Route::post('bookings/{booking}/multi-trip/reject', [StaffBookingController::class, 'rejectMultiTrip'])
+                ->name('bookings.multi-trip.reject');
 
             Route::resource('fleet', StaffVehicleController::class)
                 ->parameters(['fleet' => 'vehicle'])
@@ -236,6 +250,10 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.invoice.reject-proof');
             Route::post('bookings/{booking}/invoice/mark-unpaid', [AdminBookingController::class, 'markInvoiceUnpaid'])
                 ->name('bookings.invoice.mark-unpaid');
+            Route::post('bookings/{booking}/multi-trip/approve', [AdminBookingController::class, 'approveMultiTrip'])
+                ->name('bookings.multi-trip.approve');
+            Route::post('bookings/{booking}/multi-trip/reject', [AdminBookingController::class, 'rejectMultiTrip'])
+                ->name('bookings.multi-trip.reject');
 
             Route::get('earnings', [EarningsController::class, 'index'])->name('earnings.index');
             Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');

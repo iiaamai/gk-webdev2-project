@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Actions\CancelBooking;
+use App\Actions\ChangeCustomerBookingVehicleType;
+use App\Actions\ConfirmMultiTripRoundTrips;
 use App\Actions\CreateCustomerBooking;
+use App\Actions\RequestMultiTripRoundTrips;
 use App\Actions\SubmitInvoicePaymentProof;
 use App\Enums\BookingStatus;
 use App\Enums\VehicleStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Customer\ChangeBookingVehicleTypeRequest;
+use App\Http\Requests\Customer\RequestMultiTripRequest;
 use App\Http\Requests\Customer\StoreBookingRequest;
 use App\Http\Requests\SubmitInvoicePaymentProofRequest;
 use App\Models\Booking;
@@ -83,11 +88,14 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['eir', 'pod', 'invoice', 'rating', 'driver']);
+        $booking->load(['eir', 'pod', 'invoice', 'rating', 'driver', 'pricing']);
+
+        $pricings = Pricing::query()->orderBy('vehicle_type')->get();
 
         return view('customer.bookings.show', [
             'booking' => $booking,
             'routeMap' => $routeMapService->forBooking($booking),
+            'pricings' => $pricings,
         ]);
     }
 
@@ -124,5 +132,51 @@ class BookingController extends Controller
         return redirect()
             ->route('customer.bookings.index')
             ->with('status', 'Booking cancelled.');
+    }
+
+    public function requestMultiTrip(
+        RequestMultiTripRequest $request,
+        Booking $booking,
+        RequestMultiTripRoundTrips $requestMultiTripRoundTrips,
+    ): RedirectResponse {
+        $requestMultiTripRoundTrips->execute(
+            $request->user(),
+            $booking,
+            (int) $request->validated('round_trips'),
+        );
+
+        return redirect()
+            ->route('customer.bookings.show', $booking)
+            ->with('status', 'Round-trip request submitted. Office will review.');
+    }
+
+    public function confirmMultiTrip(
+        Booking $booking,
+        ConfirmMultiTripRoundTrips $confirmMultiTripRoundTrips,
+        Request $request,
+    ): RedirectResponse {
+        $this->authorize('confirmMultiTrip', $booking);
+
+        $confirmMultiTripRoundTrips->execute($request->user(), $booking);
+
+        return redirect()
+            ->route('customer.bookings.show', $booking)
+            ->with('status', 'Revised round-trip count confirmed.');
+    }
+
+    public function changeVehicleType(
+        ChangeBookingVehicleTypeRequest $request,
+        Booking $booking,
+        ChangeCustomerBookingVehicleType $changeCustomerBookingVehicleType,
+    ): RedirectResponse {
+        $changeCustomerBookingVehicleType->execute(
+            $request->user(),
+            $booking,
+            (int) $request->validated('pricing_id'),
+        );
+
+        return redirect()
+            ->route('customer.bookings.show', $booking)
+            ->with('status', 'Vehicle type updated. A wrong-truck fee was applied to your invoice.');
     }
 }

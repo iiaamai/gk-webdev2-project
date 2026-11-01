@@ -36,13 +36,20 @@ Earnings & reports                  No         No         No                 Yes
 Activity logs                       No         No         No                 Yes
 Rate overall trip                   Own done   No         No                 View
 Map on booking details              Own***     Own***     Active bookings    Yes
+Arrived at pickup                   No         Assigned   No                 No
+Request round trips (once)          Own****    No         No                 No
+Confirm office round-trip count     Own****    No         No                 No
+Change vehicle type once at pickup  Own****    No         No                 No
+Approve / reject round-trip request No         No         Yes                Yes
+Accept approved round-trip count    No         Assigned   No                 No
 
-* Driver: accepted → in_transit → completed (own active delivery only).
+* Driver: accepted → in_transit → arrived at pickup → … → completed (own active delivery only).
 ** When status allows (EIR: in_transit/completed; POD: completed).
 *** Only after a driver has accepted; nothing on map before accept.
 † Driver/Staff receipt download only when status is completed (not cancelled).
 ‡ System Admin downloads a simple PDF receipt (logo placeholder + trip/invoice fields) at any status.
 § Driver portal routes require office Time-In; session ends on next request after Time-Out.
+**** After driver marks arrived at pickup on an in-transit booking; one round-trip submission and one vehicle-type change per booking.
 Customer never sees gatepass.
 
 See also: lifecycle.txt, document_acl.txt

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\BookingEmailNotifier;
 use App\Services\BookingVehicleRelease;
+use App\Support\BookingMultiTrip;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -52,6 +53,12 @@ class UpdateDriverDeliveryStatus
                 if ($booking->status !== BookingStatus::InTransit) {
                     throw ValidationException::withMessages([
                         'status' => 'Only in-transit deliveries can be completed.',
+                    ]);
+                }
+
+                if (BookingMultiTrip::multiTripBlocksCompletion($booking)) {
+                    throw ValidationException::withMessages([
+                        'status' => 'Resolve the round-trip request before completing this delivery.',
                     ]);
                 }
 

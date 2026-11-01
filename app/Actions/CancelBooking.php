@@ -22,19 +22,19 @@ class CancelBooking
         private readonly ActivityLogger $activityLogger,
     ) {}
 
-    public function execute(Booking $booking, ?User $cancelledBy = null): Booking
+    public function execute(Booking $booking, ?User $cancelledBy = null, ?bool $applyLateCancelFee = null): Booking
     {
         $booking->loadMissing(['driver', 'pricing', 'invoice']);
         $assignedDriver = $booking->driver;
         $previousStatus = $booking->status;
-        $applyLateCancelFee = $this->shouldApplyLateCancelFee($booking, $cancelledBy);
+        $shouldApplyLateFee = $applyLateCancelFee ?? $this->shouldApplyLateCancelFee($booking, $cancelledBy);
 
-        $booking = DB::transaction(function () use ($booking, $applyLateCancelFee): Booking {
+        $booking = DB::transaction(function () use ($booking, $shouldApplyLateFee): Booking {
             $this->bookingVehicleRelease->releaseForBooking($booking);
 
             $booking->update(['status' => BookingStatus::Cancelled]);
 
-            if ($applyLateCancelFee) {
+            if ($shouldApplyLateFee) {
                 $this->applyLateCancelFee($booking);
             }
 
@@ -50,7 +50,7 @@ class CancelBooking
             properties: [
                 'status' => BookingStatus::Cancelled->value,
                 'previous_status' => $previousStatus->value,
-                'late_cancel_fee' => $applyLateCancelFee,
+                'late_cancel_fee' => $shouldApplyLateFee,
             ],
         );
 

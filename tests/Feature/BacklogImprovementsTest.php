@@ -87,7 +87,7 @@ class BacklogImprovementsTest extends TestCase
         $this->assertSame('9200.00', (string) $booking->fresh()->invoice?->amount);
     }
 
-    public function test_customer_booking_over_capacity_uses_multi_trip_invoice(): void
+    public function test_customer_booking_over_capacity_uses_single_fare_at_create(): void
     {
         $customer = User::factory()->customer()->create();
         $pricing = Pricing::factory()->create([
@@ -118,7 +118,7 @@ class BacklogImprovementsTest extends TestCase
 
         $booking = Booking::query()->first();
         $this->assertNotNull($booking);
-        $this->assertSame('9000.00', (string) $booking->invoice?->amount);
+        $this->assertSame('4500.00', (string) $booking->invoice?->amount);
     }
 
     public function test_customer_can_cancel_pending_booking_without_late_fee(): void
@@ -158,7 +158,7 @@ class BacklogImprovementsTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_update_cargo_recalculates_multi_trip_invoice(): void
+    public function test_admin_update_cargo_keeps_single_fare_invoice(): void
     {
         $admin = User::factory()->systemAdmin()->create();
         $pricing = Pricing::factory()->create([
@@ -189,6 +189,6 @@ class BacklogImprovementsTest extends TestCase
             ])
             ->assertRedirect();
 
-        $this->assertSame('13500.00', (string) $booking->fresh()->invoice?->amount);
+        $this->assertSame('4500.00', (string) $booking->fresh()->invoice?->amount);
     }
 }

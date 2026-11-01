@@ -20,6 +20,7 @@ class SettingSeeder extends Seeder
             'map_center_lng' => '120.9842',
             'map_zoom' => '11',
             'dropoff_change_fee' => '0',
+            'wrong_truck_fee_percent' => '10',
         ];
 
         foreach ($settings as $key => $value) {

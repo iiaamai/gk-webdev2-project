@@ -23,6 +23,7 @@ class SettingController extends Controller
             'map_center_lng',
             'map_zoom',
             'dropoff_change_fee',
+            'wrong_truck_fee_percent',
         ];
 
         $settings = [];

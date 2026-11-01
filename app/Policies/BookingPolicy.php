@@ -7,6 +7,7 @@ use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Models\Booking;
 use App\Models\User;
+use App\Support\BookingMultiTrip;
 
 class BookingPolicy
 {
@@ -255,5 +256,51 @@ class BookingPolicy
     public function forceDelete(User $user, Booking $booking): bool
     {
         return $user->isSystemAdmin();
+    }
+
+    public function markArrivedAtPickup(User $user, Booking $booking): bool
+    {
+        return $user->isDriver()
+            && $booking->driver_id === $user->id
+            && BookingMultiTrip::canMarkArrivedAtPickup($booking);
+    }
+
+    public function requestMultiTrip(User $user, Booking $booking): bool
+    {
+        return $user->isCustomer()
+            && $booking->customer_id === $user->id
+            && BookingMultiTrip::canRequestMultiTrip($booking);
+    }
+
+    public function confirmMultiTrip(User $user, Booking $booking): bool
+    {
+        return $user->isCustomer()
+            && $booking->customer_id === $user->id
+            && BookingMultiTrip::needsCustomerConfirm($booking);
+    }
+
+    public function changeVehicleType(User $user, Booking $booking): bool
+    {
+        return $user->isCustomer()
+            && $booking->customer_id === $user->id
+            && BookingMultiTrip::canChangeVehicleType($booking);
+    }
+
+    public function approveMultiTrip(User $user, Booking $booking): bool
+    {
+        return ($user->isStaff() || $user->isSystemAdmin())
+            && BookingMultiTrip::isMultiTripPendingOffice($booking);
+    }
+
+    public function rejectMultiTrip(User $user, Booking $booking): bool
+    {
+        return $this->approveMultiTrip($user, $booking);
+    }
+
+    public function acceptMultiTrip(User $user, Booking $booking): bool
+    {
+        return $user->isDriver()
+            && $booking->driver_id === $user->id
+            && BookingMultiTrip::needsDriverAccept($booking);
     }
 }

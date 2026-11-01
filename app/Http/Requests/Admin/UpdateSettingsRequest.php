@@ -27,6 +27,7 @@ class UpdateSettingsRequest extends FormRequest
             'map_center_lng' => ['required', 'numeric', 'between:-180,180'],
             'map_zoom' => ['nullable', 'integer', 'min:1', 'max:22'],
             'dropoff_change_fee' => ['nullable', 'numeric', 'min:0'],
+            'wrong_truck_fee_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'qr_ph' => ['nullable', 'file', 'mimes:jpeg,jpg,png,webp,gif', 'max:20480'],
         ];
     }

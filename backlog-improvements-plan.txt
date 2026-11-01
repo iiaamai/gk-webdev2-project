@@ -1,215 +1,128 @@
 GK Trucking Services 2.0 — Backlog & improvement plan
 ============================================================
 Status: living backlog — implement slices when explicitly requested (/implement).
-Primary scope: MVP / checkpoint B (phases.txt).
+Primary scope: MVP / checkpoint B (phases.txt) unless a slice says post-MVP.
 
-This file tracks agreed follow-ups after the first attendance release, plus reference
-for what was already shipped.
-
-======================================================================
-A. Driver Time-In / Time-Out (SHIPPED — reference)
-======================================================================
-Implemented in codebase (Staff Drivers page, login gate, seeder, tests). Render/local QA done.
-
-Process (summary)
-- Office (Staff or Admin) records Time-In → driver may log in.
-- Office records Time-Out → driver cannot log in until timed in again.
-- Driver “requests” are offline only (no in-app buttons).
-
-Locked at first ship
-| Topic | Decision |
-| When | MVP / checkpoint B |
-| Who records | System Admin + Staff |
-| No attendance record yet | Login denied until first Time-In |
-| Time-Out during trip | Block if driver has accepted or in_transit booking |
-| Same calendar day | Unlimited Time-In / Time-Out cycles |
-| Driver registration | No auto-login; redirect to login with office message |
-
-Deploy note
-- Run migration + DriverAttendanceSeeder (or manual Time-In) on each environment so demo drivers can log in.
-
-Gap vs later slices (B, C, E–G below)
-- Admin has no dedicated **Drivers** list route/nav (only User profile + staff-style list missing on admin).
-- Time-out did not end active driver sessions (superseded by slice C).
-
-Fleet (settled — not backlog)
-- **Staff**: in-use vehicles — limited edit UI (status/driver/details locks on edit).
-- **Admin**: **full override** while in use (edit all fields, status/driver, archive) — unchanged; Slice D dropped.
+This file **replaces** the earlier A–G attendance / cancel / auto multi-trip backlog.
+Those items were shipped or dropped in code; this document is the active product plan.
 
 ======================================================================
-B. Admin Drivers page + shared attendance UI (PLANNED)
+H. Capacity booking — multi-trip request at pickup (SHIPPED)
 ======================================================================
-Status: design agreed (clarify) — plan only until /implement.
+Status: shipped (implement Nov 2026).
 
-Goal
-- **Full parity** with Staff **Drivers** (search, status badges, Time in / Time out, link to Driver map).
-- **One shared screen** for Staff and Admin (`drivers._attendance_index`; Staff index refactored to use it).
+Problem
+- Cargo may need **more than one vehicle load** to finish a job.
+- Office and driver must agree on **how many round trips** before the job continues and
+  the customer is charged accordingly.
 
-Current gap
-- Staff: `/staff/drivers` live.
-- Admin: `Admin\DriverController` + `admin/drivers/index.blade.php` exist but routes
-  `admin.drivers.index`, `admin.drivers.time-in`, `admin.drivers.time-out` not wired;
-  sidebar has **Driver map** only (no **Drivers** link).
-- Admin can still Time-In/Out from **Users → driver profile** (`admin.users.time-in|out`).
+Goal (customer)
+- After the driver **has arrived at the pickup location**, the customer can request
+  **multiple round trips** to complete the booking.
+- Customer enters an **estimated number of round trips**.
+- The booking does **not** proceed on the new trip count until **office approves** and
+  the **driver accepts**.
 
-When building
-1. Register admin routes mirroring staff (index + POST time-in/out).
-2. Admin sidebar: **Drivers** nav + fix active state for map vs index.
-3. Point Staff `staff/drivers/index` at shared partial (Admin view already includes it).
-4. Optional: keep attendance card on Admin user show for convenience.
-5. Tests: admin `admin.drivers.*` routes (extend DriverAttendanceTest).
+Goal (office / driver)
+- Staff or System Admin **reviews** the request (expect accept in normal ops for revenue).
+- On **reject**, office cancels the booking; customer creates a **new booking** if needed.
+- After office **accepts**, the **driver must accept** before the trip continues under
+  the updated terms.
 
-======================================================================
-C. Time-Out ends active driver session (PLANNED — policy change)
-======================================================================
-Status: design agreed (clarify) — **replaces** shipped rule “new logins only”.
-
-New rule
-- When office records **Time-Out**, any **existing driver portal session** must end.
-- On the driver’s **next HTTP request**: middleware detects not timed in → logout, invalidate session,
-  redirect to login with a clear message (e.g. timed out by office).
-- **Middleware on all `driver/*` routes**: must be timed in (covers login gate + portal).
-
-When building
-1. `EnsureDriverTimedIn` (or equivalent) on driver route group.
-2. Update TimeOutDriver / docs; remove “session unchanged” behavior from tests.
-3. Replace test `test_time_out_does_not_log_out_existing_driver_session` with
-   “next request after time-out → guest + login”.
-4. Update this backlog section and permissions_matrix if needed.
-
-Out of scope (unchanged)
-- Stop GPS / kill WebSocket on time-out as a separate product slice (session end is enough for v1).
-
-Suggested bundle
-- Implement **B + C** together (one PR / one deploy).
-
-======================================================================
-E. Customer cancel while pending (PLANNED)
-======================================================================
-Status: design agreed (clarify) — plan only until /implement.
-
-Goal
-- Customers can **cancel their own booking** from the customer portal when status is **pending**
-  (before driver accept). **No cancellation fee** for customer-initiated cancel in this window.
-
+----------------------------------------------------------------------
 Locked decisions
+----------------------------------------------------------------------
 | Topic | Decision |
-| Who | Customer (own bookings only) |
-| When allowed | `pending` only (`accepted_at` null) |
-| Fee | None (contrast: Admin late cancel after accept — see “Already shipped” below) |
-| After accept | Customer cannot self-cancel in app; office handles cancel (Admin rules apply) |
+| When customer can request multi-trip | Only **after driver marks arrived at pickup** (not at booking create) |
+| Driver before “arrived” | Booking must already be **in_transit**; driver then records **Arrived at pickup** (new step after in_transit) |
+| Multi-trip submissions | **One submit only** per booking — no customer edits/resubmit; office approve or reject only |
+| Who approves (office) | **Staff OR System Admin** — one office approval |
+| Office trip count | Office may set final round trips on approve; if **different from customer estimate**, **customer must confirm** before driver accept |
+| After customer confirm (if needed) | **Driver must accept** updated trip count before proceeding |
+| Billable unit | **One round trip** = pickup → dropoff → **return to pickup** |
+| Customer input | Estimated **round trip count** (integer ≥ 1), single submission |
+| Invoice before approval | **Original invoice unchanged** (see create rule below) |
+| Invoice after approval | **Replace** amount with `approved_round_trips × list fare` for the booked pricing type (update snapshot on booking/invoice) |
+| At booking create (supersedes shipped F) | **Revert auto multi-trip**: invoice = **1 × list fare** at create regardless of cargo ÷ capacity |
+| Office reject | **Cancel booking**; customer must **submit a new booking** if they still need service |
+| Change vehicle type | Any time **after arrived at pickup**; **once per active booking**; **wrong-truck fee** = **% of list fare** for booked type — rate in **Settings** (Admin-configurable key; seed default at implement) |
 
-When building
-1. Policy + route (e.g. POST customer booking cancel) with pending-only guard.
-2. Reuse `CancelBooking` or dedicated action — **do not** apply `LATE_CANCEL_FEE_RATE` for customer actor.
-3. Customer UI: cancel control on pending booking show/index; confirm dialog; flash message.
-4. Email/activity log consistent with other status changes.
-5. Tests: customer can cancel pending; forbidden after accept; invoice unchanged (full amount void/waive
-   per existing cancel + invoice rules — align with product: document expected invoice behavior on cancel).
+----------------------------------------------------------------------
+Workflow (target lifecycle)
+----------------------------------------------------------------------
+1. Customer creates booking → invoice **1 × fare** (pending → gatepass → driver accept → **in_transit**).
+2. Driver sets **in_transit**, then records **Arrived at pickup** (new).
+3. Customer (active booking) → **Request additional round trips** ( **one submission** ) + estimated count.
+   - Booking enters **pending multi-trip approval** (name/flags at implement).
+4. Staff/Admin → **Approve** (final round trip count) **or Reject** → reject **cancels booking**.
+5. If office final count **≠ customer estimate** → customer **must confirm** revised count.
+6. Driver **Accept** updated trip count (acceptance gate after office approve + any customer confirm).
+7. Job continues to completion with **updated invoice** (`approved_round_trips × fare`).
+8. Any time after step 2: customer may **change vehicle type once** → Settings-based **% of list fare** fee on invoice.
 
-Out of scope (this slice)
-- Customer cancel after accept with 25% fee (explicitly not requested).
-- Time-based “hours before pickup” surcharge.
+----------------------------------------------------------------------
+UI / portal surfaces (when building)
+----------------------------------------------------------------------
+Customer
+- After **arrived at pickup**: **Request more round trips** (single submit; no edit after send).
+- If office changes trip count: **Confirm revised count** before driver accept.
+- After **arrived at pickup**: **Change truck type** (once per booking) + fee warning (% of list fare from Settings).
+- Reject outcome: cancelled booking; prompt to create new booking.
 
-======================================================================
-F. Multi-trip pricing when cargo exceeds one load (PLANNED)
-======================================================================
-Status: design agreed (clarify) — **supersedes** shipped “block over capacity; choose larger type”
-for customer create (see slice G for who must enter cargo).
+Driver
+- **in_transit** as today, then **Arrived at pickup** (geofence optional post-MVP).
+- **Accept updated trip count** after office approve (+ customer confirm if count changed).
 
-Goal
-- One booking still uses **one selected pricing / vehicle type**.
-- If cargo weight needs more than one full load at that type’s capacity, **invoice amount** reflects
-  multiple trips at the **list fare** for that type.
+Staff / Admin
+- Queue or booking detail: **Multi-trip requests** — approve (with final trip count) or reject (cancel).
+- Same permissions for Staff and Admin on this workflow unless permissions_matrix says otherwise.
 
-Locked formula
-- `trips = max(1, ceil(cargo_kg ÷ pricing.capacity_kg))`
-- `invoice_amount = trips × pricing.amount` (snapshot on booking/invoice at create time; same pattern
-  as today’s pricing snapshot — confirm in CreateBookingInvoice / booking payout fields when building).
+----------------------------------------------------------------------
+Pricing & invoice (when building)
+----------------------------------------------------------------------
+- **Create**: `invoice_amount = 1 × pricing.amount` (no `ceil(cargo ÷ capacity)` multiplier).
+- **On office approve**: `invoice_amount = approved_round_trips × pricing.amount` (recalculate snapshot).
+- **Truck change fee**: `pricing.amount × (setting_percent / 100)` added to invoice (Setting key; Admin UI).
+- Align with `CreateBookingInvoice`, booking payout snapshots, and payment proof flows.
 
-Behavior change vs today
-- **Remove** validation error that blocks `cargo_kg > capacity_kg` on customer create.
-- **Show** customer-facing hint when trips > 1 (e.g. estimated trips and total before submit).
-- Staff/Admin flows that capture cargo must use the **same formula** when creating/updating bookings (slice G).
+----------------------------------------------------------------------
+Out of scope (this slice unless added later)
+----------------------------------------------------------------------
+- Auto multi-trip at booking create (removed — see locked decisions).
+- Customer self-cancel rules (already shipped for pending — unchanged unless requested).
+- Driver time-in/out (shipped — see docs / permissions_matrix).
+- In-app driver time-in requests; payroll; geofenced arrival (optional later).
+- PayMongo / new payment rails.
 
-When building
-1. Centralize trip count + amount in a small helper/service (avoid duplicating ceil logic).
-2. Update `CreateCustomerBooking`, `CreateBookingInvoice` (and Staff/Admin store/update paths).
-3. Update `StoreBookingRequest` / any Form Requests — drop hard fail on over-capacity; validate cargo_kg ≥ 1.
-4. Tests: 1500 kg on 1000 kg capacity → 2 × fare; 500 kg on 1000 kg → 1 × fare; edge ceil boundaries.
-5. Update docs: features.txt or lifecycle if invoice on multi-trip is documented for customers.
+----------------------------------------------------------------------
+Suggested implementation order
+----------------------------------------------------------------------
+1. **Data model** — arrival event, multi-trip request record (status: pending / approved / rejected),
+   approved trip count, driver-accept flag; booking sub-status or dedicated table.
+2. **Driver — Arrived at pickup** — action, policy, UI, activity log.
+3. **Customer — request round trips** — form, validation, notifications/email stub.
+4. **Staff/Admin — approve / reject** — reject uses `CancelBooking`; approve sets trips + invoice replace.
+5. **Driver — accept updated trips** — gate before continuing in_transit/completion.
+6. **Revert create-time multi-trip** — remove `BookingTripPricing` auto multiplier at create; update tests/docs.
+7. **Customer — change truck type (once) + Settings fee** — after arrived at pickup; repricing rules if type changes.
+8. **Docs** — lifecycle.txt, features.txt, permissions_matrix.txt, seed samples if needed.
 
-Suggested bundle
-- Implement **F + G** together (one PR).
+----------------------------------------------------------------------
+Related code & docs (repo — expect changes)
+----------------------------------------------------------------------
+- app/Support/BookingTripPricing.php — today’s auto trips; **remove or limit to post-approval only**
+- app/Actions/CreateCustomerBooking.php, CreateBookingInvoice.php, UpdateBooking.php
+- app/Http/Requests/** — cargo validation; remove auto multi-trip from store
+- resources/views/customer/bookings/** — request UI, change-truck button
+- resources/views/driver/**, staff/bookings/**, admin/bookings/**
+- docs/development/lifecycle.txt, features.txt, permissions_matrix.txt
+- tests/Feature/CustomerBookingTest.php, StaffAdminBookingTest.php, BacklogImprovementsTest.php
 
-======================================================================
-G. Staff / Admin — same cargo weight rules as customer (PLANNED)
-======================================================================
-Status: design agreed (clarify) — plan only until /implement.
-
-Goal
-- Where office roles capture **cargo_kg** on a booking, enforce the same inputs and pricing outcome
-  as the customer portal: required weight when applicable, **multi-trip formula (slice F)**, no silent
-  bypass of capacity math.
-
-When building
-1. Audit Staff/Admin booking create & edit forms — add `cargo_kg` if missing on office forms.
-2. Share validation + trip/pricing calculation with customer path (slice F helper).
-3. Tests: Staff/Admin cannot save inconsistent amounts; multi-trip invoice matches formula.
-
-======================================================================
-Pricing & cancel — already shipped (reference — do not duplicate)
-======================================================================
-- **Late-cancel 25%**: System Admin cancels after driver **accept** → invoice set to 25% of list fare
-  (`CancelBooking`, `BacklogImprovementsTest`). Unchanged unless a future slice says otherwise.
-- **Cargo kg on customer create**: required weight; **today** blocks over `capacity_kg` (replaced by slice F).
-- Hide driver location on completed bookings (shipped).
-
-======================================================================
-Dropped (will not implement)
-======================================================================
-- **Slice D — Admin fleet = Staff in-use locks** (clarify): removed from backlog. Admin keeps full
-  fleet control when status is `in_use`; Staff rules unchanged.
-
-======================================================================
-Suggested implementation order (remaining work)
-======================================================================
-1. Slice B — Admin Drivers routes, nav, shared attendance index + tests.
-2. Slice C — Driver middleware + time-out session expiry + test updates.
-3. Slice E — Customer pending cancel (can ship before or after F+G).
-4. Slices F + G — Multi-trip pricing + office cargo parity.
-
-Or combined /implement batches: B+C, then E+F+G, as preferred.
-
-======================================================================
-Out of scope (all slices)
-======================================================================
-- In-app driver time-in/out requests or push notifications.
-- Payroll / hours reporting; one-shift-per-day limits; geofenced time-in.
-- Customer attendance; changing booking lifecycle beyond slice E (pending cancel) and existing rules.
-- Customer cancel after accept with fee; pickup cutoff hours for surcharge (not in scope).
-- Admin fleet in-use UI/policy parity with Staff (Slice D — dropped).
-
-======================================================================
-Related docs & code (repo)
-======================================================================
-- docs/development/phases.txt
-- docs/development/permissions_matrix.txt — update for attendance when implementing B/C
-- docs/development/seed_plan.txt — DriverAttendanceSeeder
-- app/Policies/VehiclePolicy.php — Staff in-use rules; Admin override (no change planned)
-- app/Http/Controllers/Staff/VehicleController.php — Staff fleet edit locks
-- resources/views/admin/fleet/_form.blade.php — shared Staff/Admin form (Admin not locked in-use)
-- resources/views/drivers/_attendance_index.blade.php — shared Drivers list
-- app/Http/Controllers/Admin/DriverController.php — wire routes
-- app/Support/DriverAttendance.php — login + middleware checks
-- tests/Feature/DriverAttendanceTest.php, StaffFleetTest.php
-- app/Actions/CancelBooking.php — late fee; extend for slice E (customer pending cancel)
-- app/Actions/CreateCustomerBooking.php, CreateBookingInvoice — multi-trip (slices F/G)
-- tests/Feature/BacklogImprovementsTest.php — update when F replaces block-over-capacity test
-
-======================================================================
-Earlier product backlog (implemented — do not re-implement as-is)
-======================================================================
-- Late-cancel 25% (admin after accept) — keep; see “Pricing & cancel — already shipped”
-- Cargo kg vs capacity on customer create — **being replaced by slices F + G** (multi-trip pricing)
-- Hide driver location on completed bookings
+----------------------------------------------------------------------
+Reference — previously shipped (do not re-document as active backlog)
+----------------------------------------------------------------------
+- Driver attendance Time-In/Out + Admin Drivers page + timed-in middleware (shipped).
+- Customer cancel while pending (shipped).
+- Auto multi-trip at create (shipped — **to be reverted** when slice H is implemented).
+- Late-cancel 25% admin after accept; hide driver location on completed (shipped).
+- Admin fleet full override; Staff in-use fleet locks (settled).

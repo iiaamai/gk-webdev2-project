@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Driver;
 
 use App\Actions\AcceptDriverBooking;
+use App\Actions\AcceptMultiTripRoundTrips;
+use App\Actions\MarkArrivedAtPickup;
 use App\Actions\UpdateDriverDeliveryStatus;
 use App\Actions\UploadBookingEir;
 use App\Actions\UploadBookingPod;
@@ -116,6 +118,34 @@ class DeliveryController extends Controller
         return redirect()
             ->route('driver.deliveries.show', $booking)
             ->with('status', 'POD uploaded.');
+    }
+
+    public function arrivedAtPickup(
+        Booking $booking,
+        MarkArrivedAtPickup $markArrivedAtPickup,
+        Request $request,
+    ): RedirectResponse {
+        $this->authorize('markArrivedAtPickup', $booking);
+
+        $markArrivedAtPickup->execute($request->user(), $booking);
+
+        return redirect()
+            ->route('driver.deliveries.show', $booking)
+            ->with('status', 'Marked arrived at pickup.');
+    }
+
+    public function acceptMultiTrip(
+        Booking $booking,
+        AcceptMultiTripRoundTrips $acceptMultiTripRoundTrips,
+        Request $request,
+    ): RedirectResponse {
+        $this->authorize('acceptMultiTrip', $booking);
+
+        $acceptMultiTripRoundTrips->execute($request->user(), $booking);
+
+        return redirect()
+            ->route('driver.deliveries.show', $booking)
+            ->with('status', 'Round-trip count accepted.');
     }
 
     public function downloadReceipt(

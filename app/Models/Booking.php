@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BookingStatus;
+use App\Enums\MultiTripOfficeStatus;
 use App\Models\Concerns\Archivable;
 use Database\Factories\BookingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -36,6 +37,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'is_locked',
     'accepted_at',
     'gatepass_path',
+    'arrived_at_pickup_at',
+    'multi_trip_requested_rounds',
+    'multi_trip_office_rounds',
+    'multi_trip_office_status',
+    'multi_trip_customer_confirmed_at',
+    'multi_trip_driver_accepted_at',
+    'vehicle_type_changed_at',
 ])]
 class Booking extends Model
 {
@@ -65,6 +73,11 @@ class Booking extends Model
             'status' => BookingStatus::class,
             'is_locked' => 'boolean',
             'accepted_at' => 'datetime',
+            'arrived_at_pickup_at' => 'datetime',
+            'multi_trip_office_status' => MultiTripOfficeStatus::class,
+            'multi_trip_customer_confirmed_at' => 'datetime',
+            'multi_trip_driver_accepted_at' => 'datetime',
+            'vehicle_type_changed_at' => 'datetime',
             'archived_at' => 'datetime',
         ];
     }

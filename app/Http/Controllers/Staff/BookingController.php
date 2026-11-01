@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Actions\ApproveMultiTripRoundTrips;
 use App\Actions\CancelBooking;
 use App\Actions\MarkInvoicePaid;
 use App\Actions\RejectInvoicePaymentProof;
+use App\Actions\RejectMultiTripRoundTrips;
 use App\Actions\UpdateBooking;
 use App\Actions\UploadBookingGatepass;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MarkInvoicePaidRequest;
+use App\Http\Requests\Office\ApproveMultiTripRequest;
 use App\Http\Requests\RejectInvoicePaymentProofRequest;
 use App\Http\Requests\Staff\UpdateBookingRequest;
 use App\Http\Requests\UploadGatepassRequest;
@@ -143,5 +146,35 @@ class BookingController extends Controller
         $this->authorize('downloadReceipt', $booking);
 
         return $bookingReceiptPdf->download($booking);
+    }
+
+    public function approveMultiTrip(
+        ApproveMultiTripRequest $request,
+        Booking $booking,
+        ApproveMultiTripRoundTrips $approveMultiTripRoundTrips,
+    ): RedirectResponse {
+        $approveMultiTripRoundTrips->execute(
+            $request->user(),
+            $booking,
+            (int) $request->validated('round_trips'),
+        );
+
+        return redirect()
+            ->route('staff.bookings.show', $booking)
+            ->with('status', 'Multi-trip request approved and invoice updated.');
+    }
+
+    public function rejectMultiTrip(
+        Booking $booking,
+        RejectMultiTripRoundTrips $rejectMultiTripRoundTrips,
+        Request $request,
+    ): RedirectResponse {
+        $this->authorize('rejectMultiTrip', $booking);
+
+        $rejectMultiTripRoundTrips->execute($request->user(), $booking);
+
+        return redirect()
+            ->route('staff.bookings.show', $booking)
+            ->with('status', 'Multi-trip request rejected. Booking cancelled.');
     }
 }

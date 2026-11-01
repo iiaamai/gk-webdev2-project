@@ -55,6 +55,8 @@
 
     @include('bookings._trip_stepper', ['booking' => $booking])
 
+    @include('bookings._pickup_capacity', ['booking' => $booking, 'pricings' => $pricings ?? null])
+
     @if ($showDriverContact && $driver)
         <x-ui.card class="mb-6">
             <x-ui.section-heading icon="user" title="Your driver" description="Contact details for this delivery." />

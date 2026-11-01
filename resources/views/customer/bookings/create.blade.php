@@ -287,11 +287,7 @@
                         required
                     />
                     <p class="mt-1 text-xs text-text-muted">
-                        If cargo needs more than one full load, your invoice includes multiple trips at the list fare for this type.
-                    </p>
-                    <p x-show="tripCount() > 1" x-cloak class="mt-1 text-xs font-medium text-text">
-                        Estimated <span x-text="tripCount()"></span> trips —
-                        about ₱<span x-text="tripTotal() !== null ? tripTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''"></span>
+                        Your initial invoice is one list fare for this vehicle type. If you need multiple round trips, request them after the driver arrives at pickup.
                     </p>
                     <x-ui.field-error name="cargo_kg" />
                 </div>

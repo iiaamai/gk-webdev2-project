@@ -15,8 +15,10 @@ Normal path
    - Vehicle status → in_use
    - Max one active delivery per driver (accepted or in_transit)
 4. Driver → in_transit
-5. Driver uploads EIR; on complete also POD (photos)
-6. Driver → completed only if EIR AND POD both exist
+5. Driver → arrived at pickup (timestamp; unlocks customer round-trip / vehicle-type actions)
+6. Optional: customer submits one round-trip request → office approve/reject → customer confirm if count changed → driver accept → invoice = approved_round_trips × fare
+7. Driver uploads EIR; on complete also POD (photos)
+8. Driver → completed only if EIR AND POD both exist AND multi-trip gates satisfied (if a request was submitted)
    - Vehicle → available (if it was in_use)
 
 Cancel
