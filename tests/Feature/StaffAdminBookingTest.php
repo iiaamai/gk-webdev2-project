@@ -359,6 +359,7 @@ class StaffAdminBookingTest extends TestCase
             'dropoff_address' => $booking?->dropoff_address ?? 'QC',
             'dropoff_lat' => $booking?->dropoff_lat ?? 14.6,
             'dropoff_lng' => $booking?->dropoff_lng ?? 121.1,
+            'cargo_kg' => $booking?->cargo_kg ?? 500,
             'cargo_desc' => $booking?->cargo_desc,
         ], $overrides);
     }

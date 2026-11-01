@@ -59,6 +59,12 @@
                         <dt class="text-text-muted">Vehicle type</dt>
                         <dd class="mt-1 text-text">{{ $booking->vehicle_type }}</dd>
                     </div>
+                    @if ($booking->cargo_kg)
+                        <div>
+                            <dt class="text-text-muted">Cargo weight</dt>
+                            <dd class="mt-1 text-text">{{ number_format((int) $booking->cargo_kg) }} kg</dd>
+                        </div>
+                    @endif
                     @if ($booking->cargo_desc)
                         <div class="sm:col-span-2">
                             <dt class="text-text-muted">Cargo</dt>

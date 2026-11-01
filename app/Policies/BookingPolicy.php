@@ -218,8 +218,18 @@ class BookingPolicy
 
     public function cancel(User $user, Booking $booking): bool
     {
+        if ($booking->status === BookingStatus::Completed) {
+            return false;
+        }
+
+        if ($user->isCustomer()) {
+            return $booking->customer_id === $user->id
+                && $booking->status === BookingStatus::Pending
+                && $booking->accepted_at === null;
+        }
+
         if ($user->isSystemAdmin()) {
-            return $booking->status !== BookingStatus::Completed;
+            return true;
         }
 
         return $user->isStaff()

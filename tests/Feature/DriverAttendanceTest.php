@@ -97,7 +97,7 @@ class DriverAttendanceTest extends TestCase
         $this->assertTrue(DriverAttendance::isTimedIn($driver->fresh()));
     }
 
-    public function test_time_out_does_not_log_out_existing_driver_session(): void
+    public function test_time_out_ends_existing_driver_session_on_next_request(): void
     {
         $staff = User::factory()->staff()->create();
         $driver = User::factory()->driver()->timedIn($staff)->create();
@@ -112,7 +112,27 @@ class DriverAttendanceTest extends TestCase
 
         $this->actingAs($driver)
             ->get(route('driver.home'))
-            ->assertOk();
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+    }
+
+    public function test_admin_can_access_drivers_index_and_time_in(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        $driver = User::factory()->driver()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.drivers.index'))
+            ->assertOk()
+            ->assertSee($driver->email);
+
+        $this->actingAs($admin)
+            ->post(route('admin.drivers.time-in', $driver))
+            ->assertRedirect();
+
+        $this->assertTrue(DriverAttendance::isTimedIn($driver->fresh()));
     }
 
     public function test_customer_login_unaffected_by_attendance(): void

@@ -3,6 +3,7 @@
 use App\Enums\UserRole;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Admin\DriverController as AdminDriverController;
 use App\Http\Controllers\Admin\DriverMapController as AdminDriverMapController;
 use App\Http\Controllers\Admin\EarningsController;
 use App\Http\Controllers\Admin\OverviewController;
@@ -115,11 +116,14 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
                 ->name('bookings.rating.store');
             Route::post('bookings/{booking}/payment-proof', [CustomerBookingController::class, 'storePaymentProof'])
                 ->name('bookings.payment-proof.store');
+            Route::post('bookings/{booking}/cancel', [CustomerBookingController::class, 'cancel'])
+                ->name('bookings.cancel');
         });
 
     Route::middleware('role:'.UserRole::Driver->value)
         ->prefix('driver')
         ->name('driver.')
+        ->middleware('driver_timed_in')
         ->group(function (): void {
             Route::get('/', DriverOverviewController::class)->name('home');
 
@@ -202,6 +206,9 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
             Route::post('users/{user}/time-in', [DriverAttendanceController::class, 'timeIn'])->name('users.time-in');
             Route::post('users/{user}/time-out', [DriverAttendanceController::class, 'timeOut'])->name('users.time-out');
 
+            Route::get('drivers', [AdminDriverController::class, 'index'])->name('drivers.index');
+            Route::post('drivers/{user}/time-in', [DriverAttendanceController::class, 'timeIn'])->name('drivers.time-in');
+            Route::post('drivers/{user}/time-out', [DriverAttendanceController::class, 'timeOut'])->name('drivers.time-out');
             Route::get('drivers/map', [AdminDriverMapController::class, 'index'])->name('drivers.map');
             Route::get('drivers/locations', [AdminDriverMapController::class, 'locations'])->name('drivers.locations');
 

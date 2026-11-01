@@ -18,6 +18,7 @@ Update booking fields               No         No         Yes                Yes
 Change status (pre-gatepass)        No         No         Yes                Yes
 Change status (after gatepass)      No         Own flow*  No                 Yes
 Cancel (pre-gatepass only for Staff) No        No         Yes                Yes
+Cancel own booking (pending only)   Yes        No         No                 No
 Cancel (after gatepass)             No         No         No                 Yes
 Upload gatepass (first time)        No         No         Yes                Yes
 Replace gatepass                    No         No         Yes                Yes
@@ -41,6 +42,7 @@ Map on booking details              Own***     Own***     Active bookings    Yes
 *** Only after a driver has accepted; nothing on map before accept.
 † Driver/Staff receipt download only when status is completed (not cancelled).
 ‡ System Admin downloads a simple PDF receipt (logo placeholder + trip/invoice fields) at any status.
+§ Driver portal routes require office Time-In; session ends on next request after Time-Out.
 Customer never sees gatepass.
 
 See also: lifecycle.txt, document_acl.txt

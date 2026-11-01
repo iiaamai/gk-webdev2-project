@@ -34,7 +34,10 @@
     <x-ui.nav-link :href="route('admin.fleet.index')" icon="truck" :active="request()->routeIs('admin.fleet.*')">
         Fleet
     </x-ui.nav-link>
-    <x-ui.nav-link :href="route('admin.drivers.map')" icon="map" :active="request()->routeIs('admin.drivers.*')">
+    <x-ui.nav-link :href="route('admin.drivers.index')" icon="users" :active="request()->routeIs('admin.drivers.index') || request()->routeIs('admin.drivers.time-*')">
+        Drivers
+    </x-ui.nav-link>
+    <x-ui.nav-link :href="route('admin.drivers.map')" icon="map" :active="request()->routeIs('admin.drivers.map') || request()->routeIs('admin.drivers.locations')">
         Driver map
     </x-ui.nav-link>
     <x-ui.nav-link :href="route('admin.users.index')" icon="users" :active="request()->routeIs('admin.users.*')">

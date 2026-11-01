@@ -64,6 +64,7 @@ trait ValidatesBookingFields
             'dropoff_address' => ['required', 'string', 'max:500'],
             'dropoff_lat' => ['required', 'numeric', 'between:-90,90'],
             'dropoff_lng' => ['required', 'numeric', 'between:-180,180'],
+            'cargo_kg' => ['required', 'integer', 'min:1', 'max:999999'],
             'cargo_desc' => ['nullable', 'string', 'max:2000'],
             'additional_requirements' => ['nullable', 'string', 'max:2000'],
         ];

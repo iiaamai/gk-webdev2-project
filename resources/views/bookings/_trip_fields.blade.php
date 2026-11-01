@@ -17,6 +17,12 @@
         'pricing_id' => $driver->assignedVehicle?->pricing_id,
     ])->values();
     $showDriverSelect = ($showDriver ?? true) && $drivers->isNotEmpty();
+    $pricingOptions = $pricings->map(fn ($pricing) => [
+        'id' => (string) $pricing->id,
+        'amount' => (float) $pricing->amount,
+        'capacity_kg' => (int) $pricing->capacity_kg,
+    ])->values();
+    $initialCargoKg = old('cargo_kg', $booking?->cargo_kg ?? '');
 @endphp
 
 <input type="hidden" id="pickup_lat" name="pickup_lat" value="{{ $pickupLat }}">
@@ -29,6 +35,8 @@
     x-data="{
         pricingId: @js($initialPricingId !== null && $initialPricingId !== '' ? (string) $initialPricingId : ''),
         driverId: @js($initialDriverId !== null && $initialDriverId !== '' ? (string) $initialDriverId : ''),
+        cargoKg: @js($initialCargoKg !== null && $initialCargoKg !== '' ? (string) $initialCargoKg : ''),
+        pricingOptions: @js($pricingOptions),
         drivers: @js($driverOptions),
         driverVisible(driver) {
             if (! driver.pricing_id) {
@@ -38,6 +46,22 @@
                 return true;
             }
             return this.driverId !== '' && String(driver.id) === String(this.driverId);
+        },
+        tripCount() {
+            const pricing = this.pricingOptions.find(p => String(p.id) === String(this.pricingId));
+            const kg = parseInt(this.cargoKg, 10);
+            if (! pricing || ! kg || kg < 1 || pricing.capacity_kg < 1) {
+                return 0;
+            }
+            return Math.max(1, Math.ceil(kg / pricing.capacity_kg));
+        },
+        tripTotal() {
+            const pricing = this.pricingOptions.find(p => String(p.id) === String(this.pricingId));
+            const trips = this.tripCount();
+            if (! pricing || trips < 1) {
+                return null;
+            }
+            return trips * pricing.amount;
         },
     }"
 >
@@ -136,6 +160,28 @@
             <x-ui.field-error name="dropoff_lng" />
         </div>
     @endunless
+
+    <div>
+        <x-ui.label for="cargo_kg">Cargo weight (kg)</x-ui.label>
+        <x-ui.input
+            id="cargo_kg"
+            type="number"
+            name="cargo_kg"
+            x-model="cargoKg"
+            value="{{ old('cargo_kg', $booking?->cargo_kg) }}"
+            min="1"
+            step="1"
+            required
+        />
+        <p class="mt-1 text-xs text-text-muted">
+            Heavy cargo may require multiple trips at the list fare for the selected vehicle type.
+        </p>
+        <p x-show="tripCount() > 1" x-cloak class="mt-1 text-xs font-medium text-text">
+            Estimated <span x-text="tripCount()"></span> trips —
+            invoice about ₱<span x-text="tripTotal() !== null ? tripTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''"></span>
+        </p>
+        <x-ui.field-error name="cargo_kg" />
+    </div>
 
     <div>
         <x-ui.label for="cargo_desc">Cargo description</x-ui.label>

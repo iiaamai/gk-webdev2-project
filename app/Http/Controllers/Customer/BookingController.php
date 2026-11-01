@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Actions\CancelBooking;
 use App\Actions\CreateCustomerBooking;
 use App\Actions\SubmitInvoicePaymentProof;
 use App\Enums\BookingStatus;
@@ -112,5 +113,16 @@ class BookingController extends Controller
         return redirect()
             ->route('customer.bookings.show', $booking)
             ->with('status', 'Payment screenshot submitted. Staff will confirm when it arrives in our account.');
+    }
+
+    public function cancel(Booking $booking, CancelBooking $cancelBooking): RedirectResponse
+    {
+        $this->authorize('cancel', $booking);
+
+        $cancelBooking->execute($booking, request()->user());
+
+        return redirect()
+            ->route('customer.bookings.index')
+            ->with('status', 'Booking cancelled.');
     }
 }

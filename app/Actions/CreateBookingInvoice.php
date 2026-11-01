@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Services\BookingEmailNotifier;
+use App\Support\BookingTripPricing;
 use Illuminate\Support\Facades\DB;
 
 class CreateBookingInvoice
@@ -19,10 +20,15 @@ class CreateBookingInvoice
         $invoice = DB::transaction(function () use ($booking): Invoice {
             $booking->loadMissing('pricing');
 
+            $cargoKg = (int) ($booking->cargo_kg ?? 0);
+            $amount = $booking->pricing !== null && $cargoKg > 0
+                ? BookingTripPricing::invoiceAmount($booking->pricing, $cargoKg)
+                : (float) ($booking->pricing?->amount ?? 0);
+
             return Invoice::query()->updateOrCreate(
                 ['booking_id' => $booking->id],
                 [
-                    'amount' => $booking->pricing?->amount ?? 0,
+                    'amount' => $amount,
                     'status' => InvoiceStatus::Unpaid,
                     'issued_at' => now('Asia/Manila'),
                     'paid_at' => null,

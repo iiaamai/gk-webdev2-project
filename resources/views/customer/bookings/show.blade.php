@@ -26,6 +26,24 @@
                     Download receipt
                 </x-ui.button>
             @endcan
+            @can('cancel', $booking)
+                <div x-data="{ open: false }">
+                    <form x-ref="cancelForm" method="post" action="{{ route('customer.bookings.cancel', $booking) }}">
+                        @csrf
+                        <x-ui.button type="button" variant="danger" @click="open = true">
+                            Cancel booking
+                        </x-ui.button>
+                    </form>
+                    <x-ui.confirm-dialog
+                        title="Cancel this booking?"
+                        description="Your booking will be cancelled while it is still pending. This cannot be undone."
+                        confirm-label="Cancel booking"
+                        cancel-label="Keep booking"
+                        confirm-variant="danger"
+                        form-ref="cancelForm"
+                    />
+                </div>
+            @endcan
         </x-slot:actions>
     </x-ui.page-header>
 
@@ -95,6 +113,12 @@
                 <dt class="text-text-muted">Amount</dt>
                 <dd class="mt-1 font-medium text-text">₱{{ number_format((float) $booking->payout, 2) }}</dd>
             </div>
+            @if ($booking->cargo_kg)
+                <div>
+                    <dt class="text-text-muted">Cargo weight</dt>
+                    <dd class="mt-1 text-text">{{ number_format((int) $booking->cargo_kg) }} kg</dd>
+                </div>
+            @endif
             @if ($booking->cargo_desc)
                 <div class="sm:col-span-2">
                     <dt class="text-text-muted">Cargo</dt>

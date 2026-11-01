@@ -9,6 +9,11 @@
         $pickupLng = old('pickup_lng', $locationPicker ? '' : '121.0244');
         $dropoffLat = old('dropoff_lat', $locationPicker ? '' : '14.6760');
         $dropoffLng = old('dropoff_lng', $locationPicker ? '' : '121.0437');
+        $pricingOptions = $pricings->map(fn ($pricing) => [
+            'id' => (string) $pricing->id,
+            'amount' => (float) $pricing->amount,
+            'capacity_kg' => (int) $pricing->capacity_kg,
+        ])->values();
     @endphp
 
     <x-ui.page-header
@@ -23,7 +28,24 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    <div class="mx-auto w-full max-w-3xl" x-data="{ open: false }">
+    <div class="mx-auto w-full max-w-3xl" x-data="{
+        open: false,
+        pricingId: @js(old('pricing_id') !== null && old('pricing_id') !== '' ? (string) old('pricing_id') : ''),
+        cargoKg: @js(old('cargo_kg') !== null && old('cargo_kg') !== '' ? (string) old('cargo_kg') : ''),
+        pricingOptions: @js($pricingOptions),
+        tripCount() {
+            const pricing = this.pricingOptions.find(p => String(p.id) === String(this.pricingId));
+            const kg = parseInt(this.cargoKg, 10);
+            if (! pricing || ! kg || kg < 1) return 0;
+            return Math.max(1, Math.ceil(kg / pricing.capacity_kg));
+        },
+        tripTotal() {
+            const pricing = this.pricingOptions.find(p => String(p.id) === String(this.pricingId));
+            const trips = this.tripCount();
+            if (! pricing || trips < 1) return null;
+            return trips * pricing.amount;
+        },
+    }">
     <form
         method="post"
         action="{{ route('customer.bookings.store') }}"
@@ -42,7 +64,7 @@
             <div class="mt-4 grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                     <x-ui.label for="pricing_id">Vehicle type</x-ui.label>
-                    <x-ui.select id="pricing_id" name="pricing_id" required>
+                    <x-ui.select id="pricing_id" name="pricing_id" required x-model="pricingId">
                         <option value="">Select type</option>
                         @foreach ($pricings as $pricing)
                             @php
@@ -258,12 +280,19 @@
                         id="cargo_kg"
                         type="number"
                         name="cargo_kg"
+                        x-model="cargoKg"
                         value="{{ old('cargo_kg') }}"
                         min="1"
                         step="1"
                         required
                     />
-                    <p class="mt-1 text-xs text-text-muted">Must fit within the capacity of the vehicle type you select.</p>
+                    <p class="mt-1 text-xs text-text-muted">
+                        If cargo needs more than one full load, your invoice includes multiple trips at the list fare for this type.
+                    </p>
+                    <p x-show="tripCount() > 1" x-cloak class="mt-1 text-xs font-medium text-text">
+                        Estimated <span x-text="tripCount()"></span> trips —
+                        about ₱<span x-text="tripTotal() !== null ? tripTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''"></span>
+                    </p>
                     <x-ui.field-error name="cargo_kg" />
                 </div>
                 <div>

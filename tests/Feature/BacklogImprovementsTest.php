@@ -87,7 +87,7 @@ class BacklogImprovementsTest extends TestCase
         $this->assertSame('9200.00', (string) $booking->fresh()->invoice?->amount);
     }
 
-    public function test_customer_cannot_create_booking_when_cargo_exceeds_vehicle_capacity(): void
+    public function test_customer_booking_over_capacity_uses_multi_trip_invoice(): void
     {
         $customer = User::factory()->customer()->create();
         $pricing = Pricing::factory()->create([
@@ -101,7 +101,6 @@ class BacklogImprovementsTest extends TestCase
         ]);
 
         $this->actingAs($customer)
-            ->from(route('customer.bookings.create'))
             ->post(route('customer.bookings.store'), [
                 'pricing_id' => $pricing->id,
                 'booking_datetime' => now('Asia/Manila')->addDay()->format('Y-m-d H:i:s'),
@@ -115,9 +114,81 @@ class BacklogImprovementsTest extends TestCase
                 'dropoff_lng' => 121.0437,
                 'cargo_kg' => 1500,
             ])
-            ->assertRedirect(route('customer.bookings.create'))
-            ->assertSessionHasErrors('cargo_kg');
+            ->assertRedirect();
 
-        $this->assertSame(0, Booking::query()->count());
+        $booking = Booking::query()->first();
+        $this->assertNotNull($booking);
+        $this->assertSame('9000.00', (string) $booking->invoice?->amount);
+    }
+
+    public function test_customer_can_cancel_pending_booking_without_late_fee(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => BookingStatus::Pending,
+            'accepted_at' => null,
+        ]);
+        Invoice::factory()->create([
+            'booking_id' => $booking->id,
+            'amount' => 9200.00,
+            'status' => InvoiceStatus::Unpaid,
+        ]);
+
+        $this->actingAs($customer)
+            ->post(route('customer.bookings.cancel', $booking))
+            ->assertRedirect(route('customer.bookings.index'));
+
+        $booking->refresh();
+        $this->assertSame(BookingStatus::Cancelled, $booking->status);
+        $this->assertSame('9200.00', (string) $booking->invoice?->amount);
+    }
+
+    public function test_customer_cannot_cancel_after_accept(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => BookingStatus::Accepted,
+            'accepted_at' => now('Asia/Manila'),
+        ]);
+
+        $this->actingAs($customer)
+            ->post(route('customer.bookings.cancel', $booking))
+            ->assertForbidden();
+    }
+
+    public function test_admin_update_cargo_recalculates_multi_trip_invoice(): void
+    {
+        $admin = User::factory()->systemAdmin()->create();
+        $pricing = Pricing::factory()->create([
+            'amount' => 4500,
+            'capacity_kg' => 1000,
+        ]);
+        $booking = Booking::factory()->create([
+            'pricing_id' => $pricing->id,
+            'cargo_kg' => 500,
+        ]);
+        Invoice::factory()->create([
+            'booking_id' => $booking->id,
+            'amount' => 4500,
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.bookings.update', $booking), [
+                'customer_id' => $booking->customer_id,
+                'pricing_id' => $pricing->id,
+                'booking_datetime' => $booking->booking_datetime->format('Y-m-d H:i:s'),
+                'pickup_address' => $booking->pickup_address,
+                'pickup_lat' => $booking->pickup_lat,
+                'pickup_lng' => $booking->pickup_lng,
+                'dropoff_address' => $booking->dropoff_address,
+                'dropoff_lat' => $booking->dropoff_lat,
+                'dropoff_lng' => $booking->dropoff_lng,
+                'cargo_kg' => 2500,
+            ])
+            ->assertRedirect();
+
+        $this->assertSame('13500.00', (string) $booking->fresh()->invoice?->amount);
     }
 }

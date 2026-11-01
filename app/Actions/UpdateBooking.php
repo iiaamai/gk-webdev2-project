@@ -9,6 +9,7 @@ use App\Models\Pricing;
 use App\Models\Setting;
 use App\Models\Vehicle;
 use App\Services\ActivityLogger;
+use App\Support\BookingTripPricing;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -33,6 +34,7 @@ class UpdateBooking
             'dropoff_lat',
             'dropoff_lng',
             'cargo_desc',
+            'cargo_kg',
             'additional_requirements',
             'driver_id',
             'customer_id',
@@ -41,6 +43,13 @@ class UpdateBooking
         $fresh = DB::transaction(function () use ($booking, $data): Booking {
             $dropoffChanged = $this->dropoffChanged($booking, $data);
             $pricingId = (int) $data['pricing_id'];
+            $cargoKg = (int) ($data['cargo_kg'] ?? $booking->cargo_kg ?? 0);
+
+            if ($cargoKg < 1) {
+                throw ValidationException::withMessages([
+                    'cargo_kg' => 'Enter the cargo weight in kilograms.',
+                ]);
+            }
 
             if ($pricingId !== (int) $booking->pricing_id) {
                 $pricing = Pricing::query()->find($pricingId);
@@ -73,6 +82,7 @@ class UpdateBooking
                 'dropoff_lat' => $data['dropoff_lat'],
                 'dropoff_lng' => $data['dropoff_lng'],
                 'cargo_desc' => $data['cargo_desc'] ?? null,
+                'cargo_kg' => $cargoKg,
                 'additional_requirements' => $data['additional_requirements'] ?? null,
                 'driver_id' => array_key_exists('driver_id', $data)
                     ? ($data['driver_id'] ?: null)
@@ -81,6 +91,15 @@ class UpdateBooking
 
             if (isset($data['customer_id'])) {
                 $booking->update(['customer_id' => $data['customer_id']]);
+            }
+
+            $booking->loadMissing(['invoice', 'pricing']);
+
+            if (
+                $pricingId !== (int) ($before['pricing_id'] ?? 0)
+                || $cargoKg !== (int) ($before['cargo_kg'] ?? 0)
+            ) {
+                $this->syncTripInvoiceAmount($booking->fresh(['invoice', 'pricing']));
             }
 
             if ($dropoffChanged) {
@@ -139,6 +158,25 @@ class UpdateBooking
             $invoice->paid_at = null;
         }
 
+        $invoice->save();
+    }
+
+    private function syncTripInvoiceAmount(Booking $booking): void
+    {
+        $invoice = $booking->invoice;
+        $pricing = $booking->pricing;
+
+        if ($invoice === null || $pricing === null) {
+            return;
+        }
+
+        $cargoKg = (int) ($booking->cargo_kg ?? 0);
+
+        if ($cargoKg < 1) {
+            return;
+        }
+
+        $invoice->amount = BookingTripPricing::invoiceAmount($pricing, $cargoKg);
         $invoice->save();
     }
 }

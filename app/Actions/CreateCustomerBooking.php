@@ -53,23 +53,12 @@ class CreateCustomerBooking
             ]);
         }
 
-        $cargoKg = null;
-        $requireCargoWeight = ! isset($data['status']);
+        $cargoKg = (int) ($data['cargo_kg'] ?? 0);
 
-        if ($requireCargoWeight) {
-            $cargoKg = (int) ($data['cargo_kg'] ?? 0);
-
-            if ($cargoKg < 1) {
-                throw ValidationException::withMessages([
-                    'cargo_kg' => 'Enter the cargo weight in kilograms.',
-                ]);
-            }
-
-            if ($cargoKg > $pricing->capacity_kg) {
-                throw ValidationException::withMessages([
-                    'cargo_kg' => 'Cargo weight exceeds the capacity for the selected vehicle type. Choose a larger type.',
-                ]);
-            }
+        if ($cargoKg < 1) {
+            throw ValidationException::withMessages([
+                'cargo_kg' => 'Enter the cargo weight in kilograms.',
+            ]);
         }
 
         $status = isset($data['status'])
@@ -87,8 +76,8 @@ class CreateCustomerBooking
                 'pickup_address' => $data['pickup_address'],
                 'pickup_lat' => $data['pickup_lat'],
                 'pickup_lng' => $data['pickup_lng'],
-                'pickup_port_number' => $data['pickup_port_number'],
-                'pickup_container_number' => $data['pickup_container_number'],
+                'pickup_port_number' => $data['pickup_port_number'] ?? null,
+                'pickup_container_number' => $data['pickup_container_number'] ?? null,
                 'dropoff_address' => $data['dropoff_address'],
                 'dropoff_lat' => $data['dropoff_lat'],
                 'dropoff_lng' => $data['dropoff_lng'],

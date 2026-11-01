@@ -49,4 +49,9 @@ class DriverAttendance
     {
         return 'You must be timed in by the office before you can log in. Contact dispatch when you are ready to start your shift.';
     }
+
+    public static function sessionEndedMessage(): string
+    {
+        return 'Your shift was ended by the office. Contact dispatch when you are timed in again.';
+    }
 }

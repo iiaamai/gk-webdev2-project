@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureDriverTimedIn;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureUserIsNotArchived;
 use App\Support\RoleHome;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
             'not_archived' => EnsureUserIsNotArchived::class,
+            'driver_timed_in' => EnsureDriverTimedIn::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
