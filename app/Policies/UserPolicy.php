@@ -10,7 +10,7 @@ class UserPolicy
 {
     public function before(User $user, string $ability): ?bool
     {
-        if (in_array($ability, ['updateProfile', 'viewAvatar'], true)) {
+        if (in_array($ability, ['updateProfile', 'viewAvatar', 'timeIn', 'timeOut'], true)) {
             return null;
         }
 
@@ -61,6 +61,16 @@ class UserPolicy
         return $user->id === $model->id;
     }
 
+    public function timeIn(User $user, User $model): bool
+    {
+        return $this->canManageDriverAttendance($user, $model);
+    }
+
+    public function timeOut(User $user, User $model): bool
+    {
+        return $this->canManageDriverAttendance($user, $model);
+    }
+
     public function viewAvatar(User $user, User $model): bool
     {
         if ($user->id === $model->id) {
@@ -84,5 +94,14 @@ class UserPolicy
         }
 
         return false;
+    }
+
+    private function canManageDriverAttendance(User $user, User $model): bool
+    {
+        if (! $user->isStaff() && ! $user->isSystemAdmin()) {
+            return false;
+        }
+
+        return $model->isDriver() && ! $model->isArchived();
     }
 }

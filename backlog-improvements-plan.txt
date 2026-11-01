@@ -1,96 +1,121 @@
-GK Trucking Services 2.0 — Backlog improvements plan
-====================================================
-Status: design only — do not implement until explicitly requested (/implement).
-Agreed: clarify session (late cancel, cargo capacity, post-delivery location).
+GK Trucking Services 2.0 — Driver Time-In / Time-Out plan
+============================================================
+Status: design agreed (clarify session) — implement when explicitly requested (/implement).
+Scope: MVP / checkpoint B (phases.txt).
 
-Scope
------
-Three product improvements. Not part of the first prototype commit unless implemented later.
+Process flow (office + driver)
+------------------------------
+1. Request for Time-In: The driver informs the office (Admin or Staff) that they are ready to time in.
+2. Office processes Time-In: Admin or Staff records Time-In in the system.
+3. Driver login access: Once Time-In is recorded, the driver may log in.
+4. Request for Time-Out: After duty, the driver informs the office they are ready to time out.
+5. Office processes Time-Out: Admin or Staff records Time-Out in the system.
+6. Driver login restriction: After Time-Out, the driver cannot log in until timed in again.
+
+Driver requests are offline only (phone, radio, desk) — no in-app “request time-in/out” buttons in v1.
+
+Technical flow
+--------------
+Driver requests Time-In from office (offline)
+  → Admin or Staff records Time-In
+  → System marks driver as timed in
+  → Login allowed (new sessions)
+
+Driver completes duty; requests Time-Out (offline)
+  → Admin or Staff records Time-Out (blocked if active trip — see rules)
+  → System marks driver as timed out
+  → Login restricted (new sessions only; existing session unchanged)
+
+Login validation (drivers only)
+- Timed in  → login permitted (after normal auth: password, email verified, not archived).
+- Timed out or never timed in → login denied with clear office-oriented message.
 
 Current behavior (baseline)
 ---------------------------
-Cancellation
-- No cancellation fee anywhere.
-- Staff: cancel only while status is pending and no gatepass uploaded.
-- System Admin: cancel anytime except completed.
-- Customers cannot self-cancel (office handles cancellation).
+- Drivers self-register, verify email, and log in when credentials are valid and account is not archived.
+- app/Http/Requests/Auth/LoginRequest.php — no attendance check today.
+- No Time-In / Time-Out data model or Staff/Admin UI.
 
-Pricing / load
-- One booking = one vehicle type from the Pricing list; amount copied to invoice when created.
-- Pricing rows include capacity_kg per vehicle type; bookings store cargo_desc (text) only — no cargo weight field.
-- No automatic price change for overload or multiple trips.
+Locked product decisions (clarify)
+----------------------------------
+| Topic | Decision |
+| When | MVP / checkpoint B |
+| Who records | System Admin + Staff |
+| No attendance record yet | Login denied until first Time-In |
+| Time-Out during trip | Block Time-Out if driver has accepted or in_transit booking |
+| Time-Out + active session | Block new logins only; do not force logout mid-session |
+| Same calendar day | Unlimited Time-In / Time-Out cycles |
+| Driver request UI | Offline only — office records in portal |
 
-Driver location
-- Drivers POST lat/lng while the driver portal is open (driver-location.js).
-- Customer may poll driver location only while booking status is accepted or in_transit.
-- Staff and Admin may poll driver location on a booking without that status restriction today.
-- Admin/Staff fleet map shows all drivers’ last known coordinates, including drivers with no active trip.
+Rules (detail)
+--------------
+Attendance states (driver-facing login gate)
+- Not timed in (includes never timed in): login denied.
+- Timed in: login allowed.
+- Timed out: login denied until office records a new Time-In.
 
-----------------------------------------------------------------------
-1. Late-cancel surcharge (after driver accept)
-----------------------------------------------------------------------
-Rule
-- Cancel with no surcharge: any time before a driver accepts the booking.
-- After accept: if System Admin cancels, charge a late-cancel fee of 25% of the vehicle-type fare
-  (from Pricing for the booking’s pricing_id / vehicle type at cancel time).
-- Staff cancel rules unchanged: pending, before gatepass only, still no fee.
+Time-In
+- Staff or Admin action on a driver user (driver role only).
+- Sets current state to timed in; append audit/history row (who, when, Asia/Manila).
 
-Invoice / billing
-- On admin cancel after accept: ensure an invoice reflects the 25% fee (create or adjust invoice.amount),
-  status unpaid until office marks paid (same Pay Later / QR Ph flow as today).
-- Before accept: no fee — void or do not create a surcharge invoice (existing cancel behavior).
+Time-Out
+- Staff or Admin action on a driver who is currently timed in.
+- Rejected if driver has any booking in accepted or in_transit status (vehicle still on active trip).
+- Sets current state to timed out; append audit/history row.
+- Does not invalidate an existing driver portal session — only blocks the next login attempt.
 
-Open decisions (fill in before implement)
-- Whether cancelled-after-accept still releases vehicle and unlocks booking the same as today.
-- Copy shown on invoice/receipt for “cancellation fee (25%)”.
-
-----------------------------------------------------------------------
-2. Cargo weight vs capacity (one delivery, one list price)
-----------------------------------------------------------------------
-Rule
-- Customer booking form: add required cargo weight (kg).
-- Compare entered kg to capacity_kg on the selected Pricing / vehicle type.
-- If cargo kg > capacity_kg: block form submit until the customer selects a type whose capacity_kg is enough.
-- Still one trip, one list price for the chosen type — no extra-trip multiplier, no manual surcharge field in v1.
-
-Optional follow-ups (out of scope unless added later)
-- Staff/Admin booking create/edit with the same validation.
-- Warn-only or staff override of capacity (explicitly rejected in clarify — block only).
-
-----------------------------------------------------------------------
-3. Hide driver whereabouts after delivery (completed booking)
-----------------------------------------------------------------------
-Rule
-- For bookings with status completed: no live driver pin / location poll on that booking for any role
-  (customer, staff, admin on booking detail maps).
-- Last stored driver coordinates on the user record may remain for dispatch fleet map use.
-- Driver portal may continue sharing GPS while open (no change required unless product asks to stop on complete).
+Permissions
+- Staff and Admin may record Time-In and Time-Out (same capability for this feature).
+- Customers and drivers cannot record attendance for themselves in v1.
 
 Implementation hints (when building)
-- Tighten BookingPolicy::viewDriverLocation (and any map poll URLs) to deny when status is completed.
-- Ensure booking-scoped maps and JSON endpoints return unavailable / no pin after complete.
-- Fleet-wide driver map behavior unchanged unless separately scoped.
+------------------------------------
+Data
+- Prefer driver_attendance_logs (or equivalent) with timed_in_at, timed_out_at, recorded_by user_id,
+  plus a derived “current status” on the driver (query latest open shift or status column on users for drivers).
+- Timestamps in Asia/Manila; align with existing activity log patterns if desired.
 
-----------------------------------------------------------------------
-Out of scope (this plan)
-----------------------------------------------------------------------
-- Customer self-cancel.
-- Cancellation windows based on hours before booking_datetime.
-- Extra trucks/runs, split bookings, or manual load surcharges on invoice.
-- Clearing driver GPS on trip complete.
-- Hiding idle drivers on the fleet map.
+Backend
+- Action or service: TimeInDriver, TimeOutDriver (validate role, state transitions, active booking check on time-out).
+- LoginRequest::authenticate() (or small helper): after Auth::attempt, if user is driver and not timed in, logout + validation message.
+- Optional: activity log entries for time-in/out (post-MVP nice-to-have if not in first slice).
 
-----------------------------------------------------------------------
+UI
+- Staff + Admin: driver list and/or driver detail — show attendance status, Time-In / Time-Out buttons, flash errors for blocked time-out.
+- Driver portal: no new buttons; login form shows message when denied for attendance.
+
+Tests (feature)
+- Driver denied login before first time-in; allowed after staff/admin time-in.
+- Driver denied login after time-out; allowed again after second time-in same day.
+- Time-out blocked when driver has accepted or in_transit booking.
+- Time-out does not require force logout (assert session still works on driver route if already logged in — product choice).
+- Non-drivers (customer, staff, admin) unaffected by attendance gate.
+
 Suggested implementation order
-----------------------------------------------------------------------
-1. Location hide on completed booking (smallest, policy + tests).
-2. Cargo kg + capacity block on customer create (migration, form, validation, tests).
-3. Late-cancel 25% invoice on admin cancel after accept (CancelBooking action, invoice logic, tests, UI copy).
+------------------------------
+1. Migration + model(s) + status helper for “is driver timed in”.
+2. TimeIn / TimeOut actions + policies (staff/admin, driver target).
+3. Staff/Admin UI on drivers.
+4. Login gate in LoginRequest + feature tests.
+5. Seed/demo note: demo drivers need Time-In before driver login on fresh DB (document in seed_plan or seeder).
+
+Out of scope (this plan)
+------------------------
+- In-app driver “request time-in/out” or admin notifications.
+- Force logout or stop GPS updates on time-out (explicitly not in v1).
+- One shift per day limits; payroll / hours reporting; geofenced time-in.
+- Attendance for non-driver roles.
+- Changing fleet map or booking lifecycle beyond time-out guard on active trips.
 
 Related docs (repo)
 -------------------
-- docs/development/lifecycle.txt — cancel and status rules
-- docs/development/models/pricing.txt — capacity_kg, amounts
-- docs/development/models/booking.txt — booking_datetime, pricing_id
-- app/Policies/BookingPolicy.php — viewDriverLocation, cancel
-- tests/Feature/DriverLocationTest.php — location ACL patterns
+- docs/development/phases.txt — MVP checkpoint B
+- docs/development/permissions_matrix.txt — extend for staff attendance actions
+- docs/development/seed_plan.txt — demo driver login after deploy
+- app/Http/Requests/Auth/LoginRequest.php — login gate
+- app/Http/Controllers/Auth/LoginController.php — driver redirect unchanged when allowed
+
+Prior backlog (implemented separately)
+--------------------------------------
+Late-cancel 25%, cargo kg vs capacity, hide driver location on completed bookings — already in codebase;
+this file now tracks the next planned slice (driver attendance).

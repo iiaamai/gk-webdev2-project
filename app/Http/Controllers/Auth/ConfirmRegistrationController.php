@@ -29,6 +29,12 @@ class ConfirmRegistrationController extends Controller
 
         event(new Registered($user));
 
+        if ($user->isDriver()) {
+            return redirect()
+                ->route('login')
+                ->with('status', 'Your driver account is ready. Ask the office to time you in before logging in.');
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
 

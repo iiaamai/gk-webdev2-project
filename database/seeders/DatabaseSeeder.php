@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             PricingSeeder::class,
             UserSeeder::class,
             VehicleSeeder::class,
+            DriverAttendanceSeeder::class,
             SettingSeeder::class,
             BookingSeeder::class,
         ]);

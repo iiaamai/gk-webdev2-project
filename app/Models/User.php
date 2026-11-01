@@ -99,6 +99,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ActivityLog::class);
     }
 
+    /**
+     * @return HasMany<DriverAttendanceLog, $this>
+     */
+    public function driverAttendanceLogs(): HasMany
+    {
+        return $this->hasMany(DriverAttendanceLog::class, 'driver_id');
+    }
+
     public function isCustomer(): bool
     {
         return $this->role === UserRole::Customer;

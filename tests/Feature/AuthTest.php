@@ -31,7 +31,7 @@ class AuthTest extends TestCase
             ->get(route('login'))
             ->assertRedirect(route('staff.home'));
 
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
 
         $this->actingAs($driver)
             ->get(route('login'))
@@ -56,7 +56,7 @@ class AuthTest extends TestCase
 
     public function test_driver_login_redirects_to_driver_home(): void
     {
-        User::factory()->driver()->create([
+        User::factory()->driver()->timedIn()->create([
             'email' => 'driver@example.com',
             'password' => 'password',
         ]);
@@ -121,13 +121,32 @@ class AuthTest extends TestCase
             'password_confirmation' => 'Password1!',
         ]);
 
-        $response->assertRedirect(route('driver.home'));
+        $response->assertRedirect(route('login'));
+        $this->assertGuest();
 
         $user = User::query()->where('email', 'new.driver@example.com')->first();
         $this->assertNotNull($user);
         $this->assertSame(UserRole::Driver, $user->role);
         $this->assertNull($user->assignedVehicle);
         $this->assertNotNull($user->email_verified_at);
+    }
+
+    public function test_driver_cannot_login_until_timed_in(): void
+    {
+        User::factory()->driver()->create([
+            'email' => 'waiting.driver@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->from(route('login'))
+            ->post(route('login'), [
+                'email' => 'waiting.driver@example.com',
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('email');
+
+        $this->assertGuest();
     }
 
     public function test_customer_register_rejects_a_weak_password(): void

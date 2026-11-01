@@ -3,7 +3,9 @@
 namespace Database\Factories;
 
 use App\Enums\UserRole;
+use App\Models\DriverAttendanceLog;
 use App\Models\User;
+use App\Support\DriverAttendance;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -53,6 +55,28 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'role' => UserRole::Driver,
         ]);
+    }
+
+    public function timedIn(?User $recordedBy = null): static
+    {
+        return $this->afterCreating(function (User $user) use ($recordedBy): void {
+            if (! $user->isDriver()) {
+                return;
+            }
+
+            if (DriverAttendance::isTimedIn($user)) {
+                return;
+            }
+
+            $recorder = $recordedBy ?? User::query()->where('role', UserRole::Staff)->first()
+                ?? User::factory()->staff()->create();
+
+            DriverAttendanceLog::query()->create([
+                'driver_id' => $user->id,
+                'timed_in_at' => now('Asia/Manila'),
+                'timed_in_by_id' => $recorder->id,
+            ]);
+        });
     }
 
     public function staff(): static

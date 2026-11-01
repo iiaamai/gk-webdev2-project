@@ -12,6 +12,7 @@ Driver          driver@gk.test        demo123
 Driver (2nd)    driver2@gk.test       demo123
   - Assigned fleet unit DEF-5678 (Fuso, 6-wheeler truck); extra driver so accepted + in_transit
     sample bookings do not share one active trip
+  - DriverAttendanceSeeder times in all demo drivers after users/vehicles seed (required to log in)
 
 Pricing (seed four rows)
 - 6-wheeler truck — 14500.00 — 12000 kg

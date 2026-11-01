@@ -54,6 +54,34 @@
             </x-ui.card>
 
             @if ($user->isDriver())
+                @php
+                    $attendanceStatus = \App\Support\DriverAttendance::statusFor($user);
+                    $openShift = \App\Support\DriverAttendance::openShiftFor($user);
+                @endphp
+                <x-ui.card>
+                    <x-ui.section-heading
+                        icon="clock"
+                        title="Attendance"
+                        description="Drivers must be timed in before they can log in."
+                    />
+                    <div class="mt-4 space-y-3">
+                        @include('drivers._attendance_controls', [
+                            'user' => $user,
+                            'status' => $attendanceStatus,
+                            'timeInUrl' => route('admin.users.time-in', $user),
+                            'timeOutUrl' => route('admin.users.time-out', $user),
+                        ])
+                        @if ($openShift)
+                            <p class="text-sm text-text-muted">
+                                Timed in {{ $openShift->timed_in_at->timezone(config('app.timezone'))->format('M j, Y g:i A') }}
+                                @if ($openShift->timedInBy)
+                                    by {{ $openShift->timedInBy->name }}
+                                @endif
+                            </p>
+                        @endif
+                    </div>
+                </x-ui.card>
+
                 <x-ui.card>
                     <x-ui.section-heading icon="truck" title="Fleet vehicle" />
                     <dl class="mt-4 grid grid-cols-[8rem_1fr] gap-x-3 gap-y-2 text-sm">

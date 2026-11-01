@@ -6,9 +6,7 @@ use App\Actions\StartPendingRegistration;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterDriverRequest;
-use App\Support\RoleHome;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class RegisterDriverController extends Controller
@@ -33,9 +31,8 @@ class RegisterDriverController extends Controller
                 ->with('status', 'We sent a confirmation link to '.$request->string('email')->toString().'.');
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return redirect()->to(RoleHome::path($user));
+        return redirect()
+            ->route('login')
+            ->with('status', 'Your driver account is ready. Ask the office to time you in before logging in.');
     }
 }

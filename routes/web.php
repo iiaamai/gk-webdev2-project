@@ -28,9 +28,11 @@ use App\Http\Controllers\Customer\OverviewController as CustomerOverviewControll
 use App\Http\Controllers\Driver\DeliveryController as DriverDeliveryController;
 use App\Http\Controllers\Driver\LocationController as DriverLocationController;
 use App\Http\Controllers\Driver\OverviewController as DriverOverviewController;
+use App\Http\Controllers\DriverAttendanceController;
 use App\Http\Controllers\Marketing\PricingController as MarketingPricingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Staff\BookingController as StaffBookingController;
+use App\Http\Controllers\Staff\DriverController as StaffDriverController;
 use App\Http\Controllers\Staff\DriverMapController as StaffDriverMapController;
 use App\Http\Controllers\Staff\OverviewController as StaffOverviewController;
 use App\Http\Controllers\Staff\VehicleController as StaffVehicleController;
@@ -147,6 +149,9 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
 
             Route::view('settings', 'staff.settings')->name('settings.edit');
 
+            Route::get('drivers', [StaffDriverController::class, 'index'])->name('drivers.index');
+            Route::post('drivers/{user}/time-in', [DriverAttendanceController::class, 'timeIn'])->name('drivers.time-in');
+            Route::post('drivers/{user}/time-out', [DriverAttendanceController::class, 'timeOut'])->name('drivers.time-out');
             Route::get('drivers/map', [StaffDriverMapController::class, 'index'])->name('drivers.map');
             Route::get('drivers/locations', [StaffDriverMapController::class, 'locations'])->name('drivers.locations');
 
@@ -194,6 +199,8 @@ Route::middleware(['auth', 'verified', 'not_archived'])->group(function (): void
             Route::post('users/archived/{archivedUser}/restore', [UserController::class, 'restore'])->name('users.restore');
             Route::delete('users/archived/{archivedUser}', [UserController::class, 'forceDestroy'])->name('users.force-destroy');
             Route::resource('users', UserController::class);
+            Route::post('users/{user}/time-in', [DriverAttendanceController::class, 'timeIn'])->name('users.time-in');
+            Route::post('users/{user}/time-out', [DriverAttendanceController::class, 'timeOut'])->name('users.time-out');
 
             Route::get('drivers/map', [AdminDriverMapController::class, 'index'])->name('drivers.map');
             Route::get('drivers/locations', [AdminDriverMapController::class, 'locations'])->name('drivers.locations');

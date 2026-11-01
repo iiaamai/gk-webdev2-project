@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\PendingRegistration;
+use App\Support\DriverAttendance;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -57,6 +58,14 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => 'This account has been archived.',
+            ]);
+        }
+
+        if ($user !== null && $user->isDriver() && ! DriverAttendance::isTimedIn($user)) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => DriverAttendance::loginDeniedMessage(),
             ]);
         }
 
