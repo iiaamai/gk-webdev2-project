@@ -23,7 +23,7 @@ class SettingSeeder extends Seeder
         ];
 
         foreach ($settings as $key => $value) {
-            Setting::query()->updateOrCreate(
+            Setting::query()->withArchived()->updateOrCreate(
                 ['setting_key' => $key],
                 ['setting_value' => $value],
             );

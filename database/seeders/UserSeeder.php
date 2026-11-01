@@ -56,11 +56,15 @@ class UserSeeder extends Seeder
             ],
         ];
 
-        foreach ($users as $user) {
-            User::query()->updateOrCreate(
-                ['email' => $user['email']],
-                $user,
+        foreach ($users as $attributes) {
+            $user = User::query()->withArchived()->updateOrCreate(
+                ['email' => $attributes['email']],
+                $attributes,
             );
+
+            if ($user->isArchived()) {
+                $user->unarchive();
+            }
         }
     }
 }

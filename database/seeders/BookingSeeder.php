@@ -24,13 +24,13 @@ class BookingSeeder extends Seeder
      */
     public function run(): void
     {
-        $customer = User::query()->where('email', 'customer@gk.test')->firstOrFail();
-        $driver = User::query()->where('email', 'driver@gk.test')->firstOrFail();
-        $driverTwo = User::query()->where('email', 'driver2@gk.test')->firstOrFail();
+        $customer = User::query()->withArchived()->where('email', 'customer@gk.test')->firstOrFail();
+        $driver = User::query()->withArchived()->where('email', 'driver@gk.test')->firstOrFail();
+        $driverTwo = User::query()->withArchived()->where('email', 'driver2@gk.test')->firstOrFail();
 
-        $truck = Vehicle::query()->where('plate_number', 'ABC-1234')->firstOrFail();
-        $sixWheeler = Vehicle::query()->where('plate_number', 'DEF-5678')->firstOrFail();
-        $van = Vehicle::query()->where('plate_number', 'GHI-9012')->firstOrFail();
+        $truck = Vehicle::query()->withArchived()->where('plate_number', 'ABC-1234')->firstOrFail();
+        $sixWheeler = Vehicle::query()->withArchived()->where('plate_number', 'DEF-5678')->firstOrFail();
+        $van = Vehicle::query()->withArchived()->where('plate_number', 'GHI-9012')->firstOrFail();
 
         $pricingByType = Pricing::query()->pluck('id', 'vehicle_type');
         $amountByPricingId = Pricing::query()->pluck('amount', 'id');
@@ -119,7 +119,7 @@ class BookingSeeder extends Seeder
             $withInvoice = $sample['with_invoice'] ?? null;
             unset($sample['lock_vehicle'], $sample['with_eir_pod'], $sample['with_invoice']);
 
-            $booking = Booking::query()->updateOrCreate(
+            $booking = Booking::query()->withArchived()->updateOrCreate(
                 ['booking_number' => $sample['booking_number']],
                 array_merge($sample, [
                     'customer_id' => $customer->id,
@@ -139,7 +139,7 @@ class BookingSeeder extends Seeder
             }
 
             if ($withEirPod) {
-                Eir::query()->updateOrCreate(
+                Eir::query()->withArchived()->updateOrCreate(
                     ['booking_id' => $booking->id],
                     [
                         'eir_path' => 'bookings/demo/gk-0005-eir.jpg',
@@ -147,7 +147,7 @@ class BookingSeeder extends Seeder
                     ],
                 );
 
-                Pod::query()->updateOrCreate(
+                Pod::query()->withArchived()->updateOrCreate(
                     ['booking_id' => $booking->id],
                     [
                         'photo_paths' => [
@@ -160,7 +160,7 @@ class BookingSeeder extends Seeder
             }
 
             if ($withInvoice instanceof InvoiceStatus) {
-                Invoice::query()->updateOrCreate(
+                Invoice::query()->withArchived()->updateOrCreate(
                     ['booking_id' => $booking->id],
                     [
                         'amount' => $amountByPricingId[$booking->pricing_id] ?? 0,

@@ -57,7 +57,7 @@ class VehicleSeeder extends Seeder
         ];
 
         foreach ($vehicles as $vehicle) {
-            Vehicle::query()->updateOrCreate(
+            Vehicle::query()->withArchived()->updateOrCreate(
                 ['plate_number' => $vehicle['plate_number']],
                 $vehicle,
             );
