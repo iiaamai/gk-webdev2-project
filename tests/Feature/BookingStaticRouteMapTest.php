@@ -186,7 +186,10 @@ class BookingStaticRouteMapTest extends TestCase
             ->assertSee('fill-primary', false)
             ->assertSee('fill-success', false)
             ->assertSee('minZoom', false)
-            ->assertSee('maxZoom', false);
+            ->assertSee('maxZoom', false)
+            ->assertSee('maxBounds', false)
+            ->assertSee('120.92', false)
+            ->assertSee('121.12', false);
     }
 
     public function test_customer_create_includes_location_picker_when_mapbox_configured(): void
@@ -247,6 +250,7 @@ class BookingStaticRouteMapTest extends TestCase
             ->assertSee('Set pickup', false)
             ->assertSee('Set dropoff', false)
             ->assertSee('booking-location-map', false)
+            ->assertSee('maxBounds', false)
             ->assertDontSee('data-route-map-for', false);
     }
 }

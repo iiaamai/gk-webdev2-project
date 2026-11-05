@@ -114,7 +114,9 @@ class DriverLocationTest extends TestCase
             ->get(route('admin.drivers.map'))
             ->assertOk()
             ->assertSee('Driver map', false)
-            ->assertSee('Search name, plate, or trip', false);
+            ->assertSee('Search name, plate, or trip', false)
+            ->assertSee('maxBounds', false)
+            ->assertSee('120.92', false);
 
         $this->actingAs($admin)
             ->getJson(route('admin.drivers.locations'))

@@ -224,14 +224,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        map = new mapboxgl.Map({
+        const mapOptions = {
             container: element,
             style: payload.style,
             center: payload.center,
             zoom: payload.zoom,
             minZoom: payload.minZoom,
             maxZoom: payload.maxZoom,
-        });
+        };
+
+        if (payload.maxBounds) {
+            mapOptions.maxBounds = payload.maxBounds;
+        }
+
+        map = new mapboxgl.Map(mapOptions);
 
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-left');
 

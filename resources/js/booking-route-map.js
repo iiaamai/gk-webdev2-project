@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mapboxgl.accessToken = payload.token;
 
-        const map = new mapboxgl.Map({
+        const mapOptions = {
             container: element,
             style: payload.style,
             center: payload.center,
@@ -36,7 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
             minZoom: payload.minZoom,
             maxZoom: payload.maxZoom,
             fadeDuration: 0,
-        });
+        };
+
+        if (payload.maxBounds) {
+            mapOptions.maxBounds = payload.maxBounds;
+        }
+
+        const map = new mapboxgl.Map(mapOptions);
 
         if (!payload.fullscreen) {
             map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');

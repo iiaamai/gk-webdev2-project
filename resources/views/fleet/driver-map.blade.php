@@ -23,6 +23,7 @@
             'center' => \App\Support\MapboxIntegration::defaultCenter(),
             'zoom' => \App\Support\MapboxIntegration::initialZoom(),
             'locationsUrl' => $locationsUrl,
+            'maxBounds' => \App\Support\ServiceArea::maxBounds(),
         ];
     @endphp
 

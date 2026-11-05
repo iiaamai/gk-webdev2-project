@@ -32,6 +32,7 @@
         'fullscreen' => $mapSize === 'fullscreen',
         'navDestination' => in_array($navDestination ?? null, ['pickup', 'dropoff'], true) ? $navDestination : null,
         'offRouteMeters' => 80,
+        'maxBounds' => \App\Support\ServiceArea::maxBounds(),
     ];
 @endphp
 
