@@ -34,4 +34,9 @@ class UpdateBookingRequest extends FormRequest
             ],
         ]);
     }
+
+    protected function prepareForValidation(): void
+    {
+        $this->mergeCargoTonsToKg();
+    }
 }

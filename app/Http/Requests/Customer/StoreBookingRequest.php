@@ -27,4 +27,9 @@ class StoreBookingRequest extends FormRequest
             'pickup_container_number' => ['required', 'string', 'max:100'],
         ]);
     }
+
+    protected function prepareForValidation(): void
+    {
+        $this->mergeCargoTonsToKg();
+    }
 }

@@ -139,7 +139,7 @@
                         <option value="">Select pricing…</option>
                         @foreach ($pricings ?? [] as $pricing)
                             <option value="{{ $pricing->id }}" @selected((string) old('pricing_id', $vehicle?->pricing_id) === (string) $pricing->id)>
-                                {{ $pricing->vehicle_type }} — ₱{{ number_format((float) $pricing->amount, 2) }} ({{ $pricing->capacity_kg }} kg)
+                                {{ $pricing->vehicle_type }} — ₱{{ number_format((float) $pricing->amount, 2) }} ({{ \App\Support\MetricWeight::formatTons((int) $pricing->capacity_kg) }} tons)
                             </option>
                         @endforeach
                     </x-ui.select>
@@ -148,7 +148,7 @@
                         <option value="">Select pricing…</option>
                         @foreach ($pricings ?? [] as $pricing)
                             <option value="{{ $pricing->id }}" @selected((string) old('pricing_id', $vehicle?->pricing_id) === (string) $pricing->id)>
-                                {{ $pricing->vehicle_type }} — ₱{{ number_format((float) $pricing->amount, 2) }} ({{ $pricing->capacity_kg }} kg)
+                                {{ $pricing->vehicle_type }} — ₱{{ number_format((float) $pricing->amount, 2) }} ({{ \App\Support\MetricWeight::formatTons((int) $pricing->capacity_kg) }} tons)
                             </option>
                         @endforeach
                     </x-ui.select>

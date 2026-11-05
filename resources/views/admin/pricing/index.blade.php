@@ -44,7 +44,7 @@
                 <tr>
                     <th class="px-4 py-3 font-medium">Vehicle type</th>
                     <th class="px-4 py-3 font-medium">Amount (PHP)</th>
-                    <th class="px-4 py-3 font-medium">Capacity (kg)</th>
+                    <th class="px-4 py-3 font-medium">Capacity (tons)</th>
                     <th class="px-4 py-3 font-medium"><span class="sr-only">Actions</span></th>
                 </tr>
             </x-slot:head>
@@ -52,7 +52,7 @@
                 <tr>
                     <td class="px-4 py-3 font-medium">{{ $pricing->vehicle_type }}</td>
                     <td class="px-4 py-3">₱{{ number_format((float) $pricing->amount, 2) }}</td>
-                    <td class="px-4 py-3">{{ $pricing->capacity_kg }}</td>
+                    <td class="px-4 py-3">{{ \App\Support\MetricWeight::formatTons((int) $pricing->capacity_kg) }}</td>
                     <td class="px-4 py-3">
                         <div class="flex flex-wrap items-center justify-end gap-2">
                             <x-ui.button href="{{ route('admin.pricing.edit', $pricing) }}" variant="secondary" class="!py-1.5 !text-xs">

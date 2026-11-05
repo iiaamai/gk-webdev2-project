@@ -8,6 +8,7 @@ use App\Enums\InvoiceStatus;
 use App\Models\Booking;
 use App\Models\User;
 use App\Support\BookingMultiTrip;
+use App\Support\CancellationRules;
 
 class BookingPolicy
 {
@@ -234,9 +235,7 @@ class BookingPolicy
         }
 
         if ($user->isCustomer()) {
-            return $booking->customer_id === $user->id
-                && $booking->status === BookingStatus::Pending
-                && $booking->accepted_at === null;
+            return CancellationRules::customerMayCancel($user, $booking);
         }
 
         if ($user->isSystemAdmin()) {

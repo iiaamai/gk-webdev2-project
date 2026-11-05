@@ -10,12 +10,11 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\BookingEmailNotifier;
 use App\Services\BookingVehicleRelease;
+use App\Support\CancellationRules;
 use Illuminate\Support\Facades\DB;
 
 class CancelBooking
 {
-    private const LATE_CANCEL_FEE_RATE = 0.25;
-
     public function __construct(
         private readonly BookingVehicleRelease $bookingVehicleRelease,
         private readonly BookingEmailNotifier $bookingEmailNotifier,
@@ -27,7 +26,7 @@ class CancelBooking
         $booking->loadMissing(['driver', 'pricing', 'invoice']);
         $assignedDriver = $booking->driver;
         $previousStatus = $booking->status;
-        $shouldApplyLateFee = $applyLateCancelFee ?? $this->shouldApplyLateCancelFee($booking, $cancelledBy);
+        $shouldApplyLateFee = $applyLateCancelFee ?? CancellationRules::shouldApplyCancellationFee($booking, $cancelledBy);
 
         $booking = DB::transaction(function () use ($booking, $shouldApplyLateFee): Booking {
             $this->bookingVehicleRelease->releaseForBooking($booking);
@@ -35,7 +34,7 @@ class CancelBooking
             $booking->update(['status' => BookingStatus::Cancelled]);
 
             if ($shouldApplyLateFee) {
-                $this->applyLateCancelFee($booking);
+                $this->applyCancellationFee($booking);
             }
 
             return $booking->fresh(['invoice', 'pricing']);
@@ -57,19 +56,9 @@ class CancelBooking
         return $booking;
     }
 
-    private function shouldApplyLateCancelFee(Booking $booking, ?User $cancelledBy): bool
+    private function applyCancellationFee(Booking $booking): void
     {
-        if ($cancelledBy === null || ! $cancelledBy->isSystemAdmin()) {
-            return false;
-        }
-
-        return $booking->accepted_at !== null;
-    }
-
-    private function applyLateCancelFee(Booking $booking): void
-    {
-        $fare = (float) ($booking->pricing?->amount ?? 0);
-        $fee = round($fare * self::LATE_CANCEL_FEE_RATE, 2);
+        $fee = CancellationRules::feeAmount($booking);
 
         Invoice::query()->updateOrCreate(
             ['booking_id' => $booking->id],
@@ -78,7 +67,7 @@ class CancelBooking
                 'status' => InvoiceStatus::Unpaid,
                 'issued_at' => now('Asia/Manila'),
                 'paid_at' => null,
-                'notes' => 'Cancellation fee (25%).',
+                'notes' => CancellationRules::feeNote(),
                 'payment_proof_path' => null,
                 'payment_proof_status' => null,
                 'payment_proof_submitted_at' => null,

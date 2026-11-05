@@ -23,6 +23,12 @@
         'capacity_kg' => (int) $pricing->capacity_kg,
     ])->values();
     $initialCargoKg = old('cargo_kg', $booking?->cargo_kg ?? '');
+    $initialCargoTons = old('cargo_tons');
+    if ($initialCargoTons === null && filled($initialCargoKg)) {
+        $initialCargoTons = \App\Support\MetricWeight::kgToTons((int) $initialCargoKg);
+    } elseif ($initialCargoTons === null && $booking?->cargo_kg) {
+        $initialCargoTons = \App\Support\MetricWeight::kgToTons((int) $booking->cargo_kg);
+    }
 @endphp
 
 <input type="hidden" id="pickup_lat" name="pickup_lat" value="{{ $pickupLat }}">
@@ -35,9 +41,16 @@
     x-data="{
         pricingId: @js($initialPricingId !== null && $initialPricingId !== '' ? (string) $initialPricingId : ''),
         driverId: @js($initialDriverId !== null && $initialDriverId !== '' ? (string) $initialDriverId : ''),
-        cargoKg: @js($initialCargoKg !== null && $initialCargoKg !== '' ? (string) $initialCargoKg : ''),
+        cargoTons: @js($initialCargoTons !== null && $initialCargoTons !== '' ? (string) $initialCargoTons : ''),
         pricingOptions: @js($pricingOptions),
         drivers: @js($driverOptions),
+        cargoKg() {
+            const tons = parseFloat(this.cargoTons);
+            if (! Number.isFinite(tons) || tons <= 0) {
+                return 0;
+            }
+            return Math.round(tons * 1000);
+        },
         driverVisible(driver) {
             if (! driver.pricing_id) {
                 return false;
@@ -49,7 +62,7 @@
         },
         tripCount() {
             const pricing = this.pricingOptions.find(p => String(p.id) === String(this.pricingId));
-            const kg = parseInt(this.cargoKg, 10);
+            const kg = this.cargoKg();
             if (! pricing || ! kg || kg < 1 || pricing.capacity_kg < 1) {
                 return 0;
             }
@@ -162,20 +175,21 @@
     @endunless
 
     <div>
-        <x-ui.label for="cargo_kg">Cargo weight (kg)</x-ui.label>
+        <x-ui.label for="cargo_tons">Cargo weight (tons)</x-ui.label>
         <x-ui.input
-            id="cargo_kg"
+            id="cargo_tons"
             type="number"
-            name="cargo_kg"
-            x-model="cargoKg"
-            value="{{ old('cargo_kg', $booking?->cargo_kg) }}"
-            min="1"
-            step="1"
+            name="cargo_tons"
+            x-model="cargoTons"
+            value="{{ old('cargo_tons', $initialCargoTons) }}"
+            min="0.001"
+            step="0.001"
             required
         />
         <p class="mt-1 text-xs text-text-muted">
             Initial invoice is one list fare. Multiple round trips are requested after arrival at pickup.
         </p>
+        <x-ui.field-error name="cargo_tons" />
         <x-ui.field-error name="cargo_kg" />
     </div>
 

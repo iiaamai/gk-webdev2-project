@@ -62,7 +62,7 @@
                     @if ($booking->cargo_kg)
                         <div>
                             <dt class="text-text-muted">Cargo weight</dt>
-                            <dd class="mt-1 text-text">{{ number_format((int) $booking->cargo_kg) }} kg</dd>
+                            <dd class="mt-1 text-text">{{ \App\Support\MetricWeight::weightLabel((int) $booking->cargo_kg) }}</dd>
                         </div>
                     @endif
                     @if ($booking->cargo_desc)

@@ -14,6 +14,10 @@
             'amount' => (float) $pricing->amount,
             'capacity_kg' => (int) $pricing->capacity_kg,
         ])->values();
+        $initialCargoTons = old('cargo_tons');
+        if ($initialCargoTons === null && old('cargo_kg')) {
+            $initialCargoTons = \App\Support\MetricWeight::kgToTons((int) old('cargo_kg'));
+        }
     @endphp
 
     <x-ui.page-header
@@ -31,11 +35,18 @@
     <div class="mx-auto w-full max-w-3xl" x-data="{
         open: false,
         pricingId: @js(old('pricing_id') !== null && old('pricing_id') !== '' ? (string) old('pricing_id') : ''),
-        cargoKg: @js(old('cargo_kg') !== null && old('cargo_kg') !== '' ? (string) old('cargo_kg') : ''),
+        cargoTons: @js($initialCargoTons !== null && $initialCargoTons !== '' ? (string) $initialCargoTons : ''),
         pricingOptions: @js($pricingOptions),
+        cargoKg() {
+            const tons = parseFloat(this.cargoTons);
+            if (! Number.isFinite(tons) || tons <= 0) {
+                return 0;
+            }
+            return Math.round(tons * 1000);
+        },
         tripCount() {
             const pricing = this.pricingOptions.find(p => String(p.id) === String(this.pricingId));
-            const kg = parseInt(this.cargoKg, 10);
+            const kg = this.cargoKg();
             if (! pricing || ! kg || kg < 1) return 0;
             return Math.max(1, Math.ceil(kg / pricing.capacity_kg));
         },
@@ -77,7 +88,7 @@
                                 @class(['text-neutral-400' => $availableVehicles === 0])
                             >
                                 {{ $pricing->vehicle_type }} — ₱{{ number_format((float) $pricing->amount, 2) }} —
-                                {{ number_format((int) $pricing->capacity_kg) }} kg max —
+                                {{ \App\Support\MetricWeight::formatTons((int) $pricing->capacity_kg) }} tons max —
                                 {{ $availableVehicles === 0 ? 'None available' : $availableVehicles.' available' }}
                             </option>
                         @endforeach
@@ -275,20 +286,21 @@
             <x-ui.section-heading icon="package" title="Cargo details" description="Enter cargo weight and any notes for the trip." />
             <div class="mt-4 space-y-4">
                 <div>
-                    <x-ui.label for="cargo_kg">Cargo weight (kg)</x-ui.label>
+                    <x-ui.label for="cargo_tons">Cargo weight (tons)</x-ui.label>
                     <x-ui.input
-                        id="cargo_kg"
+                        id="cargo_tons"
                         type="number"
-                        name="cargo_kg"
-                        x-model="cargoKg"
-                        value="{{ old('cargo_kg') }}"
-                        min="1"
-                        step="1"
+                        name="cargo_tons"
+                        x-model="cargoTons"
+                        value="{{ old('cargo_tons', $initialCargoTons) }}"
+                        min="0.001"
+                        step="0.001"
                         required
                     />
                     <p class="mt-1 text-xs text-text-muted">
                         Your initial invoice is one list fare for this vehicle type. If you need multiple round trips, request them after the driver arrives at pickup.
                     </p>
+                    <x-ui.field-error name="cargo_tons" />
                     <x-ui.field-error name="cargo_kg" />
                 </div>
                 <div>

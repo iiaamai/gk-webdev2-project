@@ -26,6 +26,13 @@
                 </x-ui.button>
             @endcan
             @can('cancel', $booking)
+                @php
+                    $cancelAppliesFee = \App\Support\CancellationRules::shouldApplyCancellationFee($booking, auth()->user());
+                    $cancelFeeAmount = $cancelAppliesFee ? \App\Support\CancellationRules::feeAmount($booking) : null;
+                    $cancelDescription = $cancelAppliesFee
+                        ? 'Your booking will be cancelled. A cancellation fee of ₱'.number_format($cancelFeeAmount, 2).' (10% of your current invoice) will replace your invoice total. This cannot be undone.'
+                        : 'Your booking will be cancelled at no extra fee while it is still pending today. This cannot be undone.';
+                @endphp
                 <div x-data="{ open: false }">
                     <form x-ref="cancelForm" method="post" action="{{ route('customer.bookings.cancel', $booking) }}">
                         @csrf
@@ -35,7 +42,7 @@
                     </form>
                     <x-ui.confirm-dialog
                         title="Cancel this booking?"
-                        description="Your booking will be cancelled while it is still pending. This cannot be undone."
+                        :description="$cancelDescription"
                         confirm-label="Cancel booking"
                         cancel-label="Keep booking"
                         confirm-variant="danger"
@@ -121,7 +128,7 @@
             @if ($booking->cargo_kg)
                 <div>
                     <dt class="text-text-muted">Cargo weight</dt>
-                    <dd class="mt-1 text-text">{{ number_format((int) $booking->cargo_kg) }} kg</dd>
+                    <dd class="mt-1 text-text">{{ \App\Support\MetricWeight::weightLabel((int) $booking->cargo_kg) }}</dd>
                 </div>
             @endif
             @if ($booking->cargo_desc)

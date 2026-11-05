@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Support\MetricWeight;
 use Illuminate\Http\Response;
 
 /**
@@ -49,6 +50,14 @@ class BookingReceiptPdf
             $sections[] = ['', ''];
             $sections[] = ['CARGO', ''];
             $sections[] = ['Description', $booking->cargo_desc];
+        }
+
+        if ($booking->cargo_kg) {
+            if (! filled($booking->cargo_desc)) {
+                $sections[] = ['', ''];
+                $sections[] = ['CARGO', ''];
+            }
+            $sections[] = ['Weight', MetricWeight::weightLabel((int) $booking->cargo_kg)];
         }
 
         $lines = ['GK Trucking Services'];

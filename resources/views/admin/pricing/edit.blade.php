@@ -30,8 +30,9 @@
             </div>
 
             <div>
-                <x-ui.label for="capacity_kg">Capacity (kg)</x-ui.label>
-                <x-ui.input id="capacity_kg" type="number" name="capacity_kg" value="{{ old('capacity_kg', $pricing->capacity_kg) }}" min="1" required />
+                <x-ui.label for="capacity_tons">Capacity (tons)</x-ui.label>
+                <x-ui.input id="capacity_tons" type="number" step="0.001" name="capacity_tons" value="{{ old('capacity_tons', \App\Support\MetricWeight::kgToTons($pricing->capacity_kg)) }}" min="0.001" required />
+                <x-ui.field-error name="capacity_tons" />
                 <x-ui.field-error name="capacity_kg" />
             </div>
 

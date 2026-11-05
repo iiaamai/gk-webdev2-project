@@ -36,7 +36,7 @@
                     <th class="px-4 py-3 font-medium">Brand</th>
                     <th class="px-4 py-3 font-medium">Color</th>
                     <th class="px-4 py-3 font-medium">Type</th>
-                    <th class="px-4 py-3 font-medium">Capacity (kg)</th>
+                    <th class="px-4 py-3 font-medium">Capacity (tons)</th>
                     <th class="px-4 py-3 font-medium">Status</th>
                     <th class="px-4 py-3 font-medium">Assigned driver</th>
                     <th class="px-4 py-3 font-medium"><span class="sr-only">Actions</span></th>
@@ -51,7 +51,7 @@
                     <td class="px-4 py-3">{{ $vehicle->brand }}</td>
                     <td class="px-4 py-3">{{ $vehicle->color ?? '—' }}</td>
                     <td class="px-4 py-3">{{ $vehicle->pricing?->vehicle_type ?? '—' }}</td>
-                    <td class="px-4 py-3">{{ $vehicle->pricing?->capacity_kg ?? '—' }}</td>
+                    <td class="px-4 py-3">{{ $vehicle->pricing ? \App\Support\MetricWeight::formatTons((int) $vehicle->pricing->capacity_kg) : '—' }}</td>
                     <td class="px-4 py-3">
                         <x-ui.badge :tone="$statusTone">{{ $vehicle->status->label() }}</x-ui.badge>
                     </td>

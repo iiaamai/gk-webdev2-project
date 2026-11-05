@@ -3,75 +3,101 @@ GK Trucking Services 2.0 — Backlog & improvement plan
 Status: living backlog — implement slices when explicitly requested (/implement).
 Primary scope: MVP / checkpoint B (phases.txt) unless a slice says post-MVP.
 
-Last updated: Nov 2026 (Sir Pat product slice K + prior shipped slices H–J).
+Last updated: Nov 2026 (Slice L agreed — tons UI + customer cancel / 10% fee).
 
 ======================================================================
-K. Sir Pat product alignment (SHIPPED IN CODE — Nov 2026)
+L. Metric tons UI + customer cancellation (SHIPPED IN CODE — Nov 2026)
 ======================================================================
 Locked via /clarify (Nov 2026).
 
 Goals
-- Truck-only fleet and pricing by wheel class (urban Metro Manila logistics).
-- Branded delivery receipt PDF (layout pass; mockup review later).
-- Service area: Metro Manila (NCR) bounding box on map + server validation.
+- Show weight/capacity in **metric tons** everywhere users see it (DB stays kg).
+- Let customers **cancel** more of the trip lifecycle with a clear **10% cancellation fee** rule set.
+- Align **admin** late-cancel fee with the same **10%** (replace today’s 25% in `CancelBooking`).
 
 ----------------------------------------------------------------------
-K1. Pricing & fleet
+L1. Metric tons (display + forms only)
 ----------------------------------------------------------------------
-| Decision | Detail |
-| Pricing tiers | **Two rows only:** `6-wheeler` ₱15,000 · `10-wheeler` ₱25,000 |
-| Removed | 4-wheeler truck, L300 van, Reefer / specialized |
-| Capacity | Single `capacity_kg` per tier: 42,000 (6w) · 72,000 (10w) from GCW ranges |
-| Fleet seed | **30 units** (6 lines × 5): Isuzu 4×2/6×4, Hino 4×2/6×4, Sinotruk HOWO 6×4, Fuso 6×4 |
-| Demo drivers | `driver@gk.test` → ISU-4X2-001 · `driver2@gk.test` → ISU-6X4-001 |
-| Legacy data | **`migrate:fresh --seed` OK** — no migration of old vehicle types |
+| Rule | Keep `capacity_kg`, `cargo_kg`, and validation in **kg** in the database |
+| Display | **1 metric ton = 1,000 kg** (e.g. 42,000 kg → **42 tons**) |
+| Forms | User enters **tons**; convert to kg on save; convert back for edit/display |
+| Surfaces | Marketing/pricing, booking create/edit, fleet & pricing admin, receipts/PDF, emails, vehicle-type dropdown copy (“X tons max”), trip detail read-only fields |
 
-Sample bookings (seed): GK-{year}-0001…0006 across pending / accepted / transit_to_pickup / completed / cancelled.
+Do **not** rename DB columns to tons in this slice.
 
 ----------------------------------------------------------------------
-K2. Metro Manila service area
+L2. Customer cancel — when the button shows
 ----------------------------------------------------------------------
-| Rule | Pickup **and** dropoff lat/lng must lie inside NCR bbox |
-| Implementation | `App\Support\ServiceArea` · map `maxBounds` · Form Request validation |
-| Bbox (approx.) | lat 14.45–14.73 · lng 120.92–121.12 |
-| UI | Location picker search/filter + click rejection outside box |
+Show **Cancel** on customer booking show when they own the booking and status is:
+
+| Status | Cancel allowed |
+|--------|----------------|
+| pending (with or without gatepass) | Yes |
+| accepted | Yes |
+| transit_to_pickup | Yes |
+| arrived_at_pickup | Yes |
+| in_transit | Yes |
+| transit_completed | **No** (hide button — POD/completion path) |
+| completed / cancelled | No |
+
+Confirm dialog must say whether cancel is **free** or **10% of current invoice** before submit.
 
 ----------------------------------------------------------------------
-K3. Delivery receipt PDF (layout pass)
+L3. Cancellation fee — 10% of invoice (customer + admin)
 ----------------------------------------------------------------------
-- Sections: customer, wheel class, plate, driver, route, invoice amount/status, cargo.
-- Logo when available; Helvetica-Bold headings.
-- Sir Pat mockup review later — no pixel-perfect design yet.
-- Download rules unchanged (permissions_matrix.txt).
+| Fee rate | **10%** of the booking invoice **`amount` at cancel time** (includes multi-trip / wrong-truck adjustments already on the invoice) |
+| Admin/staff late cancel | Same **10%** (change `CancelBooking` from 25% → 10%; invoice notes e.g. “Cancellation fee (10%).”) |
+| When fee applies | Invoice is **replaced** with the fee total (**even if previously paid** — manual refund/process out of scope for MVP; document for ops) |
+
+Customer fee matrix
+|-------------------|------|
+| Pending, **no gatepass**, cancel on **same calendar day** as **`created_at`** (Asia/Manila) | **Free** — invoice unchanged (full list fare remains) |
+| Pending, **no gatepass**, cancel **after** that calendar day | **10%** — invoice replaced |
+| Pending **with gatepass** (driver not accepted yet) | **10%** |
+| **Accepted** or any in-progress status in L2 table | **10%** |
+
+Side effects (unchanged pattern): status → `cancelled`, release vehicle/driver, emails + activity log (`late_cancel_fee` flag).
+
+Implementation touchpoints (for dev)
+- `BookingPolicy::cancel` — widen customer statuses; same-day free rule on `created_at`
+- `CancelBooking` — customer fee logic; fee base = invoice amount; 10% rate for admin + customer
+- `resources/views/customer/bookings/show.blade.php` — cancel UX + copy
+- Tests: `BacklogImprovementsTest`, customer cancel tests, new same-day / gatepass / fee cases
 
 ----------------------------------------------------------------------
-Render production reset (operator)
+L4. Docs follow-up (optional with slice)
 ----------------------------------------------------------------------
-Free tier (no Shell): external `DATABASE_URL` + `php artisan migrate:fresh --seed --force`
-  **or** delete/recreate Postgres + redeploy (start.sh runs migrate + seed).
-After reset: demo logins in `docs/development/seed_plan.txt`.
-Optional: set `RUN_DB_SEED=false` on web service after reset to avoid re-seed every deploy.
+- `docs/development/permissions_matrix.txt` — customer cancel window + fee
+- `docs/development/features.txt` — tons display note; cancel policy
+- Marketing FAQ if it still says kg-only or old cancel rules
+
+======================================================================
+K. Sir Pat product alignment (SHIPPED IN CODE — Nov 2026)
+======================================================================
+- Pricing: 6-wheeler ₱15,000 / 10-wheeler ₱25,000; fleet seed 30 + MNT-0001; NCR `ServiceArea`.
+- Map **maxBounds** on location picker, route maps, and driver map (Metro Manila).
+- Receipt PDF layout pass (`BookingReceiptPdf`).
+- Seed: `docs/development/seed_plan.txt` · Render reset notes unchanged (migrate/seed on deploy).
 
 ======================================================================
 SHIPPED SLICES (reference — do not re-implement without ask)
 ======================================================================
-
 H. Multi-trip at pickup — office approve, customer confirm, driver accept, invoice = rounds × fare.
-I. Lifecycle — transit_to_pickup → arrived_at_pickup → in_transit (haul) → transit_completed → completed.
+I. Lifecycle — transit_to_pickup → arrived_at_pickup → in_transit → transit_completed → completed.
 I-b. Lifecycle UX — stepper, Next step card, role callouts.
-J. Round-trip lap progress — driver marks laps; transit completed gated at N/N; staff/admin sync X/N.
+J. Round-trip lap progress — driver marks laps; transit completed gated at N/N.
 
-QA
-- Automated: `RoundTripLapProgressTest`, `LifecycleQaMatrixTest`, `ScenarioQaReportTest`, etc.
-- Hosted smoke: https://gk-trucking-web.onrender.com/ (production-safe lap pack Nov 2026).
+Prior cancel behavior (superseded by **L** when implemented)
+- Customer: pending only, no fee.
+- Admin late cancel: 25% of list fare after accept.
 
 ======================================================================
-POST-MVP / OPEN (not in slice K)
+POST-MVP / OPEN (not in slice L)
 ======================================================================
 - PayMongo online pay (F11); MVP = invoice unpaid/paid + QR proof upload.
-- Geofenced arrived-at-pickup (backlog; distinct from NCR booking bbox).
+- Automatic refund when cancel fee replaces a **paid** invoice.
+- Geofenced arrived-at-pickup (distinct from NCR booking bbox).
 - Per-lap geofence / undo lap / per-lap invoice lines.
-- Mapbox static route on details (F9 partial).
 - Email notifications full matrix (email_events.txt).
 - Receipt pixel layout when Sir Pat supplies mockup.
 

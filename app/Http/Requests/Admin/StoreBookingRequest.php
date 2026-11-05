@@ -36,4 +36,9 @@ class StoreBookingRequest extends FormRequest
             'gatepass' => ['nullable', 'file', 'mimes:jpeg,jpg,png,webp,gif', 'max:20480'],
         ]);
     }
+
+    protected function prepareForValidation(): void
+    {
+        $this->mergeCargoTonsToKg();
+    }
 }

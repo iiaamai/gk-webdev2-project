@@ -34,7 +34,7 @@ class BacklogImprovementsTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_cancel_after_accept_charges_twenty_five_percent_cancellation_fee(): void
+    public function test_admin_cancel_after_accept_charges_ten_percent_cancellation_fee(): void
     {
         $admin = User::factory()->systemAdmin()->create();
         $pricing = Pricing::factory()->create([
@@ -62,9 +62,9 @@ class BacklogImprovementsTest extends TestCase
         $booking->refresh();
         $invoice = $booking->invoice;
         $this->assertSame(BookingStatus::Cancelled, $booking->status);
-        $this->assertSame('2300.00', (string) $invoice?->amount);
+        $this->assertSame('1500.00', (string) $invoice?->amount);
         $this->assertSame(InvoiceStatus::Unpaid, $invoice?->status);
-        $this->assertSame('Cancellation fee (25%).', $invoice?->notes);
+        $this->assertSame('Cancellation fee (10%).', $invoice?->notes);
     }
 
     public function test_admin_cancel_before_accept_keeps_full_invoice_amount(): void
@@ -149,8 +149,7 @@ class BacklogImprovementsTest extends TestCase
         $customer = User::factory()->customer()->create();
         $booking = Booking::factory()->create([
             'customer_id' => $customer->id,
-            'status' => BookingStatus::Accepted,
-            'accepted_at' => now('Asia/Manila'),
+            'status' => BookingStatus::TransitCompleted,
         ]);
 
         $this->actingAs($customer)

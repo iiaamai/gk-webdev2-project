@@ -33,7 +33,7 @@
                             <div class="p-5">
                                 <p class="text-sm text-brand-charcoal/70">{{ $pricing->vehicle_type }}</p>
                                 <p class="mt-1 text-lg font-semibold text-brand-navy">₱{{ number_format((float) $pricing->amount, 2) }}</p>
-                                <p class="mt-1 text-sm text-brand-charcoal/70">{{ number_format((int) $pricing->capacity_kg) }} kg capacity</p>
+                                <p class="mt-1 text-sm text-brand-charcoal/70">{{ \App\Support\MetricWeight::capacityLabel((int) $pricing->capacity_kg) }}</p>
                             </div>
                         </article>
                     @endforeach

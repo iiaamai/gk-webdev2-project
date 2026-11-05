@@ -95,7 +95,7 @@
                             <dt class="text-text-muted">Type</dt>
                             <dd>{{ $user->assignedVehicle->pricing?->vehicle_type ?? '—' }}</dd>
                             <dt class="text-text-muted">Capacity (kg)</dt>
-                            <dd>{{ $user->assignedVehicle->pricing?->capacity_kg ?? '—' }}</dd>
+                            <dd>{{ $user->assignedVehicle->pricing ? \App\Support\MetricWeight::formatTons((int) $user->assignedVehicle->pricing->capacity_kg).' tons' : '—' }}</dd>
                         @else
                             <dt class="text-text-muted">Assignment</dt>
                             <dd>Unassigned</dd>

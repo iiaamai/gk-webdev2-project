@@ -4,6 +4,7 @@ namespace App\Http\Requests\Concerns;
 
 use App\Models\Booking;
 use App\Models\User;
+use App\Support\MetricWeight;
 use App\Support\ServiceArea;
 use Closure;
 use Illuminate\Validation\Rule;
@@ -65,7 +66,7 @@ trait ValidatesBookingFields
             'dropoff_address' => ['required', 'string', 'max:500'],
             'dropoff_lat' => ['required', 'numeric', 'between:-90,90', $this->serviceAreaRule('dropoff_lng')],
             'dropoff_lng' => ['required', 'numeric', 'between:-180,180'],
-            'cargo_kg' => ['required', 'integer', 'min:1', 'max:999999'],
+            ...$this->cargoFieldRules(),
             'cargo_desc' => ['nullable', 'string', 'max:2000'],
             'additional_requirements' => ['nullable', 'string', 'max:2000'],
         ];
@@ -84,5 +85,25 @@ trait ValidatesBookingFields
                 $fail(ServiceArea::outOfAreaMessage());
             }
         };
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    protected function cargoFieldRules(): array
+    {
+        return [
+            'cargo_tons' => ['required_without:cargo_kg', 'nullable', 'numeric', 'min:0.001', 'max:999.999'],
+            'cargo_kg' => ['required_without:cargo_tons', 'nullable', 'integer', 'min:1', 'max:999999'],
+        ];
+    }
+
+    protected function mergeCargoTonsToKg(): void
+    {
+        if ($this->filled('cargo_tons')) {
+            $this->merge([
+                'cargo_kg' => MetricWeight::tonsToKg((float) $this->input('cargo_tons')),
+            ]);
+        }
     }
 }
