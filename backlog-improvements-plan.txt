@@ -3,103 +3,136 @@ GK Trucking Services 2.0 — Backlog & improvement plan
 Status: living backlog — implement slices when explicitly requested (/implement).
 Primary scope: MVP / checkpoint B (phases.txt) unless a slice says post-MVP.
 
-Last updated: Nov 2026 (Slice L agreed — tons UI + customer cancel / 10% fee).
+Last updated: Nov 2026 (Slice N shipped — HTML/CSS delivery receipt PDF).
 
 ======================================================================
-L. Metric tons UI + customer cancellation (SHIPPED IN CODE — Nov 2026)
+N. Delivery receipt — HTML/CSS PDF (SHIPPED IN CODE — Nov 2026)
 ======================================================================
 Locked via /clarify (Nov 2026).
 
 Goals
-- Show weight/capacity in **metric tons** everywhere users see it (DB stays kg).
-- Let customers **cancel** more of the trip lifecycle with a clear **10% cancellation fee** rule set.
-- Align **admin** late-cancel fee with the same **10%** (replace today’s 25% in `CancelBooking`).
+- Replace hand-built PDF strings with **Blade HTML + CSS → PDF** (Dompdf).
+- **Lalamove-inspired layout** (hero total, two columns, route card, breakdown) using **GK branding** (navy #122B4C, crimson #C8102E, logo).
+- Keep existing **Download receipt** routes, policies, and `application/pdf` responses.
+
+Content
+| Block | Fields |
+|-------|--------|
+| Header | Logo, thank-you + customer name, issued at (Manila) |
+| Hero | Total PHP, wheel class + plate, preferred pickup datetime |
+| Route card | Pickup/dropoff, customer contact, port # / container # when set |
+| Driver | Name; star rating for this booking when rated |
+| Breakdown | Base fare, multi-trip lines, vehicle-change fee, cancellation fee when applicable; total = invoice amount; payment status |
+| Footer | `company_name`, `support_email` from Settings |
+| Cargo | Description + weight in **tons** (`MetricWeight`) |
+
+Implementation notes
+- `barryvdh/laravel-dompdf`; view e.g. `resources/views/pdf/delivery-receipt.blade.php`.
+- Breakdown helper aligns lines to **invoice amount** (best-effort + adjustment line if needed).
+- Tests: existing `BookingReceiptTest`; optional unit test on breakdown helper.
 
 ----------------------------------------------------------------------
-L1. Metric tons (display + forms only)
+N1. Dependency
 ----------------------------------------------------------------------
-| Rule | Keep `capacity_kg`, `cargo_kg`, and validation in **kg** in the database |
-| Display | **1 metric ton = 1,000 kg** (e.g. 42,000 kg → **42 tons**) |
-| Forms | User enters **tons**; convert to kg on save; convert back for edit/display |
-| Surfaces | Marketing/pricing, booking create/edit, fleet & pricing admin, receipts/PDF, emails, vehicle-type dropdown copy (“X tons max”), trip detail read-only fields |
-
-Do **not** rename DB columns to tons in this slice.
+- `composer require barryvdh/laravel-dompdf` (no new `.env` keys).
 
 ----------------------------------------------------------------------
-L2. Customer cancel — when the button shows
+N2. Tests (suggested)
 ----------------------------------------------------------------------
-Show **Cancel** on customer booking show when they own the booking and status is:
+- `tests/Feature/BookingReceiptTest.php` — still PDF headers.
+- `tests/Unit/BookingReceiptBreakdownTest.php` — cancellation / multi-trip / single fare lines.
 
-| Status | Cancel allowed |
-|--------|----------------|
-| pending (with or without gatepass) | Yes |
-| accepted | Yes |
-| transit_to_pickup | Yes |
-| arrived_at_pickup | Yes |
-| in_transit | Yes |
-| transit_completed | **No** (hide button — POD/completion path) |
-| completed / cancelled | No |
+======================================================================
+M. Customer payment visibility (SHIPPED IN CODE — Nov 2026)
+======================================================================
+Locked via /clarify (Nov 2026).
 
-Confirm dialog must say whether cancel is **free** or **10% of current invoice** before submit.
-
-----------------------------------------------------------------------
-L3. Cancellation fee — 10% of invoice (customer + admin)
-----------------------------------------------------------------------
-| Fee rate | **10%** of the booking invoice **`amount` at cancel time** (includes multi-trip / wrong-truck adjustments already on the invoice) |
-| Admin/staff late cancel | Same **10%** (change `CancelBooking` from 25% → 10%; invoice notes e.g. “Cancellation fee (10%).”) |
-| When fee applies | Invoice is **replaced** with the fee total (**even if previously paid** — manual refund/process out of scope for MVP; document for ops) |
-
-Customer fee matrix
-|-------------------|------|
-| Pending, **no gatepass**, cancel on **same calendar day** as **`created_at`** (Asia/Manila) | **Free** — invoice unchanged (full list fare remains) |
-| Pending, **no gatepass**, cancel **after** that calendar day | **10%** — invoice replaced |
-| Pending **with gatepass** (driver not accepted yet) | **10%** |
-| **Accepted** or any in-progress status in L2 table | **10%** |
-
-Side effects (unchanged pattern): status → `cancelled`, release vehicle/driver, emails + activity log (`late_cancel_fee` flag).
-
-Implementation touchpoints (for dev)
-- `BookingPolicy::cancel` — widen customer statuses; same-day free rule on `created_at`
-- `CancelBooking` — customer fee logic; fee base = invoice amount; 10% rate for admin + customer
-- `resources/views/customer/bookings/show.blade.php` — cancel UX + copy
-- Tests: `BacklogImprovementsTest`, customer cancel tests, new same-day / gatepass / fee cases
+Goals
+- Show **Paid / Unpaid** on **active** booking cards (customer home + My Bookings Active tab).
+- Add a **4th home KPI** for count of bookings with **unpaid** invoices.
+- Surface a **5-day payment window** from booking creation (UI only — no enforcement).
 
 ----------------------------------------------------------------------
-L4. Docs follow-up (optional with slice)
+M1. Paid / Unpaid chip (active bookings only)
 ----------------------------------------------------------------------
-- `docs/development/permissions_matrix.txt` — customer cancel window + fee
-- `docs/development/features.txt` — tons display note; cancel policy
-- Marketing FAQ if it still says kg-only or old cancel rules
+| Surfaces | Customer **home** → Active bookings grid · **My Bookings → Active** tab |
+| Component | `resources/views/components/customer/booking-card.blade.php` (shared) |
+| Out of scope | History tab cards · booking **detail** page header chip |
+
+Chip rules (simple — from `invoice.status` only)
+| Invoice | Chip |
+|---------|------|
+| `paid` | **Paid** (success tone — `InvoiceStatus::badgeTone()`) |
+| `unpaid` | **Unpaid** (warning tone) |
+| No invoice row | **No chip** |
+
+No separate chips for payment proof pending/rejected in this slice.
+
+Ensure queries eager-load `invoice` where cards render (already on overview + index active list).
+
+----------------------------------------------------------------------
+M2. Homepage 4th KPI — unpaid bookings
+----------------------------------------------------------------------
+| Placement | Fourth summary card beside Pending / In progress / Completed |
+| Label | e.g. **Unpaid** |
+| Count | Customer’s bookings with **`invoices.status = unpaid`** (any trip status — includes completed-but-unpaid unless changed at implement time) |
+| Optional | Subtitle with total PHP due (parity with admin unpaid KPI) |
+
+Backend: extend `App\Services\CustomerOverviewQuery::gather()` → e.g. `unpaid_count`, optional `unpaid_total`.
+
+View: `resources/views/portals/customer-home.blade.php` — grid layout for four KPIs.
+
+----------------------------------------------------------------------
+M3. Five-day payment window (UI only)
+----------------------------------------------------------------------
+| Start | **`booking.created_at`** calendar date in **Asia/Manila** |
+| Due | End of **day 5** after creation — show **“Due by M j, Y”** on active card while invoice is unpaid |
+| Overdue | After due date, still unpaid → **“Overdue”** copy/styling on card |
+| Paid | No due/overdue messaging |
+
+**No enforcement in this slice:** no auto-cancel, no block on new bookings, no staff-only flags, no scheduled jobs.
+
+Suggested helper: e.g. `App\Support\PaymentDue` — `dueDate(Booking)`, `isOverdue(Booking)` (unpaid + past due).
+
+----------------------------------------------------------------------
+M4. Tests (suggested)
+----------------------------------------------------------------------
+- Overview query returns correct `unpaid_count`.
+- Booking card renders Paid/Unpaid when invoice loaded.
+- Due/overdue copy for fixed `created_at` + unpaid invoice (feature test or unit on helper).
+
+----------------------------------------------------------------------
+M5. Docs follow-up (optional with slice)
+----------------------------------------------------------------------
+- `docs/development/features.txt` — customer sees payment status on active cards; 5-day pay expectation (informational).
+- Marketing FAQ if payment timing is mentioned.
+
+======================================================================
+L. Metric tons UI + customer cancellation (SHIPPED IN CODE — Nov 2026)
+======================================================================
+- Metric **tons** in UI; DB stays kg (`MetricWeight`).
+- Customer cancel through in-progress statuses; **10%** fee from invoice amount; admin same rate.
+- Same-day free cancel: pending, no gatepass, same Manila day as `created_at`.
 
 ======================================================================
 K. Sir Pat product alignment (SHIPPED IN CODE — Nov 2026)
 ======================================================================
-- Pricing: 6-wheeler ₱15,000 / 10-wheeler ₱25,000; fleet seed 30 + MNT-0001; NCR `ServiceArea`.
-- Map **maxBounds** on location picker, route maps, and driver map (Metro Manila).
-- Receipt PDF layout pass (`BookingReceiptPdf`).
-- Seed: `docs/development/seed_plan.txt` · Render reset notes unchanged (migrate/seed on deploy).
+- Pricing 6-wheeler ₱15k / 10-wheeler ₱25k; fleet 30 + MNT-0001; NCR bounds on all Mapbox maps.
+- Receipt visual redesign → **Slice N** (HTML/CSS PDF).
 
 ======================================================================
 SHIPPED SLICES (reference — do not re-implement without ask)
 ======================================================================
-H. Multi-trip at pickup — office approve, customer confirm, driver accept, invoice = rounds × fare.
-I. Lifecycle — transit_to_pickup → arrived_at_pickup → in_transit → transit_completed → completed.
-I-b. Lifecycle UX — stepper, Next step card, role callouts.
-J. Round-trip lap progress — driver marks laps; transit completed gated at N/N.
-
-Prior cancel behavior (superseded by **L** when implemented)
-- Customer: pending only, no fee.
-- Admin late cancel: 25% of list fare after accept.
+H. Multi-trip at pickup · I. Lifecycle · I-b. Lifecycle UX · J. Round-trip lap progress.
 
 ======================================================================
-POST-MVP / OPEN (not in slice L)
+POST-MVP / OPEN (not in slice M)
 ======================================================================
-- PayMongo online pay (F11); MVP = invoice unpaid/paid + QR proof upload.
-- Automatic refund when cancel fee replaces a **paid** invoice.
-- Geofenced arrived-at-pickup (distinct from NCR booking bbox).
-- Per-lap geofence / undo lap / per-lap invoice lines.
-- Email notifications full matrix (email_events.txt).
-- Receipt pixel layout when Sir Pat supplies mockup.
+- **Enforcement** after 5-day unpaid (block new booking, auto-cancel, staff alerts, cron).
+- Payment proof chip states on cards (pending review / rejected).
+- Paid chip on History tab or booking detail header.
+- PayMongo online pay; auto-refund on cancel fee vs paid invoice.
+- Geofenced arrived-at-pickup; email full matrix.
 
 ======================================================================
 ENV / OPS REMINDERS

@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
+use App\Enums\InvoiceStatus;
 use App\Models\Booking;
+use App\Models\Invoice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -33,8 +35,29 @@ class CustomerOverviewTest extends TestCase
             ->assertSee('Customer overview')
             ->assertSee('Pending')
             ->assertSee('In progress')
+            ->assertSee('Unpaid')
             ->assertSee('Active bookings')
             ->assertSee('New booking', false);
+    }
+
+    public function test_active_booking_card_shows_unpaid_badge(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => BookingStatus::Accepted,
+            'is_locked' => true,
+        ]);
+        Invoice::factory()->create([
+            'booking_id' => $booking->id,
+            'status' => InvoiceStatus::Unpaid,
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('customer.home'))
+            ->assertOk()
+            ->assertSee('Unpaid', false)
+            ->assertSee('Due by', false);
     }
 
     public function test_customer_bookings_index_uses_active_and_history_tabs(): void

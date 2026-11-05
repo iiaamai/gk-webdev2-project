@@ -2,6 +2,8 @@
     use App\Enums\BookingStatus;
     use App\Support\BookingMultiTrip;
 
+    $horizontalScroll = $horizontalScroll ?? false;
+
     $status = $booking->status;
     $hasGatepass = $booking->hasGatepass();
 
@@ -35,17 +37,27 @@
     </div>
 @else
     <nav class="mb-6" aria-label="Trip progress">
-        <div class="relative">
-            <ol class="-mx-1 flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth sm:mx-0 sm:flex-wrap sm:overflow-visible sm:pb-0 sm:snap-none">
+        <div @class(['relative' => ! $horizontalScroll])>
+            <ol @class([
+                '-mx-1 flex gap-2 overflow-x-auto pb-2 scroll-smooth',
+                'snap-x snap-mandatory' => $horizontalScroll,
+                'sm:mx-0 sm:flex-wrap sm:overflow-visible sm:pb-0 sm:snap-none' => ! $horizontalScroll,
+            ])>
             @foreach ($steps as $index => $step)
                 @php
                     $done = $index < $currentIndex;
                     $current = $index === $currentIndex;
                 @endphp
-                <li class="flex shrink-0 snap-start items-center gap-2 sm:min-w-0 sm:flex-1">
+                <li @class([
+                    'flex shrink-0 items-center gap-2',
+                    'snap-start' => $horizontalScroll,
+                    'sm:min-w-0 sm:flex-1' => ! $horizontalScroll,
+                ])>
                     <div
                         @class([
-                            'flex min-w-[5.5rem] items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium sm:min-w-0 sm:text-sm',
+                            'flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium sm:text-sm',
+                            'shrink-0 whitespace-nowrap' => $horizontalScroll,
+                            'min-w-[5.5rem] sm:min-w-0' => ! $horizontalScroll,
                             'bg-success-subtle text-success' => $done,
                             'bg-primary-tone-1 text-primary' => $current,
                             'bg-surface-inset text-text-muted' => ! $done && ! $current,
@@ -66,15 +78,20 @@
                                 {{ $index + 1 }}
                             @endif
                         </span>
-                        <span class="truncate">{{ $step['label'] }}</span>
+                        <span @class(['truncate' => ! $horizontalScroll])>{{ $step['label'] }}</span>
                     </div>
                     @if (! $loop->last)
-                        <span class="hidden shrink-0 text-border sm:inline" aria-hidden="true">—</span>
+                        <span @class([
+                            'shrink-0 text-border',
+                            'hidden sm:inline' => ! $horizontalScroll,
+                        ]) aria-hidden="true">—</span>
                     @endif
                 </li>
             @endforeach
             </ol>
-            <div class="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-surface to-transparent sm:hidden" aria-hidden="true"></div>
+            @if (! $horizontalScroll)
+                <div class="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-surface to-transparent sm:hidden" aria-hidden="true"></div>
+            @endif
         </div>
     </nav>
 

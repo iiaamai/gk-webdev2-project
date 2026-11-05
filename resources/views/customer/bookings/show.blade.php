@@ -61,7 +61,7 @@
 
     @include('bookings._status_callout', ['booking' => $booking])
 
-    @include('bookings._trip_stepper', ['booking' => $booking])
+    @include('bookings._trip_stepper', ['booking' => $booking, 'horizontalScroll' => true])
 
     @include('bookings._round_trip_laps', ['booking' => $booking])
 

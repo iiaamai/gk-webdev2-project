@@ -4,15 +4,23 @@
 
 @php
     use App\Support\BookingStatusCallout;
+    use App\Support\PaymentDue;
 
     $statusTone = $booking->status->badgeTone();
     $callout = BookingStatusCallout::forCustomer($booking);
+    $paymentChip = PaymentDue::paymentChip($booking);
+    $invoice = $booking->relationLoaded('invoice') ? $booking->invoice : $booking->loadMissing('invoice')->invoice;
 @endphp
 
 <x-ui.card {{ $attributes->class(['flex h-full flex-col']) }}>
     <div class="flex flex-wrap items-start justify-between gap-2">
         <p class="text-base font-semibold text-text">{{ $booking->booking_number }}</p>
-        <x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge>
+        <div class="flex flex-wrap justify-end gap-1.5">
+            @if ($paymentChip !== null && $invoice !== null)
+                <x-ui.badge :tone="$invoice->status->badgeTone()">{{ $invoice->status->label() }}</x-ui.badge>
+            @endif
+            <x-ui.badge :tone="$statusTone">{{ $booking->status->label() }}</x-ui.badge>
+        </div>
     </div>
 
     <dl class="mt-4 grid flex-1 gap-2 text-sm">
@@ -38,6 +46,18 @@
             <div>
                 <dt class="text-text-muted">Preferred pickup</dt>
                 <dd class="mt-0.5 text-text">{{ $booking->booking_datetime->timezone('Asia/Manila')->format('M j, Y g:i A') }}</dd>
+            </div>
+        @endif
+        @if (PaymentDue::isUnpaid($booking))
+            <div>
+                <dt class="text-text-muted">Payment</dt>
+                <dd class="mt-0.5 @if (PaymentDue::isOverdue($booking)) font-medium text-danger @else text-text @endif">
+                    @if (PaymentDue::isOverdue($booking))
+                        Overdue — pay via invoice on booking details
+                    @else
+                        Due by {{ PaymentDue::dueDateLabel($booking) }}
+                    @endif
+                </dd>
             </div>
         @endif
     </dl>

@@ -3,227 +3,59 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\Setting;
+use App\Support\BookingReceiptBreakdown;
 use App\Support\MetricWeight;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 
 /**
- * Builds a printable delivery-receipt PDF (no external PDF library).
+ * Builds a printable delivery-receipt PDF from Blade HTML + CSS (Dompdf).
  */
 class BookingReceiptPdf
 {
     public function download(Booking $booking): Response
     {
-        $booking->loadMissing(['customer', 'driver', 'pricing', 'invoice', 'vehicle']);
+        $booking->loadMissing(['customer', 'driver', 'pricing', 'invoice', 'vehicle', 'rating']);
 
-        $issuedAt = now('Asia/Manila')->format('M j, Y g:i A');
-        $amount = $booking->invoice?->amount ?? $booking->pricing?->amount;
-        $invoiceStatus = $booking->invoice?->status?->label() ?? '—';
-        $vehicleType = $booking->pricing?->vehicle_type ?? $booking->vehicle_type;
-        $plate = $booking->vehicle?->plate_number;
+        $amount = (float) ($booking->invoice?->amount ?? $booking->pricing?->amount ?? 0);
+        $logoPath = public_path('images/gk-logo-1.png');
 
-        $sections = [
-            ['DELIVERY RECEIPT', ''],
-            ['Issued', $issuedAt],
-            ['Booking', $booking->booking_number],
-            ['Trip status', $booking->status->label()],
-            ['', ''],
-            ['CUSTOMER', ''],
-            ['Name', $booking->customer?->name ?? 'Archived customer'],
-            ['Email', $booking->customer?->email ?? '—'],
-            ['', ''],
-            ['VEHICLE & CREW', ''],
-            ['Wheel class', $vehicleType ?? '—'],
-            ['Fleet unit', $plate ?? 'Unassigned'],
-            ['Driver', $booking->driver?->name ?? 'Unassigned'],
-            ['', ''],
-            ['ROUTE', ''],
-            ['Pickup', $booking->pickup_address],
-            ['Dropoff', $booking->dropoff_address],
-            ['Preferred pickup', $booking->booking_datetime->timezone('Asia/Manila')->format('M j, Y g:i A')],
-            ['', ''],
-            ['INVOICE', ''],
-            ['Amount (PHP)', number_format((float) ($amount ?? 0), 2)],
-            ['Payment status', $invoiceStatus],
+        $data = [
+            'issuedAt' => now('Asia/Manila')->format('M j, Y g:i A'),
+            'customerName' => $booking->customer?->name ?? 'Archived customer',
+            'customerEmail' => $booking->customer?->email ?? '—',
+            'bookingNumber' => $booking->booking_number,
+            'tripStatus' => $booking->status->label(),
+            'total' => $amount,
+            'vehicleType' => $booking->pricing?->vehicle_type ?? $booking->vehicle_type ?? '—',
+            'plate' => $booking->vehicle?->plate_number,
+            'pickupAt' => $booking->booking_datetime->timezone('Asia/Manila')->format('M j, Y g:i A'),
+            'pickup' => $booking->pickup_address,
+            'dropoff' => $booking->dropoff_address,
+            'portNumber' => $booking->pickup_port_number,
+            'containerNumber' => $booking->pickup_container_number,
+            'driverName' => $booking->driver?->name,
+            'ratingScore' => $booking->rating?->score,
+            'breakdown' => BookingReceiptBreakdown::lines($booking),
+            'paymentStatus' => $booking->invoice?->status?->label() ?? '—',
+            'cargoDesc' => filled($booking->cargo_desc) ? $booking->cargo_desc : null,
+            'cargoWeight' => $booking->cargo_kg
+                ? MetricWeight::weightLabel((int) $booking->cargo_kg)
+                : null,
+            'companyName' => Setting::getValue('company_name', 'GK Trucking Services'),
+            'supportEmail' => Setting::getValue('support_email'),
+            'logoPath' => $logoPath,
+            'logoExists' => is_file($logoPath),
         ];
 
-        if (filled($booking->cargo_desc)) {
-            $sections[] = ['', ''];
-            $sections[] = ['CARGO', ''];
-            $sections[] = ['Description', $booking->cargo_desc];
-        }
+        $pdf = Pdf::loadView('pdf.delivery-receipt', $data)->setPaper('a4');
 
-        if ($booking->cargo_kg) {
-            if (! filled($booking->cargo_desc)) {
-                $sections[] = ['', ''];
-                $sections[] = ['CARGO', ''];
-            }
-            $sections[] = ['Weight', MetricWeight::weightLabel((int) $booking->cargo_kg)];
-        }
-
-        $lines = ['GK Trucking Services'];
-
-        foreach ($sections as [$label, $value]) {
-            if ($label === '' && $value === '') {
-                $lines[] = '';
-
-                continue;
-            }
-
-            if ($value === '') {
-                $lines[] = strtoupper($label);
-
-                continue;
-            }
-
-            $lines[] = $label.': '.$value;
-        }
-
-        $pdf = $this->render($lines);
         $filename = $booking->booking_number.'-receipt.pdf';
 
-        return response($pdf, 200, [
+        return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
-    }
-
-    /**
-     * @param  list<string>  $lines
-     */
-    private function render(array $lines): string
-    {
-        $logo = $this->logoJpeg();
-        $hasLogo = $logo !== null;
-
-        $textY = $hasLogo ? 700 : 780;
-        $content = "BT\n/F1 11 Tf\n14 TL\n50 {$textY} Td\n";
-
-        foreach ($lines as $index => $line) {
-            if ($index > 0) {
-                $content .= "T*\n";
-            }
-
-            $content .= '('.$this->escape($line).") Tj\n";
-        }
-
-        $content .= 'ET';
-
-        if ($hasLogo) {
-            $drawH = 48.0;
-            $drawW = $drawH * ($logo['width'] / max(1, $logo['height']));
-            if ($drawW > 160) {
-                $drawW = 160.0;
-                $drawH = $drawW * ($logo['height'] / max(1, $logo['width']));
-            }
-
-            $content = "q\n{$drawW} 0 0 {$drawH} 50 730 cm\n/Im1 Do\nQ\n".$content;
-        }
-
-        $objects = [];
-        $objects[] = '<< /Type /Catalog /Pages 2 0 R >>';
-        $objects[] = '<< /Type /Pages /Kids [3 0 R] /Count 1 >>';
-
-        if ($hasLogo) {
-            $objects[] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> /XObject << /Im1 6 0 R >> >> >>';
-            $objects[] = '<< /Length '.strlen($content)." >>\nstream\n".$content."\nendstream";
-            $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
-            $objects[] = '<< /Type /XObject /Subtype /Image /Width '.$logo['width']
-                .' /Height '.$logo['height']
-                .' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '
-                .strlen($logo['data'])." >>\nstream\n".$logo['data']."\nendstream";
-        } else {
-            $objects[] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>';
-            $objects[] = '<< /Length '.strlen($content)." >>\nstream\n".$content."\nendstream";
-            $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
-        }
-
-        $pdf = "%PDF-1.4\n";
-        $offsets = [0];
-
-        foreach ($objects as $i => $object) {
-            $offsets[] = strlen($pdf);
-            $pdf .= ($i + 1)." 0 obj\n".$object."\nendobj\n";
-        }
-
-        $xref = strlen($pdf);
-        $pdf .= "xref\n";
-        $pdf .= '0 '.(count($objects) + 1)."\n";
-        $pdf .= "0000000000 65535 f \n";
-
-        for ($i = 1; $i <= count($objects); $i++) {
-            $pdf .= sprintf("%010d 00000 n \n", $offsets[$i]);
-        }
-
-        $pdf .= 'trailer'."\n<< /Size ".(count($objects) + 1)." /Root 1 0 R >>\n";
-        $pdf .= "startxref\n".$xref."\n%%EOF";
-
-        return $pdf;
-    }
-
-    /**
-     * @return array{data: string, width: int, height: int}|null
-     */
-    private function logoJpeg(): ?array
-    {
-        try {
-            $path = public_path('images/gk-logo-1.png');
-
-            if (! is_file($path) || ! function_exists('imagecreatefrompng') || ! function_exists('imagejpeg')) {
-                return null;
-            }
-
-            $image = @imagecreatefrompng($path);
-            if ($image === false) {
-                return null;
-            }
-
-            $width = imagesx($image);
-            $height = imagesy($image);
-            $canvas = imagecreatetruecolor($width, $height);
-            if ($canvas === false) {
-                return null;
-            }
-
-            $white = imagecolorallocate($canvas, 255, 255, 255);
-            imagefilledrectangle($canvas, 0, 0, $width, $height, $white);
-            imagecopy($canvas, $image, 0, 0, 0, 0, $width, $height);
-
-            $temp = tempnam(sys_get_temp_dir(), 'gk-logo-');
-            if ($temp === false) {
-                return null;
-            }
-
-            try {
-                if (! imagejpeg($canvas, $temp, 90)) {
-                    return null;
-                }
-
-                $data = file_get_contents($temp);
-            } finally {
-                @unlink($temp);
-            }
-
-            if ($data === false || $data === '') {
-                return null;
-            }
-
-            return [
-                'data' => $data,
-                'width' => $width,
-                'height' => $height,
-            ];
-        } catch (\Throwable) {
-            return null;
-        }
-    }
-
-    private function escape(string $text): string
-    {
-        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
-        if ($ascii === false) {
-            $ascii = preg_replace('/[^\x20-\x7E]/', '?', $text) ?? $text;
-        }
-
-        return str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $ascii);
     }
 }

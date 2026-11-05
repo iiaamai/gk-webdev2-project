@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Enums\BookingStatus;
+use App\Enums\InvoiceStatus;
 use App\Models\Booking;
+use App\Models\Invoice;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
@@ -17,6 +19,8 @@ class CustomerOverviewQuery
      *     pending_count: int,
      *     active_count: int,
      *     completed_count: int,
+     *     unpaid_count: int,
+     *     unpaid_total: string,
      *     active_bookings: Collection<int, Booking>,
      *     unrated_completed: Collection<int, Booking>,
      *     latest_booking: ?Booking
@@ -31,6 +35,20 @@ class CustomerOverviewQuery
             ->whereIn('status', BookingStatus::activeDeliveryStatuses())
             ->count();
         $completedCount = (clone $base)->where('status', BookingStatus::Completed)->count();
+
+        $unpaidCount = Booking::query()
+            ->where('customer_id', $customer->id)
+            ->whereHas('invoice', function ($query): void {
+                $query->where('status', InvoiceStatus::Unpaid);
+            })
+            ->count();
+
+        $unpaidTotal = (float) Invoice::query()
+            ->where('status', InvoiceStatus::Unpaid)
+            ->whereHas('booking', function ($query) use ($customer): void {
+                $query->where('customer_id', $customer->id);
+            })
+            ->sum('amount');
 
         $activeBookings = Booking::query()
             ->where('customer_id', $customer->id)
@@ -62,6 +80,8 @@ class CustomerOverviewQuery
             'pending_count' => $pendingCount,
             'active_count' => $activeCount,
             'completed_count' => $completedCount,
+            'unpaid_count' => $unpaidCount,
+            'unpaid_total' => number_format($unpaidTotal, 2, '.', ''),
             'active_bookings' => $activeBookings,
             'unrated_completed' => $unratedCompleted,
             'latest_booking' => $latestBooking,

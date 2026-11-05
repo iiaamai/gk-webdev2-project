@@ -22,7 +22,7 @@
         <span class="text-sm text-text-muted">{{ $booking->vehicle_type }}</span>
     </div>
 
-    @include('bookings._trip_stepper', ['booking' => $booking])
+    @include('bookings._trip_stepper', ['booking' => $booking, 'horizontalScroll' => true])
 
     @include('bookings._round_trip_laps', ['booking' => $booking])
 

@@ -15,7 +15,7 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <a href="{{ route('customer.bookings.index') }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
             <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
                 <p class="text-sm text-text-muted">Pending</p>
@@ -35,6 +35,19 @@
                 <p class="text-sm text-text-muted">Completed</p>
                 <p class="mt-1 text-2xl font-semibold text-text">{{ $overview['completed_count'] }}</p>
                 <p class="mt-1 text-xs text-text-muted">Finished deliveries.</p>
+            </x-ui.card>
+        </a>
+        <a href="{{ route('customer.bookings.index') }}" class="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <x-ui.card class="h-full transition-colors hover:border-primary/40 hover:bg-primary-tone-1/40">
+                <p class="text-sm text-text-muted">Unpaid</p>
+                <p class="mt-1 text-2xl font-semibold text-text">{{ $overview['unpaid_count'] }}</p>
+                <p class="mt-1 text-xs text-text-muted">
+                    @if ((float) $overview['unpaid_total'] > 0)
+                        ₱{{ number_format((float) $overview['unpaid_total'], 2) }} total due · pay within 5 days of booking
+                    @else
+                        No outstanding invoices.
+                    @endif
+                </p>
             </x-ui.card>
         </a>
     </div>
