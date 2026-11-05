@@ -155,7 +155,7 @@ class StaffAdminBookingTest extends TestCase
     {
         $admin = User::factory()->systemAdmin()->create();
         $customer = User::factory()->customer()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 5000]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
@@ -177,8 +177,8 @@ class StaffAdminBookingTest extends TestCase
 
     public function test_admin_cannot_assign_driver_with_mismatched_vehicle_type_on_create(): void
     {
-        $truckPricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $sixPricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler truck', 'amount' => 12000]);
+        $truckPricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
+        $sixPricing = Pricing::factory()->create(['vehicle_type' => '10-wheeler', 'amount' => 25000]);
         Vehicle::factory()->create([
             'pricing_id' => $truckPricing->id,
             'status' => VehicleStatus::Available,
@@ -205,8 +205,8 @@ class StaffAdminBookingTest extends TestCase
 
     public function test_admin_can_keep_legacy_mismatched_driver_on_update(): void
     {
-        $truckPricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $sixPricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler truck', 'amount' => 12000]);
+        $truckPricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
+        $sixPricing = Pricing::factory()->create(['vehicle_type' => '10-wheeler', 'amount' => 25000]);
         Vehicle::factory()->create([
             'pricing_id' => $truckPricing->id,
             'status' => VehicleStatus::Available,
@@ -238,7 +238,7 @@ class StaffAdminBookingTest extends TestCase
     {
         Setting::setValue('dropoff_change_fee', '500');
         $admin = User::factory()->systemAdmin()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
@@ -249,7 +249,7 @@ class StaffAdminBookingTest extends TestCase
         ]);
         $invoice = Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => 9200,
+            'amount' => 15000,
             'status' => InvoiceStatus::Unpaid,
         ]);
 
@@ -346,8 +346,8 @@ class StaffAdminBookingTest extends TestCase
     {
         $pricingId = $overrides['pricing_id']
             ?? $booking?->pricing_id
-            ?? Pricing::query()->where('vehicle_type', '4-wheeler truck')->value('id')
-            ?? Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200])->id;
+            ?? Pricing::query()->where('vehicle_type', '6-wheeler')->value('id')
+            ?? Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000])->id;
 
         return array_merge([
             'status' => $booking?->status->value ?? BookingStatus::Pending->value,

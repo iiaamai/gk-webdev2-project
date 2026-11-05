@@ -30,13 +30,15 @@ pending
 - Drop: driver clearance workflow.
 
 Pricing
-- Keep the legacy default amounts, stored in the database so they can change later (not hardcoded in the form):
-  - 6-wheeler truck — 14500.00
-  - 4-wheeler truck — 9200.00
-  - L300 van — 4500.00
-  - Reefer / specialized — 18500.00
+- Truck tiers in the database (Admin Pricing List CRUD):
+  - 6-wheeler — 15000.00 (capacity 42000 kg)
+  - 10-wheeler — 25000.00 (capacity 72000 kg)
+- Removed from default seed: 4-wheeler, L300 van, Reefer / specialized.
 - The booking form loads prices from the database based on vehicles/pricing records.
 - System Admin module: Pricing List (CRUD the price list).
+
+Service area
+- Customer pickup and dropoff must fall inside Metro Manila (NCR) bounding box (map + validation).
 
 Payments
 - In scope. Invoice for B2B (quote from the pricing list, unpaid / paid settlement).

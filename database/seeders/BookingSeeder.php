@@ -28,9 +28,9 @@ class BookingSeeder extends Seeder
         $driver = User::query()->withArchived()->where('email', 'driver@gk.test')->firstOrFail();
         $driverTwo = User::query()->withArchived()->where('email', 'driver2@gk.test')->firstOrFail();
 
-        $truck = Vehicle::query()->withArchived()->where('plate_number', 'ABC-1234')->firstOrFail();
-        $sixWheeler = Vehicle::query()->withArchived()->where('plate_number', 'DEF-5678')->firstOrFail();
-        $van = Vehicle::query()->withArchived()->where('plate_number', 'GHI-9012')->firstOrFail();
+        $sixWheeler = Vehicle::query()->withArchived()->where('plate_number', 'ISU-4X2-001')->firstOrFail();
+        $tenWheeler = Vehicle::query()->withArchived()->where('plate_number', 'ISU-6X4-001')->firstOrFail();
+        $van = Vehicle::query()->withArchived()->where('plate_number', 'HNO-4X2-003')->firstOrFail();
 
         $pricingByType = Pricing::query()->pluck('id', 'vehicle_type');
         $amountByPricingId = Pricing::query()->pluck('amount', 'id');
@@ -39,7 +39,7 @@ class BookingSeeder extends Seeder
         $samples = [
             [
                 'booking_number' => "GK-{$year}-0001",
-                'pricing_id' => $pricingByType['L300 van'],
+                'pricing_id' => $pricingByType['6-wheeler'],
                 'vehicle_id' => null,
                 'driver_id' => null,
                 'status' => BookingStatus::Pending,
@@ -51,45 +51,45 @@ class BookingSeeder extends Seeder
             ],
             [
                 'booking_number' => "GK-{$year}-0002",
-                'pricing_id' => $pricingByType['4-wheeler truck'],
+                'pricing_id' => $pricingByType['10-wheeler'],
                 'vehicle_id' => null,
                 'driver_id' => null,
                 'status' => BookingStatus::Pending,
                 'is_locked' => false,
                 'accepted_at' => null,
                 'gatepass_path' => $this->storeDemoGatepass("GK-{$year}-0002"),
-                'cargo_desc' => 'Retail pallets (pending with gatepass)',
+                'cargo_desc' => 'Heavy pallets (pending with gatepass)',
                 'with_invoice' => InvoiceStatus::Unpaid,
             ],
             [
                 'booking_number' => "GK-{$year}-0003",
-                'pricing_id' => $pricingByType['4-wheeler truck'],
-                'vehicle_id' => $truck->id,
+                'pricing_id' => $pricingByType['6-wheeler'],
+                'vehicle_id' => $sixWheeler->id,
                 'driver_id' => $driver->id,
                 'status' => BookingStatus::Accepted,
                 'is_locked' => true,
                 'accepted_at' => now('Asia/Manila')->subHours(2),
                 'gatepass_path' => $this->storeDemoGatepass("GK-{$year}-0003"),
-                'cargo_desc' => 'Accepted demo delivery',
-                'lock_vehicle' => $truck,
+                'cargo_desc' => 'Accepted demo delivery (6-wheeler)',
+                'lock_vehicle' => $sixWheeler,
                 'with_invoice' => InvoiceStatus::Unpaid,
             ],
             [
                 'booking_number' => "GK-{$year}-0004",
-                'pricing_id' => $pricingByType['6-wheeler truck'],
-                'vehicle_id' => $sixWheeler->id,
+                'pricing_id' => $pricingByType['10-wheeler'],
+                'vehicle_id' => $tenWheeler->id,
                 'driver_id' => $driverTwo->id,
                 'status' => BookingStatus::TransitToPickup,
                 'is_locked' => true,
                 'accepted_at' => now('Asia/Manila')->subDay(),
                 'gatepass_path' => $this->storeDemoGatepass("GK-{$year}-0004"),
-                'cargo_desc' => 'In-transit demo load',
-                'lock_vehicle' => $sixWheeler,
+                'cargo_desc' => 'En route to pickup (10-wheeler)',
+                'lock_vehicle' => $tenWheeler,
                 'with_invoice' => InvoiceStatus::Unpaid,
             ],
             [
                 'booking_number' => "GK-{$year}-0005",
-                'pricing_id' => $pricingByType['L300 van'],
+                'pricing_id' => $pricingByType['6-wheeler'],
                 'vehicle_id' => $van->id,
                 'driver_id' => $driver->id,
                 'status' => BookingStatus::Completed,
@@ -102,7 +102,7 @@ class BookingSeeder extends Seeder
             ],
             [
                 'booking_number' => "GK-{$year}-0006",
-                'pricing_id' => $pricingByType['Reefer / specialized'],
+                'pricing_id' => $pricingByType['10-wheeler'],
                 'vehicle_id' => null,
                 'driver_id' => null,
                 'status' => BookingStatus::Cancelled,

@@ -16,14 +16,12 @@ class PricingFactory extends Factory
     public function definition(): array
     {
         return [
-            'vehicle_type' => fake()->unique()->randomElement([
-                '6-wheeler truck',
-                '4-wheeler truck',
-                'L300 van',
-                'Reefer / specialized',
-            ]),
-            'amount' => fake()->randomElement([14500, 9200, 4500, 18500]),
-            'capacity_kg' => fake()->randomElement([1000, 3000, 5000, 12000]),
+            'vehicle_type' => fake()->randomElement([
+                '6-wheeler',
+                '10-wheeler',
+            ]).'-'.fake()->unique()->numerify('####'),
+            'amount' => fake()->randomElement([15000, 25000]),
+            'capacity_kg' => fake()->randomElement([42000, 72000]),
         ];
     }
 }

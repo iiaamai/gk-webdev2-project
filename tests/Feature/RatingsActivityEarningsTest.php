@@ -199,14 +199,14 @@ class RatingsActivityEarningsTest extends TestCase
         ]);
         Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => 9200,
+            'amount' => 15000,
         ]);
 
         $this->actingAs($admin)
             ->get(route('admin.earnings.index'))
             ->assertOk()
             ->assertSee('Earnings')
-            ->assertSee('9,200.00')
+            ->assertSee('15,000.00')
             ->assertSee('earnings-payout-chart', false)
             ->assertSee('Completed revenue (invoiced)', false);
     }

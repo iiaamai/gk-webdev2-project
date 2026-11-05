@@ -3,355 +3,79 @@ GK Trucking Services 2.0 — Backlog & improvement plan
 Status: living backlog — implement slices when explicitly requested (/implement).
 Primary scope: MVP / checkpoint B (phases.txt) unless a slice says post-MVP.
 
-Slice H (multi-trip at pickup) and Slice I (lifecycle + documents) are **shipped** in code.
-Slice I was amended (Nov 2026) to split en-route vs haul using **transit_to_pickup** and **in_transit**.
-Slice **I-b** (lifecycle UX — all roles) is **shipped** in code (Nov 2026).
-**QA. Lifecycle scenario matrix** — S1–S3, X1–X6, and **A–K done** (Nov 2026 automated QA; see section QA).
-Slice **J** (round-trip **lap progress** in haul) — **shipped** in code (Nov 2026); QA in RoundTripLapProgressTest + updated S2/S3 flows.
+Last updated: Nov 2026 (Sir Pat product slice K + prior shipped slices H–J).
 
 ======================================================================
-H. Capacity booking — multi-trip request at pickup (SHIPPED)
+K. Sir Pat product alignment (SHIPPED IN CODE — Nov 2026)
 ======================================================================
-Status: shipped (Nov 2026).
+Locked via /clarify (Nov 2026).
 
-Summary:
-- Invoice at create = **1 × list fare**.
-- After **arrived_at_pickup**: customer one round-trip request → office approve/reject
-  (reject **cancels**) → customer confirm if count changed → driver accept →
-  invoice = `approved_round_trips × fare` + wrong-truck fee when applicable (QA-3 fixed in I).
-- Customer **change vehicle type once** at pickup; fee = Settings `wrong_truck_fee_percent`.
-- Round trip = pickup → dropoff → return to pickup.
-
-Open follow-up:
-- None (QA-4 addressed in I-b).
-
-======================================================================
-I. Booking lifecycle — statuses, stepper, EIR/POD timing (SHIPPED)
-======================================================================
-Status: shipped + amended (Nov 2026). Locked via /clarify (original I + haul split).
-
-Problem solved
-- Single **in_transit** conflated “to pickup” and “haul after pickup”.
-- Driver EIR/POD gated to **transit_completed**; complete requires EIR + POD.
+Goals
+- Truck-only fleet and pricing by wheel class (urban Metro Manila logistics).
+- Branded delivery receipt PDF (layout pass; mockup review later).
+- Service area: Metro Manila (NCR) bounding box on map + server validation.
 
 ----------------------------------------------------------------------
-Target status enum (bookings.status)
+K1. Pricing & fleet
 ----------------------------------------------------------------------
-pending | accepted | transit_to_pickup | arrived_at_pickup | in_transit |
-transit_completed | completed | cancelled
+| Decision | Detail |
+| Pricing tiers | **Two rows only:** `6-wheeler` ₱15,000 · `10-wheeler` ₱25,000 |
+| Removed | 4-wheeler truck, L300 van, Reefer / specialized |
+| Capacity | Single `capacity_kg` per tier: 42,000 (6w) · 72,000 (10w) from GCW ranges |
+| Fleet seed | **30 units** (6 lines × 5): Isuzu 4×2/6×4, Hino 4×2/6×4, Sinotruk HOWO 6×4, Fuso 6×4 |
+| Demo drivers | `driver@gk.test` → ISU-4X2-001 · `driver2@gk.test` → ISU-6X4-001 |
+| Legacy data | **`migrate:fresh --seed` OK** — no migration of old vehicle types |
 
-Happy path
-  pending → (gatepass, still pending) → accepted → **transit_to_pickup**
-  → **arrived_at_pickup** → **in_transit** (haul) → **transit_completed**
-  → (driver EIR + POD) → **completed**
-
-Stepper (UI)
-  Pending → Gatepass → Accepted → To pickup → At pickup → Haul → Transit done → Completed
-
-----------------------------------------------------------------------
-Locked decisions (amended I)
-----------------------------------------------------------------------
-| Topic | Decision |
-| transit_to_pickup | New status: en route **to** pickup (driver: “Mark transit to pickup” from accepted) |
-| arrived_at_pickup | Same rules as before: timestamp, multi-trip, vehicle change |
-| in_transit | Reused enum value = **haul in progress** only (after pickup; badge “Haul in progress”) |
-| Multi-trip gates | Block **transit_completed** and **completed** only — **not** entering haul |
-| Driver EIR/POD | **transit_completed** only; complete requires both |
-| Staff/Admin EIR/POD | Unchanged (non-cancelled bookings) |
-| Migration | `in_transit` without `arrived_at_pickup_at` → **transit_to_pickup** |
+Sample bookings (seed): GK-{year}-0001…0006 across pending / accepted / transit_to_pickup / completed / cancelled.
 
 ----------------------------------------------------------------------
-Process flow (reference)
+K2. Metro Manila service area
 ----------------------------------------------------------------------
-
-  [Create] pending, invoice 1× fare
-      → gatepass (still pending)
-      → driver accept → accepted
-      → driver Mark transit to pickup → transit_to_pickup
-      → driver Arrived at pickup → arrived_at_pickup
-            ├─ optional: vehicle type once (+ fee)
-            ├─ optional: round-trip request → office / customer / driver steps
-            │     → office reject → cancelled
-      → driver Start haul → in_transit
-      → driver Transit completed → transit_completed
-            → driver EIR + POD
-      → driver Mark completed → completed
+| Rule | Pickup **and** dropoff lat/lng must lie inside NCR bbox |
+| Implementation | `App\Support\ServiceArea` · map `maxBounds` · Form Request validation |
+| Bbox (approx.) | lat 14.45–14.73 · lng 120.92–121.12 |
+| UI | Location picker search/filter + click rejection outside box |
 
 ----------------------------------------------------------------------
-QA checklist (Slice I — regression)
+K3. Delivery receipt PDF (layout pass)
 ----------------------------------------------------------------------
-- accepted: Mark transit to pickup only; no EIR/POD.
-- transit_to_pickup: Arrived at pickup; no EIR/POD; no Mark completed.
-- arrived_at_pickup: customer multi-trip / vehicle type; Start haul; no EIR/POD.
-- in_transit (haul): Mark transit completed (blocked if multi-trip open); no EIR/POD.
-- transit_completed: EIR/POD; Mark completed when both exist.
-- completed: terminal; receipt rules unchanged.
-- Multi-trip approve preserves wrong-truck fee on invoice.
+- Sections: customer, wheel class, plate, driver, route, invoice amount/status, cargo.
+- Logo when available; Helvetica-Bold headings.
+- Sir Pat mockup review later — no pixel-perfect design yet.
+- Download rules unchanged (permissions_matrix.txt).
 
 ----------------------------------------------------------------------
-Related code (Slice I)
+Render production reset (operator)
 ----------------------------------------------------------------------
-- app/Enums/BookingStatus.php (TransitToPickup, labels)
-- database/migrations/*transit_to_pickup*
-- app/Actions/UpdateDriverDeliveryStatus.php, MarkArrivedAtPickup.php, MarkTransitCompleted.php
-- app/Support/BookingMultiTrip.php
-- app/Policies/BookingPolicy.php
-- resources/views/bookings/_trip_stepper.blade.php, _pickup_capacity.blade.php
-- resources/views/driver/deliveries/show.blade.php
-- docs/development/lifecycle.txt, permissions_matrix.txt
-- tests/Feature/BookingLifecycleStatusTest.php, DriverDeliveryTest.php, MultiTripPickupTest.php, ...
-
-Known open (not Slice I-b):
-- None.
+Free tier (no Shell): external `DATABASE_URL` + `php artisan migrate:fresh --seed --force`
+  **or** delete/recreate Postgres + redeploy (start.sh runs migrate + seed).
+After reset: demo logins in `docs/development/seed_plan.txt`.
+Optional: set `RUN_DB_SEED=false` on web service after reset to avoid re-seed every deploy.
 
 ======================================================================
-I-b. Lifecycle UX — all roles (SHIPPED)
+SHIPPED SLICES (reference — do not re-implement without ask)
 ======================================================================
-Status: shipped (Nov 2026). Locked via /clarify; implemented as one slice.
 
-Problem
-- Lifecycle split (transit_to_pickup vs haul) is in code but portals still mix old “in transit” language.
-- Driver show has many action cards; customers lack “what happens now” guidance.
-- Staff/Admin home KPIs use a single “In transit” tile that no longer matches ops reality.
+H. Multi-trip at pickup — office approve, customer confirm, driver accept, invoice = rounds × fare.
+I. Lifecycle — transit_to_pickup → arrived_at_pickup → in_transit (haul) → transit_completed → completed.
+I-b. Lifecycle UX — stepper, Next step card, role callouts.
+J. Round-trip lap progress — driver marks laps; transit completed gated at N/N; staff/admin sync X/N.
 
-----------------------------------------------------------------------
-Locked decisions (I-b UX)
-----------------------------------------------------------------------
-| Topic | Decision |
-| Stepper (mobile) | 8 steps, horizontal scroll; short step labels (To pickup, Haul, …) |
-| Badges | Same **BookingStatus::label()** everywhere (enum labels) |
-| Driver workspace | Single **“Next step”** card — one primary action + short explanation |
-| Customer detail | **Status-specific callouts** when action or attention is needed |
-| Office KPIs | **Split**: **To pickup** + **On trip** (never “On haul”; **On trip** on tiles/copy for all roles) |
-| KPI counts (default) | **To pickup** = `transit_to_pickup` only; **On trip** = `arrived_at_pickup` + `in_transit` + `transit_completed` |
-| Enum vs KPI | Badge stays **“Haul in progress”** for `in_transit`; tile label **“On trip”** is UI copy only |
-| Rollout | One slice: shared partials first, then customer → driver → staff → admin |
-
-----------------------------------------------------------------------
-Shared components
-----------------------------------------------------------------------
-- resources/views/bookings/_trip_stepper.blade.php — mobile scroll polish (padding, min-width, optional edge hint).
-- **New** resources/views/bookings/_status_callout.blade.php — role-aware messages by status + multi-trip flags.
-- resources/views/bookings/_pickup_capacity.blade.php — align copy (en route vs at pickup; office prefix unchanged).
-- **New** resources/views/driver/deliveries/_next_step.blade.php — central “next action” table (see driver section).
-- resources/views/components/driver/job-card.blade.php — enum badge + optional one-line next-step hint on active job.
-
-Driver next-step matrix (reference)
-  accepted           → Mark transit to pickup
-  transit_to_pickup  → Arrived at pickup
-  arrived_at_pickup  → Start haul in progress
-  in_transit         → Mark transit completed (multi-trip blocks when applicable)
-  transit_completed  → EIR/POD then Mark completed
-
-Optional small add: driver/deliveries/navigate.blade.php subtitle by phase (to pickup vs dropoff).
-
-----------------------------------------------------------------------
-Customer
-----------------------------------------------------------------------
-- portals/customer-home.blade.php — replace “Accepted or in transit” with phase-accurate active copy.
-- customer/bookings/index.blade.php — badge + optional one-line callout linking to detail.
-- customer/bookings/show.blade.php — stepper + _status_callout (gatepass wait, en route, at pickup / multi-trip, haul, documents, etc.).
-
-----------------------------------------------------------------------
-Driver
-----------------------------------------------------------------------
-- driver/deliveries/index.blade.php — job-card next-step hint.
-- driver/deliveries/show.blade.php — replace duplicate action cards with _next_step only (+ documents below).
-- portals/driver-home.blade.php — active job badge + next step if shown.
-
-----------------------------------------------------------------------
-Staff
-----------------------------------------------------------------------
-- portals/staff-home.blade.php — two KPI tiles: **To pickup**, **On trip** (links/filters on bookings index).
-- staff/bookings/index.blade.php — status filter + optional `?phase=to_pickup` / `?phase=on_trip`.
-- staff/bookings/show.blade.php (and edit summary) — stepper; **QA-4**: snapshot shows current vehicle type from pricing, not stale label.
-
-----------------------------------------------------------------------
-Admin
-----------------------------------------------------------------------
-- portals/admin-home.blade.php — same KPI split as staff.
-- admin/bookings/index.blade.php — enum badges; optional on_trip mega-filter.
-- admin/bookings/show.blade.php — stepper; status override helper listing happy-path order.
-
-----------------------------------------------------------------------
-Backend touchpoints (minimal, for UI)
-----------------------------------------------------------------------
-- StaffOverviewQuery / AdminOverviewQuery — expose to_pickup_count, on_trip_count (split former in_transit bucket).
-- Booking list query or index controllers — `phase=to_pickup` | `phase=on_trip` → whereIn statuses.
-- Optional: small helper or view composer for driver “next step” (avoid duplicating logic in Blade).
-
-----------------------------------------------------------------------
-Suggested implementation order
-----------------------------------------------------------------------
-1. Query/KPI split — staff + admin home + feature tests for counts.
-2. _next_step + driver show/index (+ job-card).
-3. _status_callout + customer show/index/home copy.
-4. Stepper mobile polish.
-5. Staff snapshot vehicle type (QA-4).
-6. Admin status override helper text.
-7. Bookings index phase filters.
-8. Fix test_customer_cannot_access_driver_deliveries if still failing.
-
-----------------------------------------------------------------------
-QA checklist (Slice I-b UX)
-----------------------------------------------------------------------
-- Staff/Admin home: To pickup and On trip counts match filter links; no lone “In transit” KPI.
-- Driver: exactly one primary action per status on show; multi-trip block messaging on transit completed.
-- Customer: callout visible on detail for each active status; multi-trip pending points to capacity section.
-- Badges on list/detail match enum labels across all four roles.
-- Mobile: 8-step stepper scrolls without crushing labels.
-
-----------------------------------------------------------------------
-Out of scope (I-b unless added later)
-----------------------------------------------------------------------
-- Email/push copy per status.
-- Mapbox phase-specific routing UX.
-- Localized / Tagalog labels.
-- Icons-only badges without enum text.
+QA
+- Automated: `RoundTripLapProgressTest`, `LifecycleQaMatrixTest`, `ScenarioQaReportTest`, etc.
+- Hosted smoke: https://gk-trucking-web.onrender.com/ (production-safe lap pack Nov 2026).
 
 ======================================================================
-J. Round-trip lap progress during haul (SHIPPED)
+POST-MVP / OPEN (not in slice K)
 ======================================================================
-Status: shipped (Nov 2026 — /clarify + /implement).
-
-Behavior
-- When office-approved **N > 1** and multi-trip is resolved, during **in_transit** the driver marks
-  each lap (**1/N … N/N**), then **Transit completed → EIR/POD → Completed**.
-- **N = 1:** no lap UI; haul → transit completed unchanged.
-- **Transparency:** `bookings._round_trip_laps` banner (large X/N + progress bar) on customer,
-  driver, staff, and admin **booking show** only (not list rows).
-- Driver action in **Next step:** “Mark round trip complete (X of N)”.
-- Transit completed blocked until **N/N**; laps reset to 0 when haul starts.
-
-Code
-- `multi_trip_laps_completed` on bookings; `MarkRoundTripLapComplete`; `BookingMultiTrip` helpers;
-  `BookingPolicy::markRoundTripLapComplete`; route `driver.deliveries.round-trip-lap.complete`.
-- Tests: `tests/Feature/RoundTripLapProgressTest.php`; S2/S3 in `ScenarioQaReportTest` mark all laps.
-
-Out of scope (J unless added later)
-- Geofence per lap; undo lap; customer/office increment; per-lap invoice lines.
-
-----------------------------------------------------------------------
-QA checklist (Slice J)
-----------------------------------------------------------------------
-- `RoundTripLapProgressTest` + R1–R14 subset in QA matrix below.
+- PayMongo online pay (F11); MVP = invoice unpaid/paid + QR proof upload.
+- Geofenced arrived-at-pickup (backlog; distinct from NCR booking bbox).
+- Per-lap geofence / undo lap / per-lap invoice lines.
+- Mapbox static route on details (F9 partial).
+- Email notifications full matrix (email_events.txt).
+- Receipt pixel layout when Sir Pat supplies mockup.
 
 ======================================================================
-QA. Lifecycle scenario matrix (manual + automated)
+ENV / OPS REMINDERS
 ======================================================================
-Status: living QA backlog (Nov 2026). **Doc-only** — run manual/browser QA or extend
-Feature tests when requested (/implement). Results for chat/manual runs are **not**
-stored in the application.
-
-Environment (default for full matrix)
-- Local `php artisan migrate:fresh --seed`
-- Demo logins: `customer@gk.test` / `demo123`, `staff@gk.test` / `staff123`,
-  `driver@gk.test` / `demo123` (requires staff **Time-In**), `admin@gk.test` / `admin123`
-- Table columns: Step | Phase | Role | Action | Expected status | Actual | Pass/Fail | Notes
-
-----------------------------------------------------------------------
-DONE — core scenarios (executed Nov 2026, local fresh seed)
-----------------------------------------------------------------------
-| ID | Summary | Result |
-| S1 | Single trip, no changes → **completed**, invoice **unpaid** (1× fare) | Pass (action-level run + chat table) |
-| S2 | Customer **3** round trips → staff approve **3** → driver accept → **completed**; invoice **3× fare** | Pass |
-| S3 | **Vehicle change** then **2** round trips → invoice **2× new fare + wrong-truck fee**; QA-4 snapshot | Pass |
-| X1 | Office **reject** multi-trip → **cancelled** | Pass |
-| X2 | **Block** mark transit completed while multi-trip pending | Pass |
-| X3 | Customer **cancel** while pending (no gatepass) | Pass |
-| X4 | Driver **not timed in** (login gate) | Pass |
-| X5 | **EIR** policy blocked before `transit_completed` | Pass |
-| X6 | Staff/Admin KPI **To pickup** / **On trip** vs counts | Pass |
-
-Automated overlap (regression, not a formatted report):
-- tests/Feature/ScenarioQaReportTest.php — S1–S3 HTTP flow + JSON under storage/app (dev only)
-- tests/Feature/LifecycleQaMatrixTest.php — X1–X6, D, F, I + JSON under storage/app (dev only)
-- tests/Feature/LifecycleUxTest.php — I-b KPI, phase filter, callout, QA-4 accessor
-
-Full matrix command (56 tests — includes Slice J):
-  php artisan test --compact tests/Feature/RoundTripLapProgressTest.php tests/Feature/ScenarioQaReportTest.php tests/Feature/LifecycleQaMatrixTest.php tests/Feature/MultiTripPickupTest.php tests/Feature/DriverDeliveryTest.php tests/Feature/EirPodTest.php tests/Feature/LifecycleUxTest.php tests/Feature/QrPhPaymentProofTest.php tests/Feature/BacklogImprovementsTest.php tests/Feature/BookingLifecycleStatusTest.php
-
-----------------------------------------------------------------------
-PLANNED — current-cycle QA gaps (no lap feature yet)
-----------------------------------------------------------------------
-| ID | Scenario | Notes |
-| L0 | Request + approve **1** round trip → driver accept → complete | Baseline N=1; no lap UI expected today |
-| L1 | Approve **3**, accept, **single** haul → complete | Documents today: pricing ×3, one haul leg |
-| L2 | After accept, **transit completed** without lap feature | Lock expected behavior until Slice J ships |
-| M1 | **Admin** approve/reject multi-trip (parity with staff) | |
-| M2 | Vehicle change + office approves **different** N than requested | Combines G + confirm flow |
-| M3 | Staff cancel before gatepass vs admin cancel after accept (fee) | Beyond X3 |
-| M4 | **POD** upload blocked before transit_completed | Mirror X5 (EIR) |
-| M5 | Customer view **in_transit** with N>1 (invoice; no lap display today) | Becomes R8 after J |
-| M6 | Admin driver re-assign / override mid-trip | Assert allowed or forbidden |
-| M7 | Admin **archive** booking mid-lifecycle | Lists + active delivery |
-| M8 | Payment proof on **N × fare** invoice | J + S2 combined |
-
-----------------------------------------------------------------------
-DONE — Slice J lap progress (automated QA Nov 2026)
-----------------------------------------------------------------------
-| ID | Scenario | Result | Verification |
-| R1–R7, R10, R14 | Lap gates, N=1 skip, reset on haul, in_transit-only banner | Pass | RoundTripLapProgressTest |
-| R8 | Same X/N on all role booking show pages | Pass | RoundTripLapProgressTest::test_lap_progress_visible_to_all_roles |
-| R12–R13 | Customer/staff cannot increment (policy) | Pass | RoundTripLapProgressTest |
-| S2/S3 | Multi-trip haul marks all laps before transit completed | Pass | ScenarioQaReportTest |
-
-----------------------------------------------------------------------
-PLANNED — Slice J lap progress (superseded by DONE block above)
-----------------------------------------------------------------------
-| ID | Scenario | Expected |
-| R1 | N=3, accept count, start haul | Next step: mark lap; transit completed disabled |
-| R2 | Mark laps to 1/3, 2/3 | Counter updates all roles |
-| R3 | Mark 3/3 | Transit completed enabled |
-| R4 | Transit completed at 2/3 | Blocked |
-| R5 | Extra lap at 3/3 | Blocked |
-| R6 | N=1 after approve | No lap controls; flow as today |
-| R7 | Multi-trip unresolved at pickup | No lap actions |
-| R8 | After each lap, **customer, staff, admin, driver** show same **X/N** | Transparency |
-| R9 | Undo lap (if ever added) vs no-undo | Product decision |
-| R10 | EIR/POD only after transit completed at N/N | Regression on I gates |
-| R11 | Activity log per lap increment | Optional audit |
-| R12 | Customer cannot POST lap increment | 403 |
-| R13 | Staff cannot increment laps | 403 |
-| R14 | Lap UI only in **in_transit** (or from haul start — pick one in implement) | |
-
-----------------------------------------------------------------------
-DONE — extended scenarios A–K (automated QA Nov 2026)
-----------------------------------------------------------------------
-| ID | Scenario | Result | Verification |
-| A | Office different round count → customer confirm → driver accept | Pass | MultiTripPickupTest::test_customer_must_confirm_when_office_changes_round_trip_count |
-| B | Complete blocked without EIR + POD | Pass | DriverDeliveryTest::test_driver_cannot_complete_without_eir_and_pod |
-| C | EIR/POD upload blocked before transit_completed | Pass | EirPodTest + DriverDeliveryTest (haul skip) |
-| D | Customer cancel after gatepass, before driver accept | Pass | LifecycleQaMatrixTest |
-| E | Illegal skip (complete without transit_completed) | Pass | DriverDeliveryTest + BookingLifecycleStatusTest |
-| F | Multi-trip pending: haul allowed; transit completed blocked | Pass | LifecycleQaMatrixTest |
-| G | Wrong-truck fee preserved on multi-trip approve | Pass | MultiTripPickupTest::test_wrong_truck_fee_preserved_when_office_approves_multi_trip |
-| H | KPI To pickup / On trip + phase filter | Pass | LifecycleUxTest (to_pickup = transit_to_pickup only) |
-| I | Next step + customer callout | Pass | LifecycleQaMatrixTest + LifecycleUxTest; optional browser: all status badges |
-| J | Payment proof submit / reject / mark paid | Pass | QrPhPaymentProofTest |
-| K | Second accept blocked while active delivery | Pass | DriverDeliveryTest::test_driver_cannot_accept_second_job_while_active |
-
-Optional manual only: click KPI tiles in browser (H); full per-status badge sweep (I).
-
-----------------------------------------------------------------------
-Out of scope (this QA matrix)
-----------------------------------------------------------------------
-- Persisting QA results in DB or admin UI
-- PayMongo / live payment rails
-- Geofenced arrived-at-pickup
-- Email content per status (see email_events.txt post-MVP)
-
-======================================================================
-Reference — previously shipped (not active backlog)
-======================================================================
-- Driver attendance Time-In/Out + timed-in middleware.
-- Customer cancel while pending; admin/staff cancel rules.
-- Slice H multi-trip at pickup.
-
-======================================================================
-Post-MVP / optional (not scheduled)
-======================================================================
-- Geofenced “Arrived at pickup”.
-- PayMongo / new payment rails.
-- Composite KPI queue for multi-trip approval.
-- Email notifications for multi-trip events (email_events.txt).
+See `docs/development/env_checklist.txt` for MAPBOX_*, CLOUDINARY_*, mail, APP_URL on Render.

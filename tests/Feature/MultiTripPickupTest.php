@@ -23,7 +23,7 @@ class MultiTripPickupTest extends TestCase
         $staff = User::factory()->staff()->create();
         $driver = User::factory()->driver()->create();
         app(TimeInDriver::class)->execute($driver, $staff);
-        $pricing = Pricing::factory()->create(['amount' => 4500, 'capacity_kg' => 1000]);
+        $pricing = Pricing::factory()->create(['amount' => 25000, 'capacity_kg' => 72000]);
 
         $booking = Booking::factory()->create([
             'customer_id' => $customer->id,
@@ -34,7 +34,7 @@ class MultiTripPickupTest extends TestCase
         ]);
         Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => 4500,
+            'amount' => 25000,
         ]);
 
         $this->actingAs($driver)
@@ -126,7 +126,7 @@ class MultiTripPickupTest extends TestCase
         $driver = User::factory()->driver()->create();
         app(TimeInDriver::class)->execute($driver, $staff);
 
-        $large = Pricing::factory()->create(['amount' => 9200]);
+        $large = Pricing::factory()->create(['amount' => 15000]);
 
         $booking = Booking::factory()->create([
             'customer_id' => $customer->id,

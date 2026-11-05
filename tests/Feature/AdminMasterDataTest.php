@@ -74,8 +74,8 @@ class AdminMasterDataTest extends TestCase
         $driver = User::factory()->driver()->create();
         $otherDriver = User::factory()->driver()->create();
         $pricing = Pricing::factory()->create([
-            'vehicle_type' => '4-wheeler truck',
-            'amount' => 9200,
+            'vehicle_type' => '6-wheeler',
+            'amount' => 15000,
             'capacity_kg' => 3000,
         ]);
         Vehicle::factory()->create([
@@ -100,7 +100,7 @@ class AdminMasterDataTest extends TestCase
 
         $driver->load('assignedVehicle.pricing');
         $this->assertSame('ASN-0001', $driver->assignedVehicle?->plate_number);
-        $this->assertSame('4-wheeler truck', $driver->assignedVehicle?->pricing?->vehicle_type);
+        $this->assertSame('6-wheeler', $driver->assignedVehicle?->pricing?->vehicle_type);
         $this->assertSame($pricing->capacity_kg, $driver->assignedVehicle?->pricing?->capacity_kg);
 
         $this->actingAs($admin)
@@ -120,7 +120,7 @@ class AdminMasterDataTest extends TestCase
     public function test_admin_can_crud_fleet(): void
     {
         $admin = User::factory()->systemAdmin()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '10-wheeler', 'amount' => 25000]);
 
         $this->actingAs($admin)
             ->post(route('admin.fleet.store'), [

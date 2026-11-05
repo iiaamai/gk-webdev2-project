@@ -35,8 +35,8 @@ class ScenarioQaReportTest extends TestCase
         $customer = User::factory()->customer()->create(['email' => 'qa-customer@gk.test']);
         $staff = User::factory()->staff()->create();
         $driver = User::factory()->driver()->timedIn()->create(['email' => 'qa-driver@gk.test']);
-        $truckPricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200, 'capacity_kg' => 3000]);
-        $vanPricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500, 'capacity_kg' => 1000]);
+        $truckPricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000, 'capacity_kg' => 42000]);
+        $vanPricing = Pricing::factory()->create(['vehicle_type' => '10-wheeler', 'amount' => 25000, 'capacity_kg' => 72000]);
 
         Vehicle::factory()->create([
             'pricing_id' => $truckPricing->id,
@@ -95,10 +95,10 @@ class ScenarioQaReportTest extends TestCase
             'booking_number' => 'GK-QA-S1',
             'status' => BookingStatus::Pending,
         ]);
-        Invoice::factory()->create(['booking_id' => $booking->id, 'amount' => 9200]);
+        Invoice::factory()->create(['booking_id' => $booking->id, 'amount' => 15000]);
         $this->scenario1BookingId = $booking->id;
 
-        $this->record($log, 1, 'Customer', 'View booking (implicit create + gatepass ready)', 'Pending; invoice ₱9,200', $booking, '9200.00');
+        $this->record($log, 1, 'Customer', 'View booking (implicit create + gatepass ready)', 'Pending; invoice ₱15,000', $booking, '15000.00');
 
         $this->actingAs($driver)->post(route('driver.deliveries.accept', $booking))->assertRedirect();
         $this->record($log, 2, 'Driver', 'Accept delivery', 'Accepted', $booking);
@@ -124,7 +124,7 @@ class ScenarioQaReportTest extends TestCase
         $this->record($log, 7, 'Driver', 'Upload EIR + POD', 'Transit completed; documents stored', $booking, null, fn (Booking $b) => ($b->eir !== null && $b->pod !== null) ? 'EIR+POD yes' : 'missing docs');
 
         $this->actingAs($driver)->patch(route('driver.deliveries.status.update', $booking), ['status' => 'completed'])->assertRedirect();
-        $this->record($log, 8, 'Driver', 'Mark completed', 'Completed; invoice still ₱9,200', $booking, '9200.00');
+        $this->record($log, 8, 'Driver', 'Mark completed', 'Completed; invoice still ₱15,000', $booking, '15000.00');
 
         $this->actingAs($customer)->get(route('customer.bookings.show', $booking))->assertOk()->assertSee('Completed');
         $this->record($log, 9, 'Customer', 'Open booking detail', 'Completed badge + receipt rules', $booking);
@@ -146,7 +146,7 @@ class ScenarioQaReportTest extends TestCase
             'booking_number' => 'GK-QA-S2',
             'status' => BookingStatus::Pending,
         ]);
-        Invoice::factory()->create(['booking_id' => $booking->id, 'amount' => 9200]);
+        Invoice::factory()->create(['booking_id' => $booking->id, 'amount' => 15000]);
         $this->scenario2BookingId = $booking->id;
 
         $this->actingAs($driver2)->post(route('driver.deliveries.accept', $booking))->assertRedirect();
@@ -160,7 +160,7 @@ class ScenarioQaReportTest extends TestCase
         $this->record($log, 3, 'Customer', 'Request 3 round trips', 'Arrived at pickup; multi-trip pending; requested=3', $booking, null, fn (Booking $b) => 'requested='.$b->multi_trip_requested_rounds);
 
         $this->actingAs($staff)->post(route('staff.bookings.multi-trip.approve', $booking), ['round_trips' => 3])->assertRedirect();
-        $this->record($log, 4, 'Staff', 'Approve 3 round trips (match request)', 'Invoice ₱27,600 (3×₱9,200); customer auto-confirmed', $booking, '27600.00');
+        $this->record($log, 4, 'Staff', 'Approve 3 round trips (match request)', 'Invoice ₱45,000 (3×₱15,000); customer auto-confirmed', $booking, '45000.00');
 
         $this->actingAs($driver2)->post(route('driver.deliveries.multi-trip.accept', $booking))->assertRedirect();
         $this->record($log, 5, 'Driver', 'Accept round-trip count', 'Multi-trip resolved; can proceed haul', $booking, null, fn (Booking $b) => $b->multi_trip_driver_accepted_at ? 'driver accepted' : 'not accepted');
@@ -173,7 +173,7 @@ class ScenarioQaReportTest extends TestCase
         $this->actingAs($driver2)->post(route('driver.deliveries.eir.store', $booking), ['eir' => UploadedFile::fake()->image('eir.jpg')])->assertRedirect();
         $this->actingAs($driver2)->post(route('driver.deliveries.pod.store', $booking), ['photos' => [UploadedFile::fake()->image('pod.jpg')]])->assertRedirect();
         $this->actingAs($driver2)->patch(route('driver.deliveries.status.update', $booking), ['status' => 'completed'])->assertRedirect();
-        $this->record($log, 7, 'Driver', 'EIR/POD + completed', 'Completed; invoice ₱27,600', $booking, '27600.00');
+        $this->record($log, 7, 'Driver', 'EIR/POD + completed', 'Completed; invoice ₱45,000', $booking, '45000.00');
 
         $this->actingAs($customer)->get(route('customer.bookings.show', $booking))->assertOk()->assertSee('Completed');
         $this->record($log, 8, 'Customer', 'View completed booking', 'Completed; 3 round trips billed', $booking);
@@ -195,7 +195,7 @@ class ScenarioQaReportTest extends TestCase
             'booking_number' => 'GK-QA-S3',
             'status' => BookingStatus::Pending,
         ]);
-        Invoice::factory()->create(['booking_id' => $booking->id, 'amount' => 9200]);
+        Invoice::factory()->create(['booking_id' => $booking->id, 'amount' => 15000]);
         $this->scenario3BookingId = $booking->id;
 
         $this->actingAs($driver3)->post(route('driver.deliveries.accept', $booking))->assertRedirect();
@@ -204,13 +204,13 @@ class ScenarioQaReportTest extends TestCase
         $this->record($log, 1, 'Driver', 'Accept → arrived at pickup', 'Arrived at pickup', $booking);
 
         $this->actingAs($customer)->post(route('customer.bookings.vehicle-type.change', $booking), ['pricing_id' => $vanPricing->id])->assertRedirect();
-        $this->record($log, 2, 'Customer', 'Change vehicle to L300 van (once)', 'Invoice ₱5,420 (₱4,500 + 10% wrong-truck on ₱9,200)', $booking, '5420.00');
+        $this->record($log, 2, 'Customer', 'Change vehicle to 10-wheeler (once)', 'Invoice ₱26,500 (₱25,000 + 10% wrong-truck on ₱15,000)', $booking, '26500.00');
 
         $this->actingAs($customer)->post(route('customer.bookings.multi-trip.request', $booking), ['round_trips' => 2])->assertRedirect();
         $this->record($log, 3, 'Customer', 'Request 2 round trips', 'Arrived at pickup; requested=2', $booking, null, fn (Booking $b) => 'requested='.$b->multi_trip_requested_rounds);
 
         $this->actingAs($staff)->post(route('staff.bookings.multi-trip.approve', $booking), ['round_trips' => 2])->assertRedirect();
-        $this->record($log, 4, 'Staff', 'Approve 2 round trips', 'Invoice ₱9,920 (2×₱4,500 + ₱920 fee)', $booking, '9920.00');
+        $this->record($log, 4, 'Staff', 'Approve 2 round trips', 'Invoice ₱51,500 (2×₱25,000 + ₱1,500 fee)', $booking, '51500.00');
 
         $this->actingAs($driver3)->post(route('driver.deliveries.multi-trip.accept', $booking))->assertRedirect();
         $this->actingAs($driver3)->patch(route('driver.deliveries.status.update', $booking), ['status' => 'in_transit'])->assertRedirect();
@@ -221,7 +221,7 @@ class ScenarioQaReportTest extends TestCase
         $this->actingAs($driver3)->post(route('driver.deliveries.eir.store', $booking), ['eir' => UploadedFile::fake()->image('eir.jpg')])->assertRedirect();
         $this->actingAs($driver3)->post(route('driver.deliveries.pod.store', $booking), ['photos' => [UploadedFile::fake()->image('pod.jpg')]])->assertRedirect();
         $this->actingAs($driver3)->patch(route('driver.deliveries.status.update', $booking), ['status' => 'completed'])->assertRedirect();
-        $this->record($log, 6, 'Driver', 'EIR/POD + completed', 'Completed; invoice ₱9,920', $booking, '9920.00');
+        $this->record($log, 6, 'Driver', 'EIR/POD + completed', 'Completed; invoice ₱51,500', $booking, '51500.00');
 
         $this->actingAs($customer)->get(route('customer.bookings.show', $booking))->assertOk()->assertSee('Completed');
         $this->record($log, 7, 'Customer', 'View completed booking', 'Completed; van pricing + 2 trips + fee', $booking);

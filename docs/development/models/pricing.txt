@@ -3,7 +3,7 @@ Table: pricings
 Database: SQLite
 
 Purpose
-- Admin-managed price list by vehicle type.
+- Admin-managed price list by vehicle type (wheel class).
 - Booking form loads amounts from this table (not hardcoded).
 - Capacity for a type lives here (shared by all fleet units of that pricing).
 
@@ -11,14 +11,12 @@ Fields
 - id                    INTEGER PRIMARY KEY
 - vehicle_type          TEXT NOT NULL UNIQUE
                         seed defaults:
-                        - 6-wheeler truck
-                        - 4-wheeler truck
-                        - L300 van
-                        - Reefer / specialized
+                        - 6-wheeler
+                        - 10-wheeler
 - amount                REAL NOT NULL
-                        seed defaults: 14500.00 | 9200.00 | 4500.00 | 18500.00
+                        seed defaults: 15000.00 | 25000.00
 - capacity_kg           INTEGER NOT NULL
-                        seed defaults: 12000 | 3000 | 1000 | 5000
+                        seed defaults: 42000 | 72000
 - archived_at           TEXT NULL
 - created_at            TEXT NULL
 - updated_at            TEXT NULL
@@ -28,7 +26,7 @@ Relations (Eloquent)
 - bookings()            HasMany Booking
 
 Notes
-- One row per vehicle type.
+- One row per wheel class.
 - When a booking invoice is created, copy amount into Invoice.amount (commercial snapshot).
 - Open-booking fare display uses Pricing until an invoice exists; billed history uses Invoice.
 - Fleet units reference pricing_id; capacity is read from Pricing (not stored on vehicles).

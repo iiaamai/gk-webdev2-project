@@ -19,7 +19,7 @@ class AdminCreateUserTest extends TestCase
         $driver = User::factory()->driver()->create();
         $pricing = Pricing::factory()->create(['vehicle_type' => 'Wing van', 'amount' => 5000, 'capacity_kg' => 2000]);
         Vehicle::factory()->create([
-            'plate_number' => 'ABC-1234',
+            'plate_number' => 'ISU-4X2-001',
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
         ]);
@@ -29,7 +29,7 @@ class AdminCreateUserTest extends TestCase
             ->assertOk()
             ->assertSee('Basic information')
             ->assertSee('Fleet vehicle')
-            ->assertSee('ABC-1234');
+            ->assertSee('ISU-4X2-001');
     }
 
     public function test_system_admin_can_create_staff_user(): void
@@ -74,7 +74,7 @@ class AdminCreateUserTest extends TestCase
     public function test_system_admin_can_create_driver_with_fleet_vehicle(): void
     {
         $admin = User::factory()->systemAdmin()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500, 'capacity_kg' => 1000]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '10-wheeler', 'amount' => 25000, 'capacity_kg' => 72000]);
         $vehicle = Vehicle::factory()->create([
             'plate_number' => 'VAN-1001',
             'pricing_id' => $pricing->id,
@@ -93,7 +93,7 @@ class AdminCreateUserTest extends TestCase
         $this->assertNotNull($driver);
         $this->assertSame($driver->id, $vehicle->fresh()->driver_id);
         $this->assertSame('VAN-1001', $driver->assignedVehicle?->plate_number);
-        $this->assertSame('L300 van', $driver->assignedVehicle?->pricing?->vehicle_type);
+        $this->assertSame('10-wheeler', $driver->assignedVehicle?->pricing?->vehicle_type);
         $this->assertSame(1000, $driver->assignedVehicle?->pricing?->capacity_kg);
     }
 

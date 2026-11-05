@@ -31,7 +31,7 @@ class BookingEmailNotifierTest extends TestCase
         config(['gk.mail_enabled' => false]);
 
         $customer = User::factory()->customer()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000, 'capacity_kg' => 3000]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 5000, 'capacity_kg' => 3000]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
@@ -60,7 +60,7 @@ class BookingEmailNotifierTest extends TestCase
         config(['gk.mail_enabled' => true]);
 
         $customer = User::factory()->customer()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 5000, 'capacity_kg' => 3000]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 5000, 'capacity_kg' => 3000]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
@@ -90,8 +90,8 @@ class BookingEmailNotifierTest extends TestCase
         Storage::fake('local');
         config(['gk.mail_enabled' => true]);
 
-        $truckPricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $vanPricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
+        $truckPricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
+        $vanPricing = Pricing::factory()->create(['vehicle_type' => '10-wheeler', 'amount' => 25000]);
         $matching = User::factory()->driver()->create();
         $other = User::factory()->driver()->create();
         Vehicle::factory()->create([
@@ -122,11 +122,11 @@ class BookingEmailNotifierTest extends TestCase
         Mail::fake();
         config(['gk.mail_enabled' => true]);
 
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $customer = User::factory()->customer()->create();
         $driver = User::factory()->driver()->create();
         Vehicle::factory()->create([
-            'plate_number' => 'ABC-1234',
+            'plate_number' => 'ISU-4X2-001',
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
             'status' => VehicleStatus::Available,

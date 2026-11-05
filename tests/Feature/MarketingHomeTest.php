@@ -61,17 +61,17 @@ class MarketingHomeTest extends TestCase
     public function test_pricing_page_renders_live_catalog_fares(): void
     {
         Pricing::factory()->create([
-            'vehicle_type' => 'L300 van',
-            'amount' => 4500.00,
-            'capacity_kg' => 1000,
+            'vehicle_type' => '10-wheeler',
+            'amount' => 25000.00,
+            'capacity_kg' => 72000,
         ]);
 
         $this->get(route('marketing.pricing'))
             ->assertOk()
             ->assertSee('Transparent pricing')
-            ->assertSee('L300 van')
-            ->assertSee('₱4,500.00')
-            ->assertSee('1,000 kg capacity')
+            ->assertSee('10-wheeler')
+            ->assertSee('₱25,000.00')
+            ->assertSee('72,000 kg capacity')
             ->assertSee(asset('images/gk-truck-l300.png'), false)
             ->assertDontSee('Ready to book a truck?')
             ->assertDontSee('Listed in-app')
@@ -82,7 +82,7 @@ class MarketingHomeTest extends TestCase
     public function test_pricing_page_omits_archived_fares_and_shows_empty_copy(): void
     {
         $archived = Pricing::factory()->create([
-            'vehicle_type' => 'Reefer / specialized',
+            'vehicle_type' => '10-wheeler',
             'amount' => 18500.00,
             'capacity_kg' => 5000,
         ]);
@@ -90,7 +90,7 @@ class MarketingHomeTest extends TestCase
 
         $this->get(route('marketing.pricing'))
             ->assertOk()
-            ->assertDontSee('Reefer / specialized')
+            ->assertDontSee('10-wheeler')
             ->assertSee('Fares will appear here when the pricing list is published');
     }
 

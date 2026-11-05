@@ -18,10 +18,10 @@ class BookingFactory extends Factory
      */
     public function definition(): array
     {
-        $pricing = Pricing::query()->where('vehicle_type', '4-wheeler truck')->first()
+        $pricing = Pricing::query()->where('vehicle_type', '6-wheeler')->first()
             ?? Pricing::factory()->create([
-                'vehicle_type' => '4-wheeler truck',
-                'amount' => 9200.00,
+                'vehicle_type' => '6-wheeler',
+                'amount' => 15000.00,
             ]);
 
         return [

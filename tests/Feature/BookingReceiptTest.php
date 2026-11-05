@@ -21,7 +21,7 @@ class BookingReceiptTest extends TestCase
         ]);
         Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => 9200,
+            'amount' => 15000,
         ]);
 
         $response = $this->actingAs($admin)
@@ -67,7 +67,7 @@ class BookingReceiptTest extends TestCase
 
     public function test_driver_can_download_receipt_only_when_completed(): void
     {
-        $driver = User::factory()->driver()->create();
+        $driver = User::factory()->driver()->timedIn()->create();
         $completed = Booking::factory()->create([
             'driver_id' => $driver->id,
             'status' => BookingStatus::Completed,

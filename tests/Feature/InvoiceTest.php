@@ -19,7 +19,7 @@ class InvoiceTest extends TestCase
     public function test_booking_creation_creates_unpaid_invoice_with_payout_amount(): void
     {
         $customer = User::factory()->customer()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 7500, 'capacity_kg' => 3000]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 7500, 'capacity_kg' => 3000]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
@@ -55,7 +55,7 @@ class InvoiceTest extends TestCase
         $booking = Booking::factory()->create();
         $invoice = Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => $booking->pricing?->amount ?? 9200,
+            'amount' => $booking->pricing?->amount ?? 15000,
             'status' => InvoiceStatus::Unpaid,
         ]);
 
@@ -156,7 +156,7 @@ class InvoiceTest extends TestCase
         $booking = Booking::factory()->create(['customer_id' => $customer->id]);
         Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => 9200,
+            'amount' => 15000,
             'status' => InvoiceStatus::Unpaid,
         ]);
 

@@ -21,8 +21,8 @@ class DriverDeliveryTest extends TestCase
 
     public function test_driver_sees_only_available_jobs_with_gatepass_and_matching_type(): void
     {
-        $truckPricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
-        $vanPricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
+        $truckPricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
+        $vanPricing = Pricing::factory()->create(['vehicle_type' => '10-wheeler', 'amount' => 25000]);
         $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $truckPricing->id,
@@ -54,10 +54,10 @@ class DriverDeliveryTest extends TestCase
 
     public function test_driver_can_accept_job_and_locks_vehicle(): void
     {
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $driver = User::factory()->driver()->timedIn()->create();
         $vehicle = Vehicle::factory()->create([
-            'plate_number' => 'ABC-1234',
+            'plate_number' => 'ISU-4X2-001',
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
             'status' => VehicleStatus::Available,
@@ -83,7 +83,7 @@ class DriverDeliveryTest extends TestCase
 
     public function test_driver_cannot_accept_second_job_while_active(): void
     {
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
@@ -213,7 +213,7 @@ class DriverDeliveryTest extends TestCase
 
     public function test_deliveries_index_renders_job_cards(): void
     {
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
@@ -242,7 +242,7 @@ class DriverDeliveryTest extends TestCase
 
     public function test_delivery_show_renders_documents_and_route_cards(): void
     {
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
@@ -301,7 +301,7 @@ class DriverDeliveryTest extends TestCase
             ]),
         ]);
 
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
@@ -353,7 +353,7 @@ class DriverDeliveryTest extends TestCase
 
     public function test_available_jobs_are_view_only_when_driver_has_active_delivery(): void
     {
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
@@ -385,7 +385,7 @@ class DriverDeliveryTest extends TestCase
 
     public function test_available_jobs_are_ordered_oldest_first(): void
     {
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $driver = User::factory()->driver()->timedIn()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,

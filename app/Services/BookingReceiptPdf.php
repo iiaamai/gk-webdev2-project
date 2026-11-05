@@ -6,43 +6,67 @@ use App\Models\Booking;
 use Illuminate\Http\Response;
 
 /**
- * Builds a simple printable delivery-receipt PDF (no external PDF library).
+ * Builds a printable delivery-receipt PDF (no external PDF library).
  */
 class BookingReceiptPdf
 {
     public function download(Booking $booking): Response
     {
-        $booking->loadMissing(['customer', 'driver', 'pricing', 'invoice']);
+        $booking->loadMissing(['customer', 'driver', 'pricing', 'invoice', 'vehicle']);
 
         $issuedAt = now('Asia/Manila')->format('M j, Y g:i A');
         $amount = $booking->invoice?->amount ?? $booking->pricing?->amount;
         $invoiceStatus = $booking->invoice?->status?->label() ?? '—';
+        $vehicleType = $booking->pricing?->vehicle_type ?? $booking->vehicle_type;
+        $plate = $booking->vehicle?->plate_number;
 
-        $lines = [
-            'GK Trucking Services',
-            'Delivery Receipt',
-            '',
-            'Issued: '.$issuedAt,
-            'Booking: '.$booking->booking_number,
-            'Status: '.$booking->status->label(),
-            '',
-            'Customer: '.($booking->customer?->name ?? 'Archived customer'),
-            'Email: '.($booking->customer?->email ?? '—'),
-            '',
-            'Vehicle type: '.$booking->vehicle_type,
-            'Driver: '.($booking->driver?->name ?? 'Unassigned'),
-            '',
-            'Pickup: '.$booking->pickup_address,
-            'Dropoff: '.$booking->dropoff_address,
-            'Preferred pickup: '.$booking->booking_datetime->timezone('Asia/Manila')->format('M j, Y g:i A'),
-            '',
-            'Invoice amount: PHP '.number_format((float) ($amount ?? 0), 2),
-            'Invoice status: '.$invoiceStatus,
+        $sections = [
+            ['DELIVERY RECEIPT', ''],
+            ['Issued', $issuedAt],
+            ['Booking', $booking->booking_number],
+            ['Trip status', $booking->status->label()],
+            ['', ''],
+            ['CUSTOMER', ''],
+            ['Name', $booking->customer?->name ?? 'Archived customer'],
+            ['Email', $booking->customer?->email ?? '—'],
+            ['', ''],
+            ['VEHICLE & CREW', ''],
+            ['Wheel class', $vehicleType ?? '—'],
+            ['Fleet unit', $plate ?? 'Unassigned'],
+            ['Driver', $booking->driver?->name ?? 'Unassigned'],
+            ['', ''],
+            ['ROUTE', ''],
+            ['Pickup', $booking->pickup_address],
+            ['Dropoff', $booking->dropoff_address],
+            ['Preferred pickup', $booking->booking_datetime->timezone('Asia/Manila')->format('M j, Y g:i A')],
+            ['', ''],
+            ['INVOICE', ''],
+            ['Amount (PHP)', number_format((float) ($amount ?? 0), 2)],
+            ['Payment status', $invoiceStatus],
         ];
 
         if (filled($booking->cargo_desc)) {
-            $lines[] = '';
-            $lines[] = 'Cargo: '.$booking->cargo_desc;
+            $sections[] = ['', ''];
+            $sections[] = ['CARGO', ''];
+            $sections[] = ['Description', $booking->cargo_desc];
+        }
+
+        $lines = ['GK Trucking Services'];
+
+        foreach ($sections as [$label, $value]) {
+            if ($label === '' && $value === '') {
+                $lines[] = '';
+
+                continue;
+            }
+
+            if ($value === '') {
+                $lines[] = strtoupper($label);
+
+                continue;
+            }
+
+            $lines[] = $label.': '.$value;
         }
 
         $pdf = $this->render($lines);
@@ -93,7 +117,7 @@ class BookingReceiptPdf
         if ($hasLogo) {
             $objects[] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> /XObject << /Im1 6 0 R >> >> >>';
             $objects[] = '<< /Length '.strlen($content)." >>\nstream\n".$content."\nendstream";
-            $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+            $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
             $objects[] = '<< /Type /XObject /Subtype /Image /Width '.$logo['width']
                 .' /Height '.$logo['height']
                 .' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '
@@ -101,7 +125,7 @@ class BookingReceiptPdf
         } else {
             $objects[] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>';
             $objects[] = '<< /Length '.strlen($content)." >>\nstream\n".$content."\nendstream";
-            $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+            $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
         }
 
         $pdf = "%PDF-1.4\n";

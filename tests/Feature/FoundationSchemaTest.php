@@ -64,8 +64,8 @@ class FoundationSchemaTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertSame(4, Pricing::query()->count());
-        $this->assertSame(5, Vehicle::query()->count());
+        $this->assertSame(2, Pricing::query()->count());
+        $this->assertSame(31, Vehicle::query()->count());
         $this->assertSame(5, User::query()->count());
         $this->assertSame(6, Booking::query()->count());
         $this->assertSame('GK Trucking Services', Setting::getValue('company_name'));
@@ -75,11 +75,11 @@ class FoundationSchemaTest extends TestCase
         $this->assertSame(UserRole::Driver, $driver->role);
         $this->assertNotNull($driver->email_verified_at);
         $this->assertNotNull($driver->assignedVehicle);
-        $this->assertSame('ABC-1234', $driver->assignedVehicle->plate_number);
+        $this->assertSame('ISU-4X2-001', $driver->assignedVehicle->plate_number);
 
         $this->assertSame(
             $driver->id,
-            Vehicle::query()->where('plate_number', 'ABC-1234')->value('driver_id'),
+            Vehicle::query()->where('plate_number', 'ISU-4X2-001')->value('driver_id'),
         );
 
         $this->assertTrue(

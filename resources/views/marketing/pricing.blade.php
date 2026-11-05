@@ -15,10 +15,8 @@
                     @foreach ($pricings as $pricing)
                         @php
                             $image = match ($pricing->vehicle_type) {
-                                'L300 van' => 'images/gk-truck-l300.png',
-                                '4-wheeler truck' => 'images/gk-truck-4-wheeler.png',
-                                '6-wheeler truck' => 'images/gk-truck-6-wheeler.png',
-                                'Reefer / specialized' => 'images/gk-truck-reefer.png',
+                                '6-wheeler' => 'images/gk-truck-6-wheeler.png',
+                                '10-wheeler' => 'images/gk-truck-6-wheeler.png',
                                 default => null,
                             };
                         @endphp

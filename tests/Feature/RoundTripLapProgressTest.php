@@ -126,7 +126,7 @@ class RoundTripLapProgressTest extends TestCase
         $driver = User::factory()->driver()->timedIn()->create();
         $staff = User::factory()->staff()->create();
         $customer = User::factory()->customer()->create();
-        $pricing = Pricing::factory()->create(['amount' => 4500]);
+        $pricing = Pricing::factory()->create(['amount' => 25000]);
 
         $booking = Booking::factory()->create([
             'customer_id' => $customer->id,
@@ -158,7 +158,7 @@ class RoundTripLapProgressTest extends TestCase
         $staff = User::factory()->staff()->create();
         $driver = User::factory()->driver()->create();
         app(TimeInDriver::class)->execute($driver, $staff);
-        $pricing = Pricing::factory()->create(['amount' => 9200]);
+        $pricing = Pricing::factory()->create(['amount' => 15000]);
 
         $booking = Booking::factory()->create([
             'customer_id' => $customer->id,
@@ -174,7 +174,7 @@ class RoundTripLapProgressTest extends TestCase
             'multi_trip_laps_completed' => 0,
         ]);
 
-        Invoice::factory()->create(['booking_id' => $booking->id, 'amount' => 9200 * $roundTrips]);
+        Invoice::factory()->create(['booking_id' => $booking->id, 'amount' => 15000 * $roundTrips]);
 
         $this->assertTrue(BookingMultiTrip::requiresLapTracking($booking));
 

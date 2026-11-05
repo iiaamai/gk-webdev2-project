@@ -92,7 +92,8 @@ Env when enabling: MAPBOX_TOKEN (or MAPBOX_ACCESS_TOKEN), GK_MAPBOX_ENABLED=true
 Notes
 - BookingStaticRouteMapService loads a Directions GeoJSON route whenever pickup and dropoff coordinates exist.
 - Booking details and the admin overview render an interactive Mapbox map (zoom out floor 8, zoom in cap 17). No live GPS.
-- Maps open at Settings map_center_* (fallback config Metro Manila) then jump to the route without animation; no country maxBounds.
+- Maps open at Settings map_center_* (fallback config Metro Manila) then jump to the route without animation.
+- Booking create/edit map uses NCR maxBounds (ServiceArea) and server validation on pickup/dropoff coordinates.
 - When disabled/missing token: UI shows a placeholder. Customer and admin create use search + map click only while configured.
 
 3. PayMongo

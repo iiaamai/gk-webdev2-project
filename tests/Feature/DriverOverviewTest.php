@@ -17,10 +17,10 @@ class DriverOverviewTest extends TestCase
 
     public function test_driver_overview_renders_snapshot_sections(): void
     {
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $driver = User::factory()->driver()->create();
         Vehicle::factory()->create([
-            'plate_number' => 'ABC-1234',
+            'plate_number' => 'ISU-4X2-001',
             'pricing_id' => $pricing->id,
             'driver_id' => $driver->id,
             'status' => VehicleStatus::Available,
@@ -36,8 +36,8 @@ class DriverOverviewTest extends TestCase
             ->assertSee(asset('images/gk-logo-2.png'), false)
             ->assertSee('Driver overview')
             ->assertSee('Available jobs')
-            ->assertSee('ABC-1234')
-            ->assertSee('4-wheeler truck')
+            ->assertSee('ISU-4X2-001')
+            ->assertSee('6-wheeler')
             ->assertSee('Jobs waiting');
     }
 
@@ -81,7 +81,7 @@ class DriverOverviewTest extends TestCase
 
     public function test_driver_overview_view_only_copy_when_active_and_jobs_waiting(): void
     {
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         $driver = User::factory()->driver()->create();
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,

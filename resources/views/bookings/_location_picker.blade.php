@@ -14,6 +14,8 @@
         'zoom' => \App\Support\MapboxIntegration::initialZoom(),
         'country' => 'ph',
         'proximity' => \App\Support\MapboxIntegration::defaultCenter(),
+        'maxBounds' => \App\Support\ServiceArea::maxBounds(),
+        'serviceAreaLabel' => \App\Support\ServiceArea::label(),
     ];
 @endphp
 
@@ -68,7 +70,7 @@
         </div>
     </div>
 
-    <p data-status class="text-sm text-text-muted">Choose pickup, search or click the map, then switch to dropoff.</p>
+    <p data-status class="text-sm text-text-muted">Choose pickup and dropoff inside {{ \App\Support\ServiceArea::label() }} (search or click the map).</p>
 
     <div class="grid gap-3 sm:grid-cols-2">
         <div class="rounded-md border border-border bg-surface-inset p-3">

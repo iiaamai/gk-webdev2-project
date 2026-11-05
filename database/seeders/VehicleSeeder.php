@@ -17,55 +17,49 @@ class VehicleSeeder extends Seeder
     public function run(): void
     {
         $pricingByType = Pricing::query()->pluck('id', 'vehicle_type');
+        $sixWheelerId = $pricingByType['6-wheeler'];
+        $tenWheelerId = $pricingByType['10-wheeler'];
 
-        $vehicles = [
-            [
-                'plate_number' => 'ABC-1234',
-                'brand' => 'Isuzu',
-                'color' => 'White',
-                'pricing_id' => $pricingByType['4-wheeler truck'],
-                'status' => VehicleStatus::Available,
-            ],
-            [
-                'plate_number' => 'DEF-5678',
-                'brand' => 'Fuso',
-                'color' => 'White',
-                'pricing_id' => $pricingByType['6-wheeler truck'],
-                'status' => VehicleStatus::Available,
-            ],
-            [
-                'plate_number' => 'GHI-9012',
-                'brand' => 'Toyota',
-                'color' => 'Silver',
-                'pricing_id' => $pricingByType['L300 van'],
-                'status' => VehicleStatus::Available,
-            ],
-            [
-                'plate_number' => 'JKL-3456',
-                'brand' => 'Hino',
-                'color' => 'White',
-                'pricing_id' => $pricingByType['Reefer / specialized'],
-                'status' => VehicleStatus::Available,
-            ],
-            [
-                'plate_number' => 'MNO-7890',
-                'brand' => 'Mitsubishi',
-                'color' => 'Blue',
-                'pricing_id' => $pricingByType['4-wheeler truck'],
-                'status' => VehicleStatus::Maintenance,
-            ],
+        $lines = [
+            ['prefix' => 'ISU-4X2', 'brand' => 'Isuzu Giga / S&E (4×2)', 'pricing_id' => $sixWheelerId, 'count' => 5],
+            ['prefix' => 'ISU-6X4', 'brand' => 'Isuzu Giga / S&E (6×4)', 'pricing_id' => $tenWheelerId, 'count' => 5],
+            ['prefix' => 'HNO-4X2', 'brand' => 'Hino 700 (4×2)', 'pricing_id' => $sixWheelerId, 'count' => 5],
+            ['prefix' => 'HNO-6X4', 'brand' => 'Hino 700 (6×4)', 'pricing_id' => $tenWheelerId, 'count' => 5],
+            ['prefix' => 'HOW-6X4', 'brand' => 'Sinotruk HOWO 10W (6×4)', 'pricing_id' => $tenWheelerId, 'count' => 5],
+            ['prefix' => 'FUS-6X4', 'brand' => 'Fuso Super Great (6×4)', 'pricing_id' => $tenWheelerId, 'count' => 5],
         ];
 
-        foreach ($vehicles as $vehicle) {
-            Vehicle::query()->withArchived()->updateOrCreate(
-                ['plate_number' => $vehicle['plate_number']],
-                $vehicle,
-            );
+        foreach ($lines as $line) {
+            for ($unit = 1; $unit <= $line['count']; $unit++) {
+                $plate = sprintf('%s-%03d', $line['prefix'], $unit);
+
+                Vehicle::query()->withArchived()->updateOrCreate(
+                    ['plate_number' => $plate],
+                    [
+                        'brand' => $line['brand'],
+                        'color' => 'White',
+                        'pricing_id' => $line['pricing_id'],
+                        'status' => VehicleStatus::Available,
+                    ],
+                );
+            }
         }
 
+        $maintenance = Vehicle::query()->withArchived()->updateOrCreate(
+            ['plate_number' => 'MNT-0001'],
+            [
+                'brand' => 'Isuzu Giga / S&E (4×2)',
+                'color' => 'Gray',
+                'pricing_id' => $sixWheelerId,
+                'status' => VehicleStatus::Maintenance,
+            ],
+        );
+
+        unset($maintenance);
+
         $assignments = [
-            'ABC-1234' => 'driver@gk.test',
-            'DEF-5678' => 'driver2@gk.test',
+            'ISU-4X2-001' => 'driver@gk.test',
+            'ISU-6X4-001' => 'driver2@gk.test',
         ];
 
         $sync = app(SyncVehicleDriverAssignment::class);

@@ -8,22 +8,19 @@ System Admin    admin@gk.test         admin123
 Staff           staff@gk.test         staff123
 Customer        customer@gk.test      demo123
 Driver          driver@gk.test        demo123
-  - Assigned fleet unit ABC-1234 (Isuzu, 4-wheeler truck)
+  - Assigned fleet unit ISU-4X2-001 (Isuzu Giga 4×2, 6-wheeler)
 Driver (2nd)    driver2@gk.test       demo123
-  - Assigned fleet unit DEF-5678 (Fuso, 6-wheeler truck); extra driver so accepted + in_transit
-    sample bookings do not share one active trip
+  - Assigned fleet unit ISU-6X4-001 (Isuzu Giga 6×4, 10-wheeler); separate active trip from driver 1
   - DriverAttendanceSeeder times in all demo drivers after users/vehicles seed (required to log in)
 
-Pricing (seed four rows)
-- 6-wheeler truck — 14500.00 — 12000 kg
-- 4-wheeler truck — 9200.00 — 3000 kg
-- L300 van — 4500.00 — 1000 kg
-- Reefer / specialized — 18500.00 — 5000 kg
+Pricing (two truck tiers only)
+- 6-wheeler — 15000.00 — 42000 kg
+- 10-wheeler — 25000.00 — 72000 kg
 
-Vehicles
-- Several available plates across types (brand + color; capacity from Pricing)
-- At least one maintenance example (unassigned)
-- Demo drivers linked via vehicles.driver_id (ABC-1234, DEF-5678)
+Fleet
+- 30 heavy trucks (6 model lines × 5 units) — see VehicleSeeder
+- 1 maintenance example (MNT-0001)
+- Demo drivers linked via vehicles.driver_id (ISU-4X2-001, ISU-6X4-001)
 
 Seed order
 - Pricing → Users → Vehicles (assign drivers) → Settings → Bookings
@@ -36,9 +33,11 @@ Settings
 - map_zoom optional
 
 Sample bookings
-- Yes: seed a few in different statuses (pending without gatepass,
-  pending with gatepass, accepted, in_transit, completed with EIR/POD,
-  cancelled) so Overview and lists are testable on first run
+- GK-{year}-0001…0006: pending (no gatepass / with gatepass), accepted, transit_to_pickup,
+  completed with EIR/POD, cancelled — all pickup/dropoff inside NCR sample coords
+
+Service area
+- Bookings must use coordinates inside Metro Manila (NCR) bbox — see ServiceArea.php
 
 Notes
 - Never commit real production secrets

@@ -20,12 +20,12 @@ class CustomerBookingTest extends TestCase
     {
         $customer = User::factory()->customer()->create();
         $available = Pricing::factory()->create([
-            'vehicle_type' => '4-wheeler truck',
-            'amount' => 9200,
+            'vehicle_type' => '6-wheeler',
+            'amount' => 15000,
         ]);
         $unavailable = Pricing::factory()->create([
-            'vehicle_type' => 'L300 van',
-            'amount' => 4500,
+            'vehicle_type' => '10-wheeler',
+            'amount' => 25000,
         ]);
         Vehicle::factory()->count(2)->create([
             'pricing_id' => $available->id,
@@ -39,9 +39,9 @@ class CustomerBookingTest extends TestCase
         $this->actingAs($customer)
             ->get(route('customer.bookings.create'))
             ->assertOk()
-            ->assertSee('4-wheeler truck')
+            ->assertSee('6-wheeler')
             ->assertSee('2 available')
-            ->assertSee('L300 van')
+            ->assertSee('10-wheeler')
             ->assertSee('None available')
             ->assertSee('disabled', false);
     }
@@ -50,9 +50,9 @@ class CustomerBookingTest extends TestCase
     {
         $customer = User::factory()->customer()->create();
         $pricing = Pricing::factory()->create([
-            'vehicle_type' => '4-wheeler truck',
-            'amount' => 9200.00,
-            'capacity_kg' => 3000,
+            'vehicle_type' => '6-wheeler',
+            'amount' => 15000.00,
+            'capacity_kg' => 42000,
         ]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
@@ -86,8 +86,8 @@ class CustomerBookingTest extends TestCase
         $this->assertSame($pricing->id, $booking->pricing_id);
         $this->assertSame('PORT-01', $booking->pickup_port_number);
         $this->assertSame('CONT-ABC123', $booking->pickup_container_number);
-        $this->assertSame('9200.00', (string) $booking->payout);
-        $this->assertSame('9200.00', (string) $booking->invoice?->amount);
+        $this->assertSame('15000.00', (string) $booking->payout);
+        $this->assertSame('15000.00', (string) $booking->invoice?->amount);
         $this->assertSame('43', Setting::getValue('booking_seq'));
     }
 
@@ -95,9 +95,9 @@ class CustomerBookingTest extends TestCase
     {
         $customer = User::factory()->customer()->create();
         $pricing = Pricing::factory()->create([
-            'vehicle_type' => '4-wheeler truck',
-            'amount' => 9200.00,
-            'capacity_kg' => 3000,
+            'vehicle_type' => '6-wheeler',
+            'amount' => 15000.00,
+            'capacity_kg' => 42000,
         ]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
@@ -133,7 +133,7 @@ class CustomerBookingTest extends TestCase
     public function test_customer_create_requires_port_and_container_numbers(): void
     {
         $customer = User::factory()->customer()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck', 'amount' => 9200]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '6-wheeler', 'amount' => 15000]);
         Vehicle::factory()->create([
             'pricing_id' => $pricing->id,
             'status' => VehicleStatus::Available,
@@ -160,7 +160,7 @@ class CustomerBookingTest extends TestCase
     public function test_customer_cannot_create_booking_without_available_vehicle(): void
     {
         $customer = User::factory()->customer()->create();
-        $pricing = Pricing::factory()->create(['vehicle_type' => 'L300 van', 'amount' => 4500]);
+        $pricing = Pricing::factory()->create(['vehicle_type' => '10-wheeler', 'amount' => 25000]);
         Vehicle::factory()->maintenance()->create([
             'pricing_id' => $pricing->id,
         ]);

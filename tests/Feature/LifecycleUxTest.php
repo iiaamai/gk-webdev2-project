@@ -52,8 +52,8 @@ class LifecycleUxTest extends TestCase
     public function test_trip_snapshot_uses_booking_pricing_after_vehicle_type_change(): void
     {
         $staff = User::factory()->staff()->create();
-        $original = Pricing::factory()->create(['vehicle_type' => '4-wheeler truck']);
-        $updated = Pricing::factory()->create(['vehicle_type' => 'L300 van']);
+        $original = Pricing::factory()->create(['vehicle_type' => '6-wheeler']);
+        $updated = Pricing::factory()->create(['vehicle_type' => '10-wheeler']);
         $driver = User::factory()->driver()->create();
         $vehicle = Vehicle::factory()->create([
             'pricing_id' => $original->id,
@@ -72,8 +72,8 @@ class LifecycleUxTest extends TestCase
         $this->actingAs($staff)
             ->get(route('staff.bookings.show', $booking))
             ->assertOk()
-            ->assertSee('L300 van')
-            ->assertDontSee('4-wheeler truck');
+            ->assertSee('10-wheeler')
+            ->assertDontSee('6-wheeler');
     }
 
     public function test_customer_booking_detail_shows_status_callout_when_en_route(): void

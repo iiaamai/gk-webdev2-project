@@ -94,12 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
         let suppressClick = false;
         const center = config.center ?? config.proximity ?? [120.9842, 14.5995];
         const zoom = Number.isFinite(config.zoom) ? config.zoom : 11;
+        const maxBounds = config.maxBounds ?? null;
+        const serviceAreaLabel = config.serviceAreaLabel ?? 'Metro Manila (NCR)';
         const lineId = 'draft-route-line';
         const pinsId = 'draft-pins';
 
         mapboxgl.accessToken = config.token;
 
-        const map = new mapboxgl.Map({
+        const mapOptions = {
             container: mapElement,
             style: config.style,
             center,
@@ -107,7 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
             minZoom: config.minZoom,
             maxZoom: config.maxZoom,
             fadeDuration: 0,
-        });
+        };
+
+        if (maxBounds) {
+            mapOptions.maxBounds = maxBounds;
+        }
+
+        const map = new mapboxgl.Map(mapOptions);
 
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
@@ -143,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchLabel.textContent = label;
             }
 
-            searchInput.placeholder = `${label} in the Philippines`;
+            searchInput.placeholder = `${label} in ${serviceAreaLabel}`;
             searchInput.value = (mode === 'pickup' ? pickup?.address : dropoff?.address) ?? '';
         }
 
@@ -291,6 +299,16 @@ document.addEventListener('DOMContentLoaded', () => {
             hasFramed = true;
         }
 
+        function inServiceArea(lng, lat) {
+            if (!maxBounds) {
+                return true;
+            }
+
+            const [[minLng, minLat], [maxLng, maxLat]] = maxBounds;
+
+            return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
+        }
+
         async function reverseGeocode(lng, lat) {
             const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json`);
             url.searchParams.set('access_token', config.token);
@@ -310,6 +328,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async function place(which, lng, lat, address) {
             setError('');
+
+            if (!inServiceArea(lng, lat)) {
+                setError(`That point is outside ${serviceAreaLabel}.`);
+
+                return;
+            }
 
             let resolved = address;
 
@@ -380,6 +404,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 features.forEach((feature) => {
+                    const [lng, lat] = feature.center;
+
+                    if (!inServiceArea(lng, lat)) {
+                        return;
+                    }
+
                     const item = document.createElement('li');
                     const button = document.createElement('button');
                     button.type = 'button';
@@ -393,6 +423,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.append(button);
                     results.append(item);
                 });
+
+                if (results.childElementCount === 0) {
+                    setError(`No addresses found inside ${serviceAreaLabel}.`);
+
+                    return;
+                }
 
                 results.hidden = false;
             } catch {

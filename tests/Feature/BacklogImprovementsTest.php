@@ -38,8 +38,8 @@ class BacklogImprovementsTest extends TestCase
     {
         $admin = User::factory()->systemAdmin()->create();
         $pricing = Pricing::factory()->create([
-            'vehicle_type' => '4-wheeler truck',
-            'amount' => 9200.00,
+            'vehicle_type' => '6-wheeler',
+            'amount' => 15000.00,
             'capacity_kg' => 3000,
         ]);
         $booking = Booking::factory()->withGatepass()->create([
@@ -51,7 +51,7 @@ class BacklogImprovementsTest extends TestCase
         ]);
         Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => 9200.00,
+            'amount' => 15000.00,
             'status' => InvoiceStatus::Unpaid,
         ]);
 
@@ -76,7 +76,7 @@ class BacklogImprovementsTest extends TestCase
         ]);
         Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => 9200.00,
+            'amount' => 15000.00,
             'status' => InvoiceStatus::Unpaid,
         ]);
 
@@ -84,15 +84,15 @@ class BacklogImprovementsTest extends TestCase
             ->post(route('admin.bookings.cancel', $booking))
             ->assertRedirect();
 
-        $this->assertSame('9200.00', (string) $booking->fresh()->invoice?->amount);
+        $this->assertSame('15000.00', (string) $booking->fresh()->invoice?->amount);
     }
 
     public function test_customer_booking_over_capacity_uses_single_fare_at_create(): void
     {
         $customer = User::factory()->customer()->create();
         $pricing = Pricing::factory()->create([
-            'vehicle_type' => 'L300 van',
-            'amount' => 4500,
+            'vehicle_type' => '10-wheeler',
+            'amount' => 25000,
             'capacity_kg' => 1000,
         ]);
         Vehicle::factory()->create([
@@ -118,7 +118,7 @@ class BacklogImprovementsTest extends TestCase
 
         $booking = Booking::query()->first();
         $this->assertNotNull($booking);
-        $this->assertSame('4500.00', (string) $booking->invoice?->amount);
+        $this->assertSame('25000.00', (string) $booking->invoice?->amount);
     }
 
     public function test_customer_can_cancel_pending_booking_without_late_fee(): void
@@ -131,7 +131,7 @@ class BacklogImprovementsTest extends TestCase
         ]);
         Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => 9200.00,
+            'amount' => 15000.00,
             'status' => InvoiceStatus::Unpaid,
         ]);
 
@@ -141,7 +141,7 @@ class BacklogImprovementsTest extends TestCase
 
         $booking->refresh();
         $this->assertSame(BookingStatus::Cancelled, $booking->status);
-        $this->assertSame('9200.00', (string) $booking->invoice?->amount);
+        $this->assertSame('15000.00', (string) $booking->invoice?->amount);
     }
 
     public function test_customer_cannot_cancel_after_accept(): void
@@ -162,7 +162,7 @@ class BacklogImprovementsTest extends TestCase
     {
         $admin = User::factory()->systemAdmin()->create();
         $pricing = Pricing::factory()->create([
-            'amount' => 4500,
+            'amount' => 25000,
             'capacity_kg' => 1000,
         ]);
         $booking = Booking::factory()->create([
@@ -171,7 +171,7 @@ class BacklogImprovementsTest extends TestCase
         ]);
         Invoice::factory()->create([
             'booking_id' => $booking->id,
-            'amount' => 4500,
+            'amount' => 25000,
         ]);
 
         $this->actingAs($admin)
@@ -189,6 +189,6 @@ class BacklogImprovementsTest extends TestCase
             ])
             ->assertRedirect();
 
-        $this->assertSame('4500.00', (string) $booking->fresh()->invoice?->amount);
+        $this->assertSame('25000.00', (string) $booking->fresh()->invoice?->amount);
     }
 }
