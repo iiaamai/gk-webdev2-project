@@ -11,6 +11,7 @@ use App\Services\ActivityLogger;
 use App\Services\BookingEmailNotifier;
 use App\Services\BookingVehicleRelease;
 use App\Support\CancellationRules;
+use App\Support\DriverTripCancelledNotice;
 use Illuminate\Support\Facades\DB;
 
 class CancelBooking
@@ -41,6 +42,7 @@ class CancelBooking
         });
 
         $this->bookingEmailNotifier->statusChanged($booking, BookingStatus::Cancelled, $assignedDriver);
+        DriverTripCancelledNotice::remember($assignedDriver, $booking);
 
         $this->activityLogger->log(
             action: 'booking.status_changed',

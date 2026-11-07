@@ -18,7 +18,6 @@ class BookingVehicleRelease
 
         $booking->forceFill([
             'vehicle_id' => null,
-            'driver_id' => null,
             'accepted_at' => null,
             'is_locked' => false,
         ])->save();

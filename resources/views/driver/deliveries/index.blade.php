@@ -14,7 +14,11 @@
 
     <section class="mb-8">
         <x-ui.section-heading icon="truck" title="Active delivery" />
-        @if ($active->isEmpty())
+        @if ($cancelledBooking ?? null)
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                <x-driver.job-card :booking="$cancelledBooking" cta-label="Back to dashboard" />
+            </div>
+        @elseif ($active->isEmpty())
             <p class="mt-4 text-sm text-text-muted">No active delivery. Accept a job below when you are ready.</p>
         @else
             <div class="mt-4 grid gap-4 sm:grid-cols-2">

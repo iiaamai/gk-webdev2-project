@@ -6,10 +6,12 @@
 ])
 
 @php
+    use App\Enums\BookingStatus;
     use App\Support\DriverDeliveryNextStep;
 
+    $isCancelled = $booking->status === BookingStatus::Cancelled;
     $statusTone = $booking->status->badgeTone();
-    $nextStepHint = $showNextStepHint ? DriverDeliveryNextStep::hint($booking) : null;
+    $nextStepHint = (! $isCancelled && $showNextStepHint) ? DriverDeliveryNextStep::hint($booking) : null;
 @endphp
 
 <x-ui.card {{ $attributes->class([
@@ -52,14 +54,16 @@
     @endif
 
     <div class="mt-4 flex flex-col gap-2">
-        <x-driver.nav-actions :booking="$booking" compact />
+        @unless ($isCancelled)
+            <x-driver.nav-actions :booking="$booking" compact />
+        @endunless
         <div>
             <x-ui.button
-                href="{{ route('driver.deliveries.show', $booking) }}"
-                :variant="$viewOnly ? 'ghost' : 'secondary'"
+                href="{{ $isCancelled ? route('driver.home') : route('driver.deliveries.show', $booking) }}"
+                :variant="$isCancelled ? 'primary' : ($viewOnly ? 'ghost' : 'secondary')"
                 class="!py-1.5 !text-xs"
             >
-                {{ $ctaLabel }}
+                {{ $isCancelled ? 'Back to dashboard' : $ctaLabel }}
             </x-ui.button>
         </div>
     </div>

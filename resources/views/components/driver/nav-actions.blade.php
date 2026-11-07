@@ -4,11 +4,14 @@
 ])
 
 @php
+    use App\Enums\BookingStatus;
+
     $hasPickup = $booking->pickup_lat !== null && $booking->pickup_lng !== null;
     $hasDropoff = $booking->dropoff_lat !== null && $booking->dropoff_lng !== null;
+    $isCancelled = $booking->status === BookingStatus::Cancelled;
 @endphp
 
-@if ($hasPickup || $hasDropoff)
+@if (! $isCancelled && ($hasPickup || $hasDropoff))
     <div {{ $attributes->class(['flex flex-wrap gap-2']) }}>
         @if ($hasPickup)
             <x-ui.button

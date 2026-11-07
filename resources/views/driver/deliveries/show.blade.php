@@ -4,16 +4,26 @@
 
 @section('content')
     @php
+        use App\Enums\BookingStatus;
+
         $statusTone = $booking->status->badgeTone();
         $customer = $booking->customer;
+        $isCancelled = $booking->status === BookingStatus::Cancelled;
     @endphp
 
     <x-ui.page-header :title="$booking->booking_number" subtitle="Delivery workspace">
         <x-slot:actions>
-            <x-ui.button href="{{ route('driver.deliveries.index') }}" variant="secondary">
-                <x-ui.icon name="arrow-left" size="size-4" />
-                Back to deliveries
-            </x-ui.button>
+            @if ($isCancelled)
+                <x-ui.button href="{{ route('driver.home') }}" variant="primary">
+                    <x-ui.icon name="arrow-left" size="size-4" />
+                    Back to dashboard
+                </x-ui.button>
+            @else
+                <x-ui.button href="{{ route('driver.deliveries.index') }}" variant="secondary">
+                    <x-ui.icon name="arrow-left" size="size-4" />
+                    Back to deliveries
+                </x-ui.button>
+            @endif
         </x-slot:actions>
     </x-ui.page-header>
 
@@ -22,9 +32,14 @@
         <span class="text-sm text-text-muted">{{ $booking->vehicle_type }}</span>
     </div>
 
-    @include('bookings._trip_stepper', ['booking' => $booking, 'horizontalScroll' => true])
-
-    @include('bookings._round_trip_laps', ['booking' => $booking])
+    @if ($isCancelled)
+        <div class="mb-6 rounded-md border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger" role="status">
+            This delivery was cancelled. You cannot continue this trip. Return to the dashboard.
+        </div>
+    @else
+        @include('bookings._trip_stepper', ['booking' => $booking, 'horizontalScroll' => true])
+        @include('bookings._round_trip_laps', ['booking' => $booking])
+    @endif
 
     <x-ui.card class="mb-6">
         <x-ui.section-heading icon="map-pin" title="Trip details" />
@@ -76,19 +91,21 @@
         </dl>
     </x-ui.card>
 
-    <x-ui.card class="mb-6">
-        @include('bookings._route_map', [
-            'booking' => $booking,
-            'routeMap' => $routeMap,
-            'showNavActions' => true,
-        ])
-    </x-ui.card>
+    @unless ($isCancelled)
+        <x-ui.card class="mb-6">
+            @include('bookings._route_map', [
+                'booking' => $booking,
+                'routeMap' => $routeMap,
+                'showNavActions' => true,
+            ])
+        </x-ui.card>
 
-    @include('driver.deliveries._documents', ['booking' => $booking])
+        @include('driver.deliveries._documents', ['booking' => $booking])
 
-    @include('bookings._pickup_capacity', ['booking' => $booking])
+        @include('bookings._pickup_capacity', ['booking' => $booking])
 
-    @include('driver.deliveries._next_step', ['booking' => $booking])
+        @include('driver.deliveries._next_step', ['booking' => $booking])
+    @endunless
 
     @can('downloadReceipt', $booking)
         <p class="mb-4 text-sm">

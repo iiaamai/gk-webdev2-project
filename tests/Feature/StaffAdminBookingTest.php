@@ -334,7 +334,7 @@ class StaffAdminBookingTest extends TestCase
         $vehicle->refresh();
         $this->assertSame(BookingStatus::Cancelled, $booking->status);
         $this->assertNull($booking->vehicle_id);
-        $this->assertNull($booking->driver_id);
+        $this->assertNotNull($booking->driver_id);
         $this->assertSame(VehicleStatus::Available, $vehicle->status);
     }
 

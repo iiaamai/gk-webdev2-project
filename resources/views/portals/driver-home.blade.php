@@ -5,6 +5,7 @@
 @section('content')
     @php
         $hasActiveDelivery = $overview['active_booking'] !== null;
+        $cancelledBooking = $cancelledBooking ?? null;
     @endphp
 
     <x-ui.page-header
@@ -31,7 +32,11 @@
 
     <section class="mb-8">
         <x-ui.section-heading icon="package" title="Active delivery" description="One active trip at a time." />
-        @if (! $hasActiveDelivery)
+        @if ($cancelledBooking)
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                <x-driver.job-card :booking="$cancelledBooking" cta-label="Back to dashboard" />
+            </div>
+        @elseif (! $hasActiveDelivery)
             <p class="mt-4 text-sm text-text-muted">No active delivery. Accept a job from the deliveries list.</p>
             <div class="mt-4">
                 <x-ui.button href="{{ route('driver.deliveries.index') }}">

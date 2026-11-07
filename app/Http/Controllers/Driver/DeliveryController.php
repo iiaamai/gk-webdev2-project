@@ -18,6 +18,7 @@ use App\Http\Requests\UploadPodRequest;
 use App\Models\Booking;
 use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
+use App\Support\DriverTripCancelledNotice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -42,7 +43,12 @@ class DeliveryController extends Controller
             ->orderByDesc('accepted_at')
             ->get();
 
-        return view('driver.deliveries.index', compact('available', 'active', 'driver'));
+        $cancelledBooking = DriverTripCancelledNotice::bookingFor(
+            $driver,
+            DriverTripCancelledNotice::peek($driver),
+        );
+
+        return view('driver.deliveries.index', compact('available', 'active', 'driver', 'cancelledBooking'));
     }
 
     public function show(Request $request, Booking $booking, BookingStaticRouteMapService $routeMapService): View
@@ -189,6 +195,10 @@ class DeliveryController extends Controller
 
     private function navigationDestination(Request $request, Booking $booking): ?string
     {
+        if ($booking->status === BookingStatus::Cancelled) {
+            return null;
+        }
+
         $nav = $request->query('nav');
 
         if ($nav === 'pickup' && $booking->pickup_lat !== null && $booking->pickup_lng !== null) {
