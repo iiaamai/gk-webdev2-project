@@ -15,7 +15,7 @@
                     @foreach ($pricings as $pricing)
                         @php
                             $image = match ($pricing->vehicle_type) {
-                                '6-wheeler' => 'images/gk-truck-6-wheeler.png',
+                                '6-wheeler', '6-wheeler (economy)' => 'images/gk-truck-6-wheeler.png',
                                 '10-wheeler' => 'images/gk-truck-6-wheeler.png',
                                 default => null,
                             };

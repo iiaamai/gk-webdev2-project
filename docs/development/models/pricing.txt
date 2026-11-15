@@ -12,11 +12,12 @@ Fields
 - vehicle_type          TEXT NOT NULL UNIQUE
                         seed defaults:
                         - 6-wheeler
+                        - 6-wheeler (economy)
                         - 10-wheeler
 - amount                REAL NOT NULL
-                        seed defaults: 15000.00 | 25000.00
+                        seed defaults: 15000.00 | 14500.00 | 25000.00
 - capacity_kg           INTEGER NOT NULL
-                        seed defaults: 42000 | 72000
+                        seed defaults: 42000 (6W) | 72000 (10W)
 - archived_at           TEXT NULL
 - created_at            TEXT NULL
 - updated_at            TEXT NULL

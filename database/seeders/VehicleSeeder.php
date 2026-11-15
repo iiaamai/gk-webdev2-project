@@ -18,15 +18,13 @@ class VehicleSeeder extends Seeder
     {
         $pricingByType = Pricing::query()->pluck('id', 'vehicle_type');
         $sixWheelerId = $pricingByType['6-wheeler'];
+        $sixEconomyId = $pricingByType['6-wheeler (economy)'];
         $tenWheelerId = $pricingByType['10-wheeler'];
 
         $lines = [
             ['prefix' => 'ISU-4X2', 'brand' => 'Isuzu Giga / S&E (4×2)', 'pricing_id' => $sixWheelerId, 'count' => 5],
+            ['prefix' => 'ECO-6W', 'brand' => 'Isuzu Giga / S&E economy (4×2)', 'pricing_id' => $sixEconomyId, 'count' => 5],
             ['prefix' => 'ISU-6X4', 'brand' => 'Isuzu Giga / S&E (6×4)', 'pricing_id' => $tenWheelerId, 'count' => 5],
-            ['prefix' => 'HNO-4X2', 'brand' => 'Hino 700 (4×2)', 'pricing_id' => $sixWheelerId, 'count' => 5],
-            ['prefix' => 'HNO-6X4', 'brand' => 'Hino 700 (6×4)', 'pricing_id' => $tenWheelerId, 'count' => 5],
-            ['prefix' => 'HOW-6X4', 'brand' => 'Sinotruk HOWO 10W (6×4)', 'pricing_id' => $tenWheelerId, 'count' => 5],
-            ['prefix' => 'FUS-6X4', 'brand' => 'Fuso Super Great (6×4)', 'pricing_id' => $tenWheelerId, 'count' => 5],
         ];
 
         foreach ($lines as $line) {

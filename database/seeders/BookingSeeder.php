@@ -30,7 +30,7 @@ class BookingSeeder extends Seeder
 
         $sixWheeler = Vehicle::query()->withArchived()->where('plate_number', 'ISU-4X2-001')->firstOrFail();
         $tenWheeler = Vehicle::query()->withArchived()->where('plate_number', 'ISU-6X4-001')->firstOrFail();
-        $van = Vehicle::query()->withArchived()->where('plate_number', 'HNO-4X2-003')->firstOrFail();
+        $economyTruck = Vehicle::query()->withArchived()->where('plate_number', 'ECO-6W-003')->firstOrFail();
 
         $pricingByType = Pricing::query()->pluck('id', 'vehicle_type');
         $amountByPricingId = Pricing::query()->pluck('amount', 'id');
@@ -89,8 +89,8 @@ class BookingSeeder extends Seeder
             ],
             [
                 'booking_number' => "GK-{$year}-0005",
-                'pricing_id' => $pricingByType['6-wheeler'],
-                'vehicle_id' => $van->id,
+                'pricing_id' => $pricingByType['6-wheeler (economy)'],
+                'vehicle_id' => $economyTruck->id,
                 'driver_id' => $driver->id,
                 'status' => BookingStatus::Completed,
                 'is_locked' => true,

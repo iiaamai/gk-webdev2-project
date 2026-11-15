@@ -14,6 +14,7 @@ class PricingSeeder extends Seeder
     {
         $rows = [
             ['vehicle_type' => '6-wheeler', 'amount' => 15000.00, 'capacity_kg' => 42000],
+            ['vehicle_type' => '6-wheeler (economy)', 'amount' => 14500.00, 'capacity_kg' => 42000],
             ['vehicle_type' => '10-wheeler', 'amount' => 25000.00, 'capacity_kg' => 72000],
         ];
 

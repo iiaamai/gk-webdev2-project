@@ -30,10 +30,11 @@ pending
 - Drop: driver clearance workflow.
 
 Pricing
-- Truck tiers in the database (Admin Pricing List CRUD):
+- Truck tiers in the database (Admin Pricing List CRUD); seed defaults:
   - 6-wheeler — 15000.00 (capacity 42000 kg)
+  - 6-wheeler (economy) — 14500.00 (capacity 42000 kg)
   - 10-wheeler — 25000.00 (capacity 72000 kg)
-- Removed from default seed: 4-wheeler, L300 van, Reefer / specialized.
+- Removed from default seed: 4-wheeler, L300 van, Reefer / specialized; extra brand lines beyond the 3×5 demo fleet.
 - The booking form loads prices from the database based on vehicles/pricing records.
 - System Admin module: Pricing List (CRUD the price list).
 

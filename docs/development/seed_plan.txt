@@ -13,12 +13,13 @@ Driver (2nd)    driver2@gk.test       demo123
   - Assigned fleet unit ISU-6X4-001 (Isuzu Giga 6×4, 10-wheeler); separate active trip from driver 1
   - DriverAttendanceSeeder times in all demo drivers after users/vehicles seed (required to log in)
 
-Pricing (two truck tiers only)
+Pricing (wheel classes in seed)
 - 6-wheeler — 15000.00 — 42000 kg
+- 6-wheeler (economy) — 14500.00 — 42000 kg
 - 10-wheeler — 25000.00 — 72000 kg
 
 Fleet
-- 30 heavy trucks (6 model lines × 5 units) — see VehicleSeeder
+- 15 available trucks (3 lines × 5 units): ISU-4X2 (6-wheeler), ECO-6W (economy), ISU-6X4 (10-wheeler) — see VehicleSeeder
 - 1 maintenance example (MNT-0001)
 - Demo drivers linked via vehicles.driver_id (ISU-4X2-001, ISU-6X4-001)
 

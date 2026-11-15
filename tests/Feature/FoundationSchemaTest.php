@@ -64,8 +64,8 @@ class FoundationSchemaTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertSame(2, Pricing::query()->count());
-        $this->assertSame(31, Vehicle::query()->count());
+        $this->assertSame(3, Pricing::query()->count());
+        $this->assertSame(16, Vehicle::query()->count());
         $this->assertSame(5, User::query()->count());
         $this->assertSame(6, Booking::query()->count());
         $this->assertSame('GK Trucking Services', Setting::getValue('company_name'));
