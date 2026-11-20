@@ -21,7 +21,7 @@ class PricingSeeder extends Seeder
         foreach ($rows as $row) {
             Pricing::query()->withArchived()->updateOrCreate(
                 ['vehicle_type' => $row['vehicle_type']],
-                $row,
+                [...$row, 'archived_at' => null],
             );
         }
     }
