@@ -17,12 +17,12 @@ class EarningsController extends Controller
         $year = (int) $request->integer('year', $now->year);
         $month = (int) $request->integer('month', $now->month);
 
-        $year = max(2020, min($now->year + 1, $year));
+        $year = max(2020, min($now->year, $year));
         $month = max(1, min(12, $month));
 
         $report = $earningsQuery->forMonth($year, $month);
 
-        $yearOptions = range($now->year - 5, $now->year + 1);
+        $yearOptions = range(2020, $now->year);
 
         return view('admin.earnings.index', [
             'report' => $report,

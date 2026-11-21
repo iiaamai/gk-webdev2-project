@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             DriverAttendanceSeeder::class,
             SettingSeeder::class,
             BookingSeeder::class,
+            HistoricalBookingSeeder::class,
         ]);
     }
 }

@@ -67,7 +67,7 @@ class FoundationSchemaTest extends TestCase
         $this->assertSame(3, Pricing::query()->count());
         $this->assertSame(16, Vehicle::query()->count());
         $this->assertSame(6, User::query()->count());
-        $this->assertSame(9, Booking::query()->count());
+        $this->assertSame(75, Booking::query()->count());
         $this->assertSame('GK Trucking Services', Setting::getValue('company_name'));
 
         $driver = User::query()->where('email', 'reynaldo.cruz@gklogistics.ph')->first();
