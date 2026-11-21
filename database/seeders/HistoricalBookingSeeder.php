@@ -21,8 +21,6 @@ class HistoricalBookingSeeder extends Seeder
 
     private const HISTORY_END_DAY = 21;
 
-    private const string HISTORY_END_DATE = '2026-11-21';
-
     /**
      * @var array<int, int>
      */
@@ -70,7 +68,7 @@ class HistoricalBookingSeeder extends Seeder
         ];
 
         $tz = 'Asia/Manila';
-        $historyEndsAt = Carbon::parse(self::HISTORY_END_DATE, $tz)->endOfDay();
+        $historyEndsAt = Carbon::parse(SeedAccounts::SEED_PRESENT_AT, $tz)->endOfDay();
 
         $tripIndex = 0;
 

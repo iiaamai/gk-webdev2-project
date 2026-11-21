@@ -24,4 +24,7 @@ final class SeedAccounts
     public const STAFF_PASSWORD = 'staff123';
 
     public const PORTAL_PASSWORD = 'password123';
+
+    /** Presentation “today” for seed dates (Asia/Manila), aligned with historical cap. */
+    public const SEED_PRESENT_AT = '2026-11-21';
 }

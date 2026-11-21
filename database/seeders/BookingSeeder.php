@@ -13,6 +13,7 @@ use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Support\DocumentStorage;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
@@ -41,7 +42,8 @@ class BookingSeeder extends Seeder
         $pricingByType = Pricing::query()->pluck('id', 'vehicle_type');
         $amountByPricingId = Pricing::query()->pluck('amount', 'id');
         $tz = 'Asia/Manila';
-        $year = now($tz)->year;
+        $present = Carbon::parse(SeedAccounts::SEED_PRESENT_AT, $tz)->startOfDay();
+        $year = (int) $present->year;
 
         $defaults = [
             'pickup_address' => 'Makati City, Metro Manila',
@@ -229,14 +231,14 @@ class BookingSeeder extends Seeder
             $withInvoice = $row['with_invoice'] ?? null;
 
             $bookingNumber = "GK-{$year}-{$suffix}";
-            $anchor = now($tz)->addDays($bookingOffsetDays);
+            $anchor = $present->copy()->addDays($bookingOffsetDays);
 
             $acceptedAt = $row['accepted_at'] ?? null;
             if ($acceptedAt === null && isset($row['accepted_at_days'])) {
-                $acceptedAt = now($tz)->addDays($row['accepted_at_days']);
+                $acceptedAt = $present->copy()->addDays($row['accepted_at_days']);
             }
             if ($acceptedAt === null && isset($row['accepted_at_hours'])) {
-                $acceptedAt = now($tz)->addHours($row['accepted_at_hours']);
+                $acceptedAt = $present->copy()->addHours($row['accepted_at_hours']);
             }
 
             $gatepassPath = null;

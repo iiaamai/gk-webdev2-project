@@ -35,7 +35,7 @@ Drivers are **timed in** by `DriverAttendanceSeeder` so they can use the driver 
 
 **Where:** log in as **Carlos Reyes** → **Earnings**. Use the **year** (2020–2026) and **month** filters.
 
-Historical completed trips are capped at **21 Nov 2026** (Asia/Manila). **Dec 2026** has no bulk historical rows (presentation `BookingSeeder` dates still use relative “today”).
+Historical and presentation booking dates are capped at **21 Nov 2026** (Asia/Manila; `SeedAccounts::SEED_PRESENT_AT`). **Dec 2026** should show **no** seeded earnings.
 
 Earnings count **completed** bookings with invoices, bucketed by **`accepted_at`** (`HistoricalBookingSeeder` plus presentation `GK-{year}-0005` / `0007` / `0008` / `0009`).
 
@@ -55,7 +55,7 @@ Plus presentation trips near “today” in the current year (`BookingSeeder`).
 
 ### Live presentation trips (current year)
 
-After seed, these sit near “today” (relative dates in `BookingSeeder`):
+After seed, these sit near **21 Nov 2026** (fixed anchor in `BookingSeeder`):
 
 | Booking | Role in demo |
 |---------|----------------|
