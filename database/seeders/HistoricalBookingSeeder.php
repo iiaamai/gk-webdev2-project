@@ -9,12 +9,9 @@ use App\Models\Invoice;
 use App\Models\Pricing;
 use App\Models\User;
 use App\Models\Vehicle;
-use App\Support\DocumentStorage;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\File;
-use RuntimeException;
 
 class HistoricalBookingSeeder extends Seeder
 {
@@ -72,48 +69,14 @@ class HistoricalBookingSeeder extends Seeder
         $tripIndex = 0;
 
         for ($year = self::HISTORY_START_YEAR; $year <= $endYear; $year++) {
-            for ($quarter = 1; $quarter <= 4; $quarter++) {
-                $primaryMonth = ($quarter - 1) * 3 + 2;
-                $this->seedCompletedTrip(
-                    year: $year,
-                    month: $primaryMonth,
-                    day: 12,
-                    customers: $customers,
-                    drivers: [$driver, $driverTwo],
-                    vehicles: $vehicles,
-                    pricingRotation: $pricingRotation,
-                    amountByPricingId: $amountByPricingId,
-                    cargoDescriptions: $cargoDescriptions,
-                    tripIndex: $tripIndex,
-                    tz: $tz,
-                );
-                $tripIndex++;
+            $tripsPerMonth = $this->tripsPerMonth($year);
 
-                if ($quarter % 2 === 0) {
-                    $secondaryMonth = ($quarter - 1) * 3 + 3;
-                    $this->seedCompletedTrip(
-                        year: $year,
-                        month: $secondaryMonth,
-                        day: 18,
-                        customers: $customers,
-                        drivers: [$driver, $driverTwo],
-                        vehicles: $vehicles,
-                        pricingRotation: $pricingRotation,
-                        amountByPricingId: $amountByPricingId,
-                        cargoDescriptions: $cargoDescriptions,
-                        tripIndex: $tripIndex,
-                        tz: $tz,
-                    );
-                    $tripIndex++;
-                }
-            }
-
-            if ($year >= 2025) {
-                for ($month = 1; $month <= 12; $month++) {
+            for ($month = 1; $month <= 12; $month++) {
+                foreach ($this->spreadDaysAcrossMonth($year, $month, $tripsPerMonth, $tz) as $day) {
                     $this->seedCompletedTrip(
                         year: $year,
                         month: $month,
-                        day: 22,
+                        day: $day,
                         customers: $customers,
                         drivers: [$driver, $driverTwo],
                         vehicles: $vehicles,
@@ -127,6 +90,44 @@ class HistoricalBookingSeeder extends Seeder
                 }
             }
         }
+    }
+
+    private function tripsPerMonth(int $year): int
+    {
+        return match (true) {
+            $year <= 2022 => 6,
+            $year <= 2024 => 10,
+            default => 15,
+        };
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function spreadDaysAcrossMonth(int $year, int $month, int $tripCount, string $tz): array
+    {
+        $daysInMonth = Carbon::create($year, $month, 1, 0, 0, 0, $tz)->daysInMonth;
+        $days = [];
+
+        for ($i = 0; $i < $tripCount; $i++) {
+            $day = (int) round(($i + 1) * ($daysInMonth / ($tripCount + 1)));
+            $day = max(2, min($daysInMonth - 1, $day));
+
+            while (in_array($day, $days, true) && $day < $daysInMonth) {
+                $day++;
+            }
+
+            if (in_array($day, $days, true)) {
+                $day = max(2, $day - 1);
+                while (in_array($day, $days, true) && $day > 2) {
+                    $day--;
+                }
+            }
+
+            $days[] = $day;
+        }
+
+        return $days;
     }
 
     /**
@@ -150,7 +151,8 @@ class HistoricalBookingSeeder extends Seeder
         int $tripIndex,
         string $tz,
     ): void {
-        $acceptedAt = Carbon::create($year, $month, $day, 9, 30, 0, $tz);
+        $hour = 8 + ($tripIndex % 9);
+        $acceptedAt = Carbon::create($year, $month, $day, $hour, 15, 0, $tz);
         $anchor = $acceptedAt->copy()->subDays(2);
 
         $customerEmail = $tripIndex % 2 === 0
@@ -162,7 +164,6 @@ class HistoricalBookingSeeder extends Seeder
         $vehicle = $vehicles[$tripIndex % count($vehicles)];
 
         $bookingNumber = $this->nextHistoricalBookingNumber($year);
-        $gatepassPath = $this->storeGatepassFixture($bookingNumber);
 
         $defaults = [
             'pickup_address' => 'Makati City, Metro Manila',
@@ -183,7 +184,7 @@ class HistoricalBookingSeeder extends Seeder
                 'status' => BookingStatus::Completed,
                 'is_locked' => false,
                 'accepted_at' => $acceptedAt,
-                'gatepass_path' => $gatepassPath,
+                'gatepass_path' => null,
                 'cargo_desc' => $cargoDescriptions[$tripIndex % count($cargoDescriptions)],
                 'pickup_port_number' => sprintf('MICT-%02d', ($tripIndex % 28) + 1),
                 'pickup_container_number' => sprintf('HISTU%07d', 1000000 + $tripIndex),
@@ -234,19 +235,5 @@ class HistoricalBookingSeeder extends Seeder
         $this->sequenceByYear[$year] = $next;
 
         return sprintf('GK-%d-%04d', $year, $next);
-    }
-
-    private function storeGatepassFixture(string $bookingNumber): string
-    {
-        $fixture = database_path('seeders/fixtures/sample-gatepass.png');
-
-        if (! File::isReadable($fixture)) {
-            throw new RuntimeException('Missing gatepass seed fixture: '.$fixture);
-        }
-
-        $path = 'bookings/'.$bookingNumber.'/gatepass.png';
-        DocumentStorage::disk()->put($path, File::get($fixture));
-
-        return $path;
     }
 }
