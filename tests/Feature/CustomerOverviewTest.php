@@ -85,8 +85,12 @@ class CustomerOverviewTest extends TestCase
             ->assertSee('Active')
             ->assertSee('History')
             ->assertSee('GK-TEST-ACTIVE')
-            ->assertSee('GK-TEST-DONE')
             ->assertSee('View details', false);
+
+        $this->actingAs($customer)
+            ->get(route('customer.bookings.index', ['tab' => 'history']))
+            ->assertOk()
+            ->assertSee('GK-TEST-DONE');
     }
 
     public function test_customer_booking_show_is_polished(): void

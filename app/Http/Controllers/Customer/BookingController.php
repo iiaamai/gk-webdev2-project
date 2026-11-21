@@ -8,7 +8,6 @@ use App\Actions\ConfirmMultiTripRoundTrips;
 use App\Actions\CreateCustomerBooking;
 use App\Actions\RequestMultiTripRoundTrips;
 use App\Actions\SubmitInvoicePaymentProof;
-use App\Enums\BookingStatus;
 use App\Enums\VehicleStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\ChangeBookingVehicleTypeRequest;
@@ -19,6 +18,8 @@ use App\Models\Booking;
 use App\Models\Pricing;
 use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
+use App\Services\CustomerBookingListQuery;
+use App\Support\ListFilter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,33 +27,26 @@ use Illuminate\View\View;
 
 class BookingController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, CustomerBookingListQuery $customerBookingListQuery): View
     {
         $this->authorize('viewAny', Booking::class);
 
-        $customerId = $request->user()->id;
+        $customer = $request->user();
+        $tab = $customerBookingListQuery->resolveTab($request);
+        $bookings = $customerBookingListQuery->paginate($customer, $request);
+        $filtersActive = $customerBookingListQuery->filtersActive($request, $tab);
 
-        $active = Booking::query()
-            ->where('customer_id', $customerId)
-            ->whereIn('status', [
-                BookingStatus::Pending,
-                ...BookingStatus::activeDeliveryStatuses(),
-            ])
-            ->with(['pricing', 'vehicle.pricing', 'invoice'])
-            ->orderByDesc('created_at')
-            ->get();
-
-        $history = Booking::query()
-            ->where('customer_id', $customerId)
-            ->whereIn('status', [
-                BookingStatus::Completed,
-                BookingStatus::Cancelled,
-            ])
-            ->with(['pricing', 'vehicle.pricing', 'invoice'])
-            ->orderByDesc('created_at')
-            ->get();
-
-        return view('customer.bookings.index', compact('active', 'history'));
+        return view('customer.bookings.index', [
+            'bookings' => $bookings,
+            'tab' => $tab,
+            'filtersActive' => $filtersActive,
+            'search' => ListFilter::searchTerm($request),
+            'statusFilter' => $request->query('status'),
+            'paymentFilter' => $request->query('payment'),
+            'statusOptions' => $customerBookingListQuery->statusOptionsForTab($tab),
+            'paymentOptions' => $customerBookingListQuery->paymentOptions(),
+            'clearUrl' => route('customer.bookings.index', ['tab' => $tab]),
+        ]);
     }
 
     public function create(Request $request): View

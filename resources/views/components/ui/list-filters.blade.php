@@ -14,9 +14,16 @@
     'dateFrom' => null,
     'dateTo' => null,
     'showDateRange' => false,
+    'payment' => null,
+    'paymentOptions' => [],
+    'paymentLabel' => 'Payment',
+    'tab' => null,
 ])
 
 <form method="get" action="{{ $action }}" class="mb-4 flex flex-col gap-3 rounded-md border border-border bg-surface-elevated p-4 lg:flex-row lg:flex-wrap lg:items-end">
+    @if (filled($tab))
+        <input type="hidden" name="tab" value="{{ $tab }}" />
+    @endif
     <div class="min-w-[12rem] flex-1">
         <x-ui.label for="list_filter_q">Search</x-ui.label>
         <x-ui.input
@@ -36,6 +43,18 @@
                 <option value="">All</option>
                 @foreach ($statusOptions as $value => $label)
                     <option value="{{ $value }}" @selected((string) $status === (string) $value)>{{ $label }}</option>
+                @endforeach
+            </x-ui.select>
+        </div>
+    @endif
+
+    @if (count($paymentOptions) > 0)
+        <div class="min-w-[10rem]">
+            <x-ui.label for="list_filter_payment">{{ $paymentLabel }}</x-ui.label>
+            <x-ui.select id="list_filter_payment" name="payment" class="mt-1">
+                <option value="">All</option>
+                @foreach ($paymentOptions as $value => $label)
+                    <option value="{{ $value }}" @selected((string) $payment === (string) $value)>{{ $label }}</option>
                 @endforeach
             </x-ui.select>
         </div>

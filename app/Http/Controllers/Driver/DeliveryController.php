@@ -18,7 +18,9 @@ use App\Http\Requests\UploadPodRequest;
 use App\Models\Booking;
 use App\Services\BookingReceiptPdf;
 use App\Services\BookingStaticRouteMapService;
+use App\Services\DriverDeliveryListQuery;
 use App\Support\DriverTripCancelledNotice;
+use App\Support\ListFilter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,29 +28,31 @@ use Illuminate\View\View;
 
 class DeliveryController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, DriverDeliveryListQuery $driverDeliveryListQuery): View
     {
         $driver = $request->user();
         $driver->load('assignedVehicle.pricing');
 
-        $available = Booking::query()
-            ->availableForDriver($driver)
-            ->with(['pricing', 'vehicle.pricing'])
-            ->orderBy('created_at')
-            ->get();
-
-        $active = Booking::query()
-            ->activeForDriver($driver)
-            ->with(['pricing', 'vehicle.pricing'])
-            ->orderByDesc('accepted_at')
-            ->get();
+        $available = $driverDeliveryListQuery->paginateAvailable($driver, $request);
+        $active = $driverDeliveryListQuery->paginateActive($driver, $request);
+        $filtersActive = $driverDeliveryListQuery->filtersActive($request);
 
         $cancelledBooking = DriverTripCancelledNotice::bookingFor(
             $driver,
             DriverTripCancelledNotice::peek($driver),
         );
 
-        return view('driver.deliveries.index', compact('available', 'active', 'driver', 'cancelledBooking'));
+        return view('driver.deliveries.index', [
+            'available' => $available,
+            'active' => $active,
+            'driver' => $driver,
+            'cancelledBooking' => $cancelledBooking,
+            'filtersActive' => $filtersActive,
+            'search' => ListFilter::searchTerm($request),
+            'statusFilter' => $request->query('status'),
+            'statusOptions' => $driverDeliveryListQuery->statusOptions(),
+            'clearUrl' => route('driver.deliveries.index'),
+        ]);
     }
 
     public function show(Request $request, Booking $booking, BookingStaticRouteMapService $routeMapService): View
