@@ -1,17 +1,18 @@
-GK Trucking Services 2.0 — Seed / demo data plan
+GK Trucking Services 2.0 — Seed / presentation data plan
 
 Brand in settings: GK Trucking Services
 
-Demo users (local only; hashed passwords in seeder)
-Role            Email                 Password
-System Admin    admin@gk.test         admin123
-Staff           staff@gk.test         staff123
-Customer        customer@gk.test      demo123
-Driver          driver@gk.test        demo123
+Portal users (local only; hashed passwords in seeder)
+Role            Name              Email                              Password
+System Admin    Carlos Reyes      carlos.reyes@gklogistics.ph         admin123
+Staff           Ana Mendoza       ana.mendoza@gklogistics.ph         staff123
+Customer        Maria Santos      maria.santos@gklogistics.ph        password123
+Customer        James Lim         james.lim@gklogistics.ph           password123
+Driver          Reynaldo Cruz     reynaldo.cruz@gklogistics.ph       password123
   - Assigned fleet unit ISU-4X2-001 (Isuzu Giga 4×2, 6-wheeler)
-Driver (2nd)    driver2@gk.test       demo123
+Driver          Mark Villanueva   mark.villanueva@gklogistics.ph     password123
   - Assigned fleet unit ISU-6X4-001 (Isuzu Giga 6×4, 10-wheeler); separate active trip from driver 1
-  - DriverAttendanceSeeder times in all demo drivers after users/vehicles seed (required to log in)
+  - DriverAttendanceSeeder times in all drivers after users/vehicles seed (required to log in)
 
 Pricing (wheel classes in seed)
 - 6-wheeler — 15000.00 — 42000 kg
@@ -21,26 +22,26 @@ Pricing (wheel classes in seed)
 Fleet
 - 15 available trucks (3 lines × 5 units): ISU-4X2 (6-wheeler), ECO-6W (economy), ISU-6X4 (10-wheeler) — see VehicleSeeder
 - 1 maintenance example (MNT-0001)
-- Demo drivers linked via vehicles.driver_id (ISU-4X2-001, ISU-6X4-001)
+- Drivers linked via vehicles.driver_id (ISU-4X2-001, ISU-6X4-001)
 
 Seed order
-- Pricing → Users → Vehicles (assign drivers) → Settings → Bookings
+- Pricing → Users → Vehicles (assign drivers) → Driver attendance → Settings → Bookings
 
 Settings
 - company_name = GK Trucking Services
-- support_email = support@gk.test
-- booking_seq = 1 (or next after samples)
+- support_email = support@gklogistics.ph
+- booking_seq = 10 (after sample bookings)
 - map_center_lat / map_center_lng = Metro Manila area
 - map_zoom optional
 
-Sample bookings
-- GK-{year}-0001…0006: pending (no gatepass / with gatepass), accepted, transit_to_pickup,
-  completed with EIR/POD, cancelled — all pickup/dropoff inside NCR sample coords
+Sample bookings (GK-{year}-0001…0009)
+- Active mix: pending, gatepass, accepted, transit_to_pickup, completed (EIR/POD), cancelled
+- History: 0007–0009 backdated for prior-week / prior-month earnings and reports
+- All pickup/dropoff inside NCR sample coordinates
 
 Service area
 - Bookings must use coordinates inside Metro Manila (NCR) bbox — see ServiceArea.php
 
 Notes
 - Never commit real production secrets
-- Emails use @gk.test for local demo
 - Command: php artisan migrate:fresh --seed

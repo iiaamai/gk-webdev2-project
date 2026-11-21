@@ -17,14 +17,14 @@ class UserSeederTest extends TestCase
         $this->seed(UserSeeder::class);
         $this->seed(UserSeeder::class);
 
-        $this->assertSame(5, User::query()->withArchived()->count());
+        $this->assertSame(6, User::query()->withArchived()->count());
     }
 
-    public function test_user_seeder_restores_archived_demo_driver(): void
+    public function test_user_seeder_restores_archived_driver(): void
     {
         $this->seed(UserSeeder::class);
 
-        $driver = User::query()->withArchived()->where('email', 'driver@gk.test')->firstOrFail();
+        $driver = User::query()->withArchived()->where('email', 'reynaldo.cruz@gklogistics.ph')->firstOrFail();
         $driver->archive();
 
         $this->seed(UserSeeder::class);
@@ -38,6 +38,6 @@ class UserSeederTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertDatabaseHas('users', ['email' => 'driver@gk.test']);
+        $this->assertDatabaseHas('users', ['email' => 'reynaldo.cruz@gklogistics.ph']);
     }
 }

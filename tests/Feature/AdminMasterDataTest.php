@@ -183,13 +183,13 @@ class AdminMasterDataTest extends TestCase
         $this->actingAs($staff)->get(route('admin.users.index'))->assertRedirect(route('staff.home'));
     }
 
-    public function test_seeded_demo_passwords_work_after_fresh_seed(): void
+    public function test_seeded_portal_passwords_work_after_fresh_seed(): void
     {
         $this->seed();
 
         $this->post(route('login'), [
-            'email' => 'customer@gk.test',
-            'password' => 'demo123',
+            'email' => 'maria.santos@gklogistics.ph',
+            'password' => 'password123',
         ])->assertRedirect(route('customer.home'));
 
         $this->post(route('logout'));

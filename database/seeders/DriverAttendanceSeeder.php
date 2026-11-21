@@ -12,7 +12,7 @@ class DriverAttendanceSeeder extends Seeder
 {
     public function run(): void
     {
-        $recordedBy = User::query()->where('email', 'admin@gk.test')->first()
+        $recordedBy = User::query()->where('email', SeedAccounts::ADMIN_EMAIL)->first()
             ?? User::query()->where('role', UserRole::Staff)->first();
 
         if ($recordedBy === null) {

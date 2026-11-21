@@ -60,17 +60,17 @@ class FoundationSchemaTest extends TestCase
         $this->assertFalse(Schema::hasColumn('bookings', 'payout'));
     }
 
-    public function test_database_seeder_creates_demo_data(): void
+    public function test_database_seeder_creates_presentation_data(): void
     {
         $this->seed(DatabaseSeeder::class);
 
         $this->assertSame(3, Pricing::query()->count());
         $this->assertSame(16, Vehicle::query()->count());
-        $this->assertSame(5, User::query()->count());
-        $this->assertSame(6, Booking::query()->count());
+        $this->assertSame(6, User::query()->count());
+        $this->assertSame(9, Booking::query()->count());
         $this->assertSame('GK Trucking Services', Setting::getValue('company_name'));
 
-        $driver = User::query()->where('email', 'driver@gk.test')->first();
+        $driver = User::query()->where('email', 'reynaldo.cruz@gklogistics.ph')->first();
         $this->assertNotNull($driver);
         $this->assertSame(UserRole::Driver, $driver->role);
         $this->assertNotNull($driver->email_verified_at);

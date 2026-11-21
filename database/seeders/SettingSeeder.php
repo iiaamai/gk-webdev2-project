@@ -14,8 +14,8 @@ class SettingSeeder extends Seeder
     {
         $settings = [
             'company_name' => 'GK Trucking Services',
-            'support_email' => 'support@gk.test',
-            'booking_seq' => '7',
+            'support_email' => 'support@gklogistics.ph',
+            'booking_seq' => '10',
             'map_center_lat' => '14.5995',
             'map_center_lng' => '120.9842',
             'map_zoom' => '11',

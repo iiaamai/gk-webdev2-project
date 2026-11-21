@@ -56,8 +56,8 @@ class VehicleSeeder extends Seeder
         unset($maintenance);
 
         $assignments = [
-            'ISU-4X2-001' => 'driver@gk.test',
-            'ISU-6X4-001' => 'driver2@gk.test',
+            'ISU-4X2-001' => SeedAccounts::DRIVER_EMAIL,
+            'ISU-6X4-001' => SeedAccounts::DRIVER_TWO_EMAIL,
         ];
 
         $sync = app(SyncVehicleDriverAssignment::class);
