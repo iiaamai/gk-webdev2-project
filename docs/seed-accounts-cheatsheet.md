@@ -33,19 +33,21 @@ Drivers are **timed in** by `DriverAttendanceSeeder` so they can use the driver 
 
 ## Admin earnings (seed history)
 
-**Where:** log in as **Carlos Reyes** → **Earnings**. Use the **year** (2020–current year) and **month** filters.
+**Where:** log in as **Carlos Reyes** → **Earnings**. Use the **year** (2020–2026) and **month** filters.
+
+Historical completed trips are capped at **21 Nov 2026** (Asia/Manila). **Dec 2026** has no bulk historical rows (presentation `BookingSeeder` dates still use relative “today”).
 
 Earnings count **completed** bookings with invoices, bucketed by **`accepted_at`** (`HistoricalBookingSeeder` plus presentation `GK-{year}-0005` / `0007` / `0008` / `0009`).
 
 ### Volume by year (graduated seed)
 
-Every month **Jan–Dec** from **2020** through the current year has multiple completed trips (spread across different days for daily charts):
+Every month from **Jan 2020** through **Nov 2026** (through day **21**) has multiple completed trips (spread across different days for daily charts):
 
 | Years | Completed trips per month (approx.) |
 |-------|-------------------------------------|
 | **2020–2022** | **6** |
 | **2023–2024** | **10** |
-| **2025–current year** | **15** |
+| **2025–2026** (through Nov) | **15** |
 
 Plus presentation trips near “today” in the current year (`BookingSeeder`).
 

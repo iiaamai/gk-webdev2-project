@@ -17,6 +17,12 @@ class HistoricalBookingSeeder extends Seeder
 {
     private const HISTORY_START_YEAR = 2020;
 
+    private const HISTORY_END_YEAR = 2026;
+
+    private const HISTORY_END_DAY = 21;
+
+    private const string HISTORY_END_DATE = '2026-11-21';
+
     /**
      * @var array<int, int>
      */
@@ -64,15 +70,27 @@ class HistoricalBookingSeeder extends Seeder
         ];
 
         $tz = 'Asia/Manila';
-        $endYear = (int) now($tz)->year;
+        $historyEndsAt = Carbon::parse(self::HISTORY_END_DATE, $tz)->endOfDay();
 
         $tripIndex = 0;
 
-        for ($year = self::HISTORY_START_YEAR; $year <= $endYear; $year++) {
+        for ($year = self::HISTORY_START_YEAR; $year <= self::HISTORY_END_YEAR; $year++) {
             $tripsPerMonth = $this->tripsPerMonth($year);
+            $lastMonth = $year === self::HISTORY_END_YEAR ? 11 : 12;
 
-            for ($month = 1; $month <= 12; $month++) {
-                foreach ($this->spreadDaysAcrossMonth($year, $month, $tripsPerMonth, $tz) as $day) {
+            for ($month = 1; $month <= $lastMonth; $month++) {
+                $maxDay = $year === self::HISTORY_END_YEAR && $month === 11
+                    ? self::HISTORY_END_DAY
+                    : null;
+
+                foreach ($this->spreadDaysAcrossMonth($year, $month, $tripsPerMonth, $tz, $maxDay) as $day) {
+                    $hour = 8 + ($tripIndex % 9);
+                    $acceptedAt = Carbon::create($year, $month, $day, $hour, 15, 0, $tz);
+
+                    if ($acceptedAt->gt($historyEndsAt)) {
+                        continue;
+                    }
+
                     $this->seedCompletedTrip(
                         year: $year,
                         month: $month,
@@ -85,6 +103,7 @@ class HistoricalBookingSeeder extends Seeder
                         cargoDescriptions: $cargoDescriptions,
                         tripIndex: $tripIndex,
                         tz: $tz,
+                        acceptedAt: $acceptedAt,
                     );
                     $tripIndex++;
                 }
@@ -104,9 +123,19 @@ class HistoricalBookingSeeder extends Seeder
     /**
      * @return list<int>
      */
-    private function spreadDaysAcrossMonth(int $year, int $month, int $tripCount, string $tz): array
-    {
+    private function spreadDaysAcrossMonth(
+        int $year,
+        int $month,
+        int $tripCount,
+        string $tz,
+        ?int $maxDay = null,
+    ): array {
         $daysInMonth = Carbon::create($year, $month, 1, 0, 0, 0, $tz)->daysInMonth;
+
+        if ($maxDay !== null) {
+            $daysInMonth = min($daysInMonth, $maxDay);
+        }
+
         $days = [];
 
         for ($i = 0; $i < $tripCount; $i++) {
@@ -124,7 +153,9 @@ class HistoricalBookingSeeder extends Seeder
                 }
             }
 
-            $days[] = $day;
+            if ($maxDay === null || $day <= $maxDay) {
+                $days[] = $day;
+            }
         }
 
         return $days;
@@ -150,9 +181,8 @@ class HistoricalBookingSeeder extends Seeder
         array $cargoDescriptions,
         int $tripIndex,
         string $tz,
+        Carbon $acceptedAt,
     ): void {
-        $hour = 8 + ($tripIndex % 9);
-        $acceptedAt = Carbon::create($year, $month, $day, $hour, 15, 0, $tz);
         $anchor = $acceptedAt->copy()->subDays(2);
 
         $customerEmail = $tripIndex % 2 === 0
@@ -227,7 +257,7 @@ class HistoricalBookingSeeder extends Seeder
     private function nextHistoricalBookingNumber(int $year): string
     {
         if (! isset($this->sequenceByYear[$year])) {
-            $next = $year === (int) now('Asia/Manila')->year ? 1010 : 1000;
+            $next = $year === self::HISTORY_END_YEAR ? 1010 : 1000;
         } else {
             $next = $this->sequenceByYear[$year] + 1;
         }
